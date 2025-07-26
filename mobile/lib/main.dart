@@ -442,11 +442,22 @@ class MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
   }
 
   void _onTabTapped(int index) {
-    // Lazy load ProfileScreen when profile tab is first accessed
-    if (index == 3 && _screens[3] is Container) {
-      setState(() {
-        _screens[3] = ProfileScreen(profilePubkey: _viewingProfilePubkey);
-      });
+    // When tapping the profile tab directly, always show current user's profile
+    if (index == 3) {
+      // Reset to current user's profile when tapping the tab
+      _viewingProfilePubkey = null;
+      
+      // Lazy load ProfileScreen when profile tab is first accessed
+      if (_screens[3] is Container) {
+        setState(() {
+          _screens[3] = ProfileScreen(profilePubkey: null); // null means current user
+        });
+      } else {
+        // Update existing ProfileScreen to show current user
+        setState(() {
+          _screens[3] = ProfileScreen(profilePubkey: null); // null means current user
+        });
+      }
     }
 
     // Check for double-tap on feed icon
@@ -581,6 +592,7 @@ class MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
   }
 
   /// Navigate to a user's profile
+  /// Called from other screens to view a specific user's profile
   void navigateToProfile(String? profilePubkey) {
     setState(() {
       _viewingProfilePubkey = profilePubkey;
