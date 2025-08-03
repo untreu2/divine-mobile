@@ -6,6 +6,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:nostr_sdk/nostr_sdk.dart';
 import 'package:openvine/models/pending_upload.dart';
 import 'package:openvine/utils/unified_logger.dart';
 
@@ -34,6 +35,9 @@ void main() {
       registerFallbackValue(Uri.parse('https://example.com'));
       registerFallbackValue(<String, String>{});
       registerFallbackValue(UploadStatus.pending);
+      
+      // Register Event fallback for mocktail
+      registerFallbackValue(Event('0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef', 22, [], 'test'));
     });
 
     tearDownAll(() async {

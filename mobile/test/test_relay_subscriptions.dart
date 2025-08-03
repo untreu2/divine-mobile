@@ -14,7 +14,7 @@ void main() async {
   final ourSubscriptions = <String>{};
 
   try {
-    final wsUrl = Uri.parse('wss://vine.hol.is');
+    final wsUrl = Uri.parse('wss://relay3.openvine.co');
     final channel = IOWebSocketChannel.connect(wsUrl);
 
     Log.debug('1. Connecting to $wsUrl...');
@@ -63,7 +63,7 @@ void main() async {
       'REQ',
       subId,
       {
-        'kinds': [22],
+        'kinds': [32222],
         'limit': 5,
       }
     ]);

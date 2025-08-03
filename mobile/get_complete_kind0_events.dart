@@ -1,4 +1,4 @@
-// Fetch COMPLETE kind 0 events from vine.hol.is relay - ALL DATA
+// Fetch COMPLETE kind 0 events from OpenVine relay - ALL DATA
 import 'dart:async';
 import 'dart:io';
 
@@ -13,7 +13,7 @@ import 'package:nostr_sdk/relay/relay_status.dart';
 import 'package:nostr_sdk/signer/local_nostr_signer.dart';
 
 void main() async {
-  Log.info('📋 Fetching COMPLETE kind 0 events from vine.hol.is...\n', name: 'Kind0Fetcher');
+  Log.info('📋 Fetching COMPLETE kind 0 events from OpenVine relay...\n', name: 'Kind0Fetcher');
   
   final privateKey = generatePrivateKey();
   final signer = LocalNostrSigner(privateKey);
@@ -28,11 +28,11 @@ void main() async {
   );
   
   // Connect to relay
-  final relay = RelayBase('wss://vine.hol.is', RelayStatus('wss://vine.hol.is'));
+  final relay = RelayBase('wss://relay3.openvine.co', RelayStatus('wss://relay3.openvine.co'));
   await nostrClient.addRelay(relay, autoSubscribe: true);
   await Future.delayed(const Duration(milliseconds: 500));
   
-  Log.info('🔌 Connected to wss://vine.hol.is', name: 'Kind0Fetcher');
+  Log.info('🔌 Connected to wss://relay3.openvine.co', name: 'Kind0Fetcher');
   
   // Create subscription for ALL kind 0 events
   final filter = Filter(kinds: [0], limit: 100); // Get up to 100
@@ -48,7 +48,7 @@ void main() async {
   
   // Save complete data to file
   final output = StringBuffer();
-  output.writeln('COMPLETE KIND 0 EVENTS FROM vine.hol.is');
+  output.writeln('COMPLETE KIND 0 EVENTS FROM OPENVINE RELAY');
   output.writeln('Total events: ${events.length}');
   output.writeln('Generated: ${DateTime.now()}');
   output.writeln('=' * 120);
@@ -87,7 +87,7 @@ void main() async {
   final file = File('kind0_events_complete.txt');
   await file.writeAsString(output.toString());
   
-  Log.info('\n✅ COMPLETE! Found ${events.length} total kind 0 events on vine.hol.is', name: 'Kind0Fetcher');
+  Log.info('\n✅ COMPLETE! Found ${events.length} total kind 0 events on OpenVine relay', name: 'Kind0Fetcher');
   Log.info('📝 Full data saved to: kind0_events_complete.txt', name: 'Kind0Fetcher');
   Log.info('All event data includes EVERYTHING - id, pubkey, created_at, kind, tags, content, sig', name: 'Kind0Fetcher');
 }

@@ -54,6 +54,9 @@ class PendingUpload {
     this.nostrEventId,
     this.completedAt,
     this.retryCount = 0,
+    this.videoWidth,
+    this.videoHeight,
+    this.videoDuration,
   });
 
   /// Create a new pending upload
@@ -64,6 +67,9 @@ class PendingUpload {
     String? title,
     String? description,
     List<String>? hashtags,
+    int? videoWidth,
+    int? videoHeight,
+    Duration? videoDuration,
   }) =>
       PendingUpload(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
@@ -75,6 +81,9 @@ class PendingUpload {
         title: title,
         description: description,
         hashtags: hashtags,
+        videoWidth: videoWidth,
+        videoHeight: videoHeight,
+        videoDuration: videoDuration,
       );
   @HiveField(0)
   final String id;
@@ -127,6 +136,15 @@ class PendingUpload {
   @HiveField(14)
   final int? retryCount;
 
+  @HiveField(17)
+  final int? videoWidth;
+
+  @HiveField(18)
+  final int? videoHeight;
+
+  @HiveField(19)
+  final Duration? videoDuration;
+
   /// Copy with updated fields
   PendingUpload copyWith({
     String? id,
@@ -146,6 +164,9 @@ class PendingUpload {
     String? nostrEventId,
     DateTime? completedAt,
     int? retryCount,
+    int? videoWidth,
+    int? videoHeight,
+    Duration? videoDuration,
   }) =>
       PendingUpload(
         id: id ?? this.id,
@@ -165,6 +186,9 @@ class PendingUpload {
         nostrEventId: nostrEventId ?? this.nostrEventId,
         completedAt: completedAt ?? this.completedAt,
         retryCount: retryCount ?? this.retryCount,
+        videoWidth: videoWidth ?? this.videoWidth,
+        videoHeight: videoHeight ?? this.videoHeight,
+        videoDuration: videoDuration ?? this.videoDuration,
       );
 
   /// Check if the upload is in a terminal state

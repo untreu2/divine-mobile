@@ -51,13 +51,14 @@ void main() {
     });
 
     // Create VideoEventService
-    final mockSubscriptionManager = MockSubscriptionManager(mockNostrService);
+    final mockSubscriptionManager = MockSubscriptionManager();
     final videoEventService = VideoEventService(mockNostrService,
         subscriptionManager: mockSubscriptionManager);
 
     // Step 1: Classic vines subscription
     Log.debug('📱 Step 1: Loading classic vines...');
     await videoEventService.subscribeToVideoFeed(
+      subscriptionType: SubscriptionType.discovery,
       authors: [
         '25315276cbaeb8f2ed998ed55d15ef8c9cf2027baea191d1253d9a5c69a2b856'
       ],
@@ -68,6 +69,7 @@ void main() {
     // Step 2: Open feed subscription (this was being wrongly rejected before)
     Log.debug('📱 Step 2: Loading open feed...');
     await videoEventService.subscribeToVideoFeed(
+      subscriptionType: SubscriptionType.discovery,
       limit: 300,
       replace: false,
     );
@@ -75,6 +77,7 @@ void main() {
     // Step 3: Editor picks subscription
     Log.debug('📱 Step 3: Loading editor picks...');
     await videoEventService.subscribeToVideoFeed(
+      subscriptionType: SubscriptionType.discovery,
       authors: [
         '70ed6c56d6fb355f102a1e985741b5ee65f6ae9f772e028894b321bc74854082'
       ],

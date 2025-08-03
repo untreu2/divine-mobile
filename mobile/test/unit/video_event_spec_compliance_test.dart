@@ -1,5 +1,5 @@
-// ABOUTME: Test to verify VideoEvent parsing of NIP-71 compliant kind 22 events
-// ABOUTME: Tests proper imeta tag parsing according to the Nostr specification
+// ABOUTME: Test to verify VideoEvent parsing of NIP-32222 compliant kind 32222 events
+// ABOUTME: Tests proper imeta tag parsing according to the NIP-32222 specification
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nostr_sdk/event.dart';
@@ -7,18 +7,19 @@ import 'package:openvine/models/video_event.dart';
 import 'package:openvine/utils/unified_logger.dart';
 
 void main() {
-  group('VideoEvent NIP-71 Spec Compliance', () {
-    test('should parse properly formatted NIP-71 imeta tags', () {
-      Log.debug('🔍 Testing NIP-71 compliant video event...', name: 'VideoEventSpecComplianceTest', category: LogCategory.system);
+  group('VideoEvent NIP-32222 Spec Compliance', () {
+    test('should parse properly formatted NIP-32222 imeta tags', () {
+      Log.debug('🔍 Testing NIP-32222 compliant video event...', name: 'VideoEventSpecComplianceTest', category: LogCategory.system);
       
-      // Properly formatted NIP-71 kind 22 event with imeta tags
+      // Properly formatted NIP-32222 kind 32222 event with imeta tags
       final event = Event(
         '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
-        22,
+        32222,
         [
+          ["d", "test-video-id"], // Required for addressable events
           ["title", "Test Video"],
           ["published_at", "1751355472"],
-          ["alt", "A test video for NIP-71 compliance"],
+          ["alt", "A test video for NIP-32222 compliance"],
           ["imeta", 
            "url https://api.openvine.co/media/test-video.mp4",
            "x 3093509d1e0bc604ff60cb9286f4cd7c781553bc8991937befaacfdc28ec5cdc", 
@@ -28,26 +29,26 @@ void main() {
           ],
           ["duration", "15"],
           ["t", "test"],
-          ["t", "nip71"]
+          ["t", "nip32222"]
         ],
-        'A test video demonstrating NIP-71 compliance',
+        'A test video demonstrating NIP-32222 compliance',
       );
       
       // Parse the event
       final videoEvent = VideoEvent.fromNostrEvent(event);
       
-      Log.info('✅ Parsed NIP-71 event: hasVideo=${videoEvent.hasVideo}, videoUrl=${videoEvent.videoUrl}', name: 'VideoEventSpecComplianceTest', category: LogCategory.system);
+      Log.info('✅ Parsed NIP-32222 event: hasVideo=${videoEvent.hasVideo}, videoUrl=${videoEvent.videoUrl}', name: 'VideoEventSpecComplianceTest', category: LogCategory.system);
       Log.info('✅ Duration: ${videoEvent.duration}, dimensions: ${videoEvent.dimensions}', name: 'VideoEventSpecComplianceTest', category: LogCategory.system);
       
       // Verify parsing results
-      expect(videoEvent.hasVideo, true, reason: 'NIP-71 compliant event should have video URL');
+      expect(videoEvent.hasVideo, true, reason: 'NIP-32222 compliant event should have video URL');
       expect(videoEvent.videoUrl, 'https://api.openvine.co/media/test-video.mp4');
       expect(videoEvent.mimeType, 'video/mp4');
       expect(videoEvent.title, 'Test Video');
       expect(videoEvent.duration, 15);
       expect(videoEvent.dimensions, '1080x1920');
       expect(videoEvent.hashtags, contains('test'));
-      expect(videoEvent.hashtags, contains('nip71'));
+      expect(videoEvent.hashtags, contains('nip32222'));
     });
     
     test('should handle multiple imeta tags for different video qualities', () {
@@ -56,8 +57,9 @@ void main() {
       // Event with multiple imeta tags for different qualities
       final event = Event(
         'fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210',
-        22,
+        32222,
         [
+          ["d", "multi-quality-video"], // Required for addressable events
           ["title", "Multi-Quality Video"],
           ["imeta", 
            "url https://api.openvine.co/media/video-1080p.mp4",
@@ -89,11 +91,11 @@ void main() {
       expect(videoEvent.videoUrl, startsWith('https://api.openvine.co/media/video-'));
     });
     
-    test('should understand why vine.hol.is events are not spec compliant', () {
-      Log.debug('🔍 Analyzing vine.hol.is event format vs NIP-71 spec...', name: 'VideoEventSpecComplianceTest', category: LogCategory.system);
+    test('should handle migration from Kind 22 to Kind 32222 format', () {
+      Log.debug('🔍 Analyzing Kind 22 legacy format vs NIP-32222 spec...', name: 'VideoEventSpecComplianceTest', category: LogCategory.system);
       
-      // Current vine.hol.is format (NOT spec compliant)
-      final nonCompliantEvent = Event(
+      // Legacy Kind 22 format (should be rejected)
+      final legacyEvent = Event(
         'd95aa8fc0eff8e488952495b8064991d27fb96ed8652f12cdedc5a4e8b5ae540',
         22,
         [
@@ -108,32 +110,34 @@ void main() {
         '',
       );
       
-      // What it SHOULD be according to NIP-71
+      // New NIP-32222 format
       final compliantEvent = Event(
         'd95aa8fc0eff8e488952495b8064991d27fb96ed8652f12cdedc5a4e8b5ae540',
-        22,
+        32222,
         [
+          ["d", "vine-id-123"], // Required for addressable events
           ["title", "Untitled"],
           ["imeta", 
            "url https://api.openvine.co/media/1751355501029-7553157a",
            "m video/mp4"
           ],
           ["t", "openvine"],
-          ["h", "vine"]  // This might also not be spec compliant
+          ["h", "vine"]
         ],
         '',
       );
       
-      final nonCompliantVideo = VideoEvent.fromNostrEvent(nonCompliantEvent);
+      // Legacy format should be rejected
+      expect(
+        () => VideoEvent.fromNostrEvent(legacyEvent),
+        throwsA(isA<ArgumentError>()),
+        reason: 'Kind 22 events should be rejected',
+      );
+      
+      // New format should work
       final compliantVideo = VideoEvent.fromNostrEvent(compliantEvent);
-      
-      Log.warning('❌ Non-compliant format: hasVideo=${nonCompliantVideo.hasVideo}', name: 'VideoEventSpecComplianceTest', category: LogCategory.system);
-      Log.info('✅ Compliant format: hasVideo=${compliantVideo.hasVideo}', name: 'VideoEventSpecComplianceTest', category: LogCategory.system);
-      
-      // Both should work with our parser (backwards compatibility)
-      expect(nonCompliantVideo.hasVideo, true, reason: 'Our parser should handle legacy format');
-      expect(compliantVideo.hasVideo, true, reason: 'Our parser should handle spec format');
-      expect(nonCompliantVideo.videoUrl, compliantVideo.videoUrl, reason: 'Should extract same URL');
+      expect(compliantVideo.hasVideo, true, reason: 'NIP-32222 format should work');
+      expect(compliantVideo.vineId, 'vine-id-123', reason: 'Should have d tag');
     });
   });
 }

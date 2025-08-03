@@ -5,10 +5,9 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:nostr_sdk/event.dart';
-import 'package:nostr_sdk/filter.dart';
 import 'package:openvine/models/user_profile.dart';
 import 'package:openvine/providers/app_providers.dart';
+import 'package:openvine/services/profile_websocket_service.dart';
 import 'package:openvine/state/user_profile_state.dart';
 import 'package:openvine/utils/unified_logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -17,6 +16,19 @@ part 'user_profile_providers.g.dart';
 
 // Helper function for safe pubkey truncation in logs
 String _safePubkeyTrunc(String pubkey) => pubkey.length > 8 ? pubkey.substring(0, 8) : pubkey;
+
+/// ProfileWebSocketService provider - persistent WebSocket for profiles
+@Riverpod(keepAlive: true)
+ProfileWebSocketService profileWebSocketService(Ref ref) {
+  final nostrService = ref.watch(nostrServiceProvider);
+  final service = ProfileWebSocketService(nostrService);
+  
+  ref.onDispose(() {
+    service.dispose();
+  });
+  
+  return service;
+}
 
 // Cache for user profiles
 final Map<String, UserProfile> _userProfileCache = {};
@@ -67,12 +79,12 @@ void _clearUserProfileCache(String pubkey) {
 
 /// Mark a profile as missing to avoid spam
 void _markProfileAsMissing(String pubkey) {
-  final retryAfter = DateTime.now().add(const Duration(hours: 1));
+  final retryAfter = DateTime.now().add(const Duration(minutes: 10));
   _knownMissingProfiles.add(pubkey);
   _missingProfileRetryAfter[pubkey] = retryAfter;
   
   Log.debug(
-    'Marked profile as missing: ${_safePubkeyTrunc(pubkey)}... (retry after 1 hour)',
+    'Marked profile as missing: ${_safePubkeyTrunc(pubkey)}... (retry after 10 minutes)',
     name: 'UserProfileProvider',
     category: LogCategory.ui,
   );
@@ -107,83 +119,27 @@ Future<UserProfile?> userProfile(Ref ref, String pubkey) async {
     return null;
   }
 
-  // Get services from app providers
-  final nostrService = ref.watch(nostrServiceProvider);
+  // Get ProfileWebSocketService from app providers
+  final profileWebSocketService = ref.watch(profileWebSocketServiceProvider);
 
   Log.debug('🔍 Loading profile for: ${_safePubkeyTrunc(pubkey)}...',
       name: 'UserProfileProvider', category: LogCategory.ui);
 
   try {
-    // Create filter for Kind 0 profile event
-    final filter = Filter(
-      kinds: const [0],
-      authors: [pubkey],
-      limit: 1,
-    );
+    // Use the persistent ProfileWebSocketService instead of individual subscriptions
+    final profile = await profileWebSocketService.getProfile(pubkey);
 
-    // Subscribe and wait for profile
-    final completer = Completer<UserProfile?>();
-    final stream = nostrService.subscribeToEvents(filters: [filter]);
-    StreamSubscription<Event>? subscription;
+    if (profile != null) {
+      // Cache the profile
+      _cacheUserProfile(pubkey, profile);
 
-    // Timeout after 5 seconds
-    final timer = Timer(const Duration(seconds: 5), () {
-      subscription?.cancel();
-      if (!completer.isCompleted) {
-        completer.complete(null);
-      }
-    });
-
-    subscription = stream.listen(
-      (event) {
-        timer.cancel();
-        subscription?.cancel();
-
-        try {
-          final profile = UserProfile.fromNostrEvent(event);
-
-          // Cache the profile
-          _cacheUserProfile(pubkey, profile);
-
-          Log.info(
-            '✅ Fetched profile for ${_safePubkeyTrunc(pubkey)}: ${profile.bestDisplayName}',
-            name: 'UserProfileProvider',
-            category: LogCategory.ui,
-          );
-
-          if (!completer.isCompleted) {
-            completer.complete(profile);
-          }
-        } catch (e) {
-          Log.error('Error parsing profile event: $e',
-              name: 'UserProfileProvider', category: LogCategory.ui);
-          if (!completer.isCompleted) {
-            completer.complete(null);
-          }
-        }
-      },
-      onError: (error) {
-        timer.cancel();
-        subscription?.cancel();
-        Log.error('Error fetching profile: $error',
-            name: 'UserProfileProvider', category: LogCategory.ui);
-
-        if (!completer.isCompleted) {
-          completer.complete(null);
-        }
-      },
-      onDone: () {
-        timer.cancel();
-        if (!completer.isCompleted) {
-          completer.complete(null);
-        }
-      },
-    );
-
-    final profile = await completer.future;
-
-    // If no profile found, mark as missing
-    if (profile == null) {
+      Log.info(
+        '✅ Fetched profile for ${_safePubkeyTrunc(pubkey)}: ${profile.bestDisplayName}',
+        name: 'UserProfileProvider',
+        category: LogCategory.ui,
+      );
+    } else {
+      // If no profile found, mark as missing
       _markProfileAsMissing(pubkey);
     }
 
@@ -199,18 +155,13 @@ Future<UserProfile?> userProfile(Ref ref, String pubkey) async {
 // User profile state notifier with reactive state management
 @riverpod
 class UserProfileNotifier extends _$UserProfileNotifier {
-  // Active subscription tracking
-  final Map<String, String> _activeSubscriptionIds =
-      {}; // pubkey -> subscription ID
-  String? _batchSubscriptionId;
-  Timer? _batchTimer;
+  // ProfileWebSocketService handles all subscription management
   Timer? _batchDebounceTimer;
 
   @override
   UserProfileState build() {
     ref.onDispose(() {
       _cleanupAllSubscriptions();
-      _batchTimer?.cancel();
       _batchDebounceTimer?.cancel();
     });
 
@@ -331,6 +282,74 @@ class UserProfileNotifier extends _$UserProfileNotifier {
     }
   }
 
+  /// Aggressively pre-fetch profiles for immediate display (no debouncing)
+  Future<void> prefetchProfilesImmediately(List<String> pubkeys) async {
+    if (!state.isInitialized) {
+      await initialize();
+    }
+
+    // Filter out already cached profiles and known missing profiles
+    final pubkeysToFetch = pubkeys
+        .where((p) => !state.hasProfile(p) && !_shouldSkipFetch(p))
+        .toList();
+
+    if (pubkeysToFetch.isEmpty) {
+      Log.debug('All requested profiles already cached or known missing',
+          name: 'UserProfileNotifier', category: LogCategory.system);
+      return;
+    }
+
+    Log.debug('⚡ Immediate pre-fetch for ${pubkeysToFetch.length} profiles',
+        name: 'UserProfileNotifier', category: LogCategory.system);
+
+    try {
+      // Use ProfileWebSocketService for immediate batch requests
+      final profileWebSocketService = ref.read(profileWebSocketServiceProvider);
+      
+      // Get multiple profiles efficiently using the persistent WebSocket service
+      final results = await profileWebSocketService.getMultipleProfiles(pubkeysToFetch);
+      
+      // Update cache and state with fetched profiles
+      final fetchedPubkeys = <String>{};
+      for (final entry in results.entries) {
+        final pubkey = entry.key;
+        final profile = entry.value;
+        
+        if (profile != null) {
+          fetchedPubkeys.add(pubkey);
+          
+          // Update both memory cache and state cache
+          _cacheUserProfile(pubkey, profile);
+          
+          final newCache = {...state.profileCache, pubkey: profile};
+          state = state.copyWith(
+            profileCache: newCache,
+            totalProfilesCached: newCache.length,
+          );
+
+          Log.debug(
+            '⚡ Prefetched profile: ${profile.bestDisplayName}',
+            name: 'UserProfileNotifier',
+            category: LogCategory.system,
+          );
+        }
+      }
+      
+      // Mark unfetched profiles as missing
+      for (final pubkey in pubkeysToFetch) {
+        if (!fetchedPubkeys.contains(pubkey)) {
+          markProfileAsMissing(pubkey);
+        }
+      }
+
+      Log.debug('⚡ Prefetch completed: ${fetchedPubkeys.length}/${pubkeysToFetch.length} profiles fetched',
+          name: 'UserProfileNotifier', category: LogCategory.system);
+    } catch (e) {
+      Log.error('Error in prefetch: $e',
+          name: 'UserProfileNotifier', category: LogCategory.system);
+    }
+  }
+
   /// Fetch multiple profiles with batching
   Future<void> fetchMultipleProfiles(List<String> pubkeys,
       {bool forceRefresh = false}) async {
@@ -360,10 +379,10 @@ class UserProfileNotifier extends _$UserProfileNotifier {
       isLoading: true,
     );
 
-    // Debounce batch execution
+    // Debounce batch execution (reduced delay for faster UI)
     _batchDebounceTimer?.cancel();
     _batchDebounceTimer =
-        Timer(const Duration(milliseconds: 100), executeBatchFetch);
+        Timer(const Duration(milliseconds: 50), executeBatchFetch);
   }
 
   /// Mark a profile as missing to avoid spam
@@ -372,7 +391,7 @@ class UserProfileNotifier extends _$UserProfileNotifier {
     _markProfileAsMissing(pubkey);
     
     // Update state
-    final retryAfter = DateTime.now().add(const Duration(hours: 1));
+    final retryAfter = DateTime.now().add(const Duration(minutes: 10));
     state = state.copyWith(
       knownMissingProfiles: {...state.knownMissingProfiles, pubkey},
       missingProfileRetryAfter: {
@@ -382,7 +401,7 @@ class UserProfileNotifier extends _$UserProfileNotifier {
     );
 
     Log.debug(
-      'Marked profile as missing: ${_safePubkeyTrunc(pubkey)}... (retry after 1 hour)',
+      'Marked profile as missing: ${_safePubkeyTrunc(pubkey)}... (retry after 10 minutes)',
       name: 'UserProfileNotifier',
       category: LogCategory.system,
     );
@@ -403,73 +422,46 @@ class UserProfileNotifier extends _$UserProfileNotifier {
     );
 
     try {
-      // Create filter for multiple authors
-      final filter = Filter(
-        kinds: const [0],
-        authors: pubkeysToFetch,
-        limit: pubkeysToFetch.length,
-      );
-
-      final nostrService = ref.read(nostrServiceProvider);
+      // Use ProfileWebSocketService for batch requests instead of individual subscriptions
+      final profileWebSocketService = ref.read(profileWebSocketServiceProvider);
+      
       Log.debug(
-        'Got nostr service, subscribing to events...',
+        'Using ProfileWebSocketService for batch fetch...',
         name: 'UserProfileNotifier',
         category: LogCategory.system,
       );
-      final stream = nostrService.subscribeToEvents(filters: [filter]);
-      StreamSubscription<Event>? subscription;
-
-      // Collect profiles as they come in
+      
+      // Get multiple profiles efficiently using the persistent WebSocket service
+      final results = await profileWebSocketService.getMultipleProfiles(pubkeysToFetch);
+      
+      // Update cache and state with fetched profiles
       final fetchedPubkeys = <String>{};
+      for (final entry in results.entries) {
+        final pubkey = entry.key;
+        final profile = entry.value;
+        
+        if (profile != null) {
+          fetchedPubkeys.add(pubkey);
+          
+          // Update both memory cache and state cache
+          _cacheUserProfile(pubkey, profile);
+          
+          final newCache = {...state.profileCache, pubkey: profile};
+          state = state.copyWith(
+            profileCache: newCache,
+            totalProfilesCached: newCache.length,
+          );
 
-      // Timeout after 5 seconds
-      _batchTimer = Timer(const Duration(seconds: 5), () {
-        subscription?.cancel();
-        _finalizeBatchFetch(pubkeysToFetch, fetchedPubkeys);
-      });
-
-      subscription = stream.listen(
-        (event) {
-          try {
-            final profile = UserProfile.fromNostrEvent(event);
-            fetchedPubkeys.add(profile.pubkey);
-
-            // Update both memory cache and state cache
-            _cacheUserProfile(profile.pubkey, profile);
-            
-            final newCache = {...state.profileCache, profile.pubkey: profile};
-            state = state.copyWith(
-              profileCache: newCache,
-              totalProfilesCached: newCache.length,
-            );
-
-            Log.debug(
-              'Batch fetched profile: ${profile.bestDisplayName}',
-              name: 'UserProfileNotifier',
-              category: LogCategory.system,
-            );
-          } catch (e) {
-            Log.error(
-              'Error parsing batch profile event: $e',
-              name: 'UserProfileNotifier',
-              category: LogCategory.system,
-            );
-          }
-        },
-        onError: (error) {
-          Log.error('Batch fetch error: $error',
-              name: 'UserProfileNotifier', category: LogCategory.system);
-          state = state.copyWith(error: error.toString());
-        },
-        onDone: () {
-          _batchTimer?.cancel();
-          subscription?.cancel();
-          _finalizeBatchFetch(pubkeysToFetch, fetchedPubkeys);
-        },
-      );
-
-      // Store subscription ID for cleanup
-      _batchSubscriptionId = 'batch-${DateTime.now().millisecondsSinceEpoch}';
+          Log.debug(
+            'Batch fetched profile: ${profile.bestDisplayName}',
+            name: 'UserProfileNotifier',
+            category: LogCategory.system,
+          );
+        }
+      }
+      
+      // Finalize the batch
+      _finalizeBatchFetch(pubkeysToFetch, fetchedPubkeys);
     } catch (e) {
       Log.error('Error executing batch fetch: $e',
           name: 'UserProfileNotifier', category: LogCategory.system);
@@ -503,39 +495,16 @@ class UserProfileNotifier extends _$UserProfileNotifier {
   }
 
   Future<void> _cleanupProfileRequest(String pubkey) async {
-    final subscriptionId = _activeSubscriptionIds[pubkey];
-    if (subscriptionId != null) {
-      try {
-        final subscriptionManager = ref.read(subscriptionManagerProvider);
-        subscriptionManager.cancelSubscription(subscriptionId);
-        _activeSubscriptionIds.remove(pubkey);
-      } catch (e) {
-        Log.error('Error canceling subscription: $e',
-            name: 'UserProfileNotifier', category: LogCategory.system);
-      }
-    }
+    // No longer needed - ProfileWebSocketService handles cleanup internally
+    Log.debug('Profile request cleanup no longer needed for: ${_safePubkeyTrunc(pubkey)}',
+        name: 'UserProfileNotifier', category: LogCategory.system);
   }
 
   void _cleanupAllSubscriptions() {
-    try {
-      final subscriptionManager = ref.read(subscriptionManagerProvider);
-
-      // Clean up individual subscriptions
-      for (final subscriptionId in _activeSubscriptionIds.values) {
-        subscriptionManager.cancelSubscription(subscriptionId);
-      }
-      _activeSubscriptionIds.clear();
-
-      // Clean up batch subscription
-      if (_batchSubscriptionId != null) {
-        subscriptionManager.cancelSubscription(_batchSubscriptionId!);
-        _batchSubscriptionId = null;
-      }
-    } catch (e) {
-      // Container might be disposed, ignore cleanup errors
-      Log.debug('Cleanup error during disposal: $e',
-          name: 'UserProfileNotifier', category: LogCategory.system);
-    }
+    // ProfileWebSocketService handles all subscription cleanup automatically
+    // No manual cleanup needed here
+    Log.debug('Subscription cleanup delegated to ProfileWebSocketService',
+        name: 'UserProfileNotifier', category: LogCategory.system);
   }
 
   /// Check if we have a cached profile

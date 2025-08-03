@@ -16,7 +16,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 class AnalyticsService  implements BackgroundAwareService {
   AnalyticsService({http.Client? client}) : _client = client ?? http.Client();
   static const String _analyticsEndpoint =
-      'https://nostrvine-backend.protestnet.workers.dev/analytics/view';
+      'https://api.openvine.co/analytics/view';
   static const String _analyticsEnabledKey = 'analytics_enabled';
   static const Duration _requestTimeout = Duration(seconds: 10);
 
@@ -97,8 +97,41 @@ class AnalyticsService  implements BackgroundAwareService {
     );
   }
 
+  /// Track a video view with user identification for proper analytics
+  Future<void> trackVideoViewWithUser(VideoEvent video, {
+    required String? userId,
+    String source = 'mobile'
+  }) async {
+    trackDetailedVideoViewWithUser(video,
+      userId: userId,
+      source: source, 
+      eventType: 'view_start',
+    );
+  }
+
   /// Track detailed video interaction events
   Future<void> trackDetailedVideoView(VideoEvent video, {
+    required String source,
+    required String eventType, // 'view_start', 'view_end', 'loop', 'pause', 'resume', 'skip'
+    Duration? watchDuration,
+    Duration? totalDuration,
+    int? loopCount,
+    bool? completedVideo,
+  }) async {
+    trackDetailedVideoViewWithUser(video,
+      userId: null, // Legacy method - no user ID
+      source: source,
+      eventType: eventType,
+      watchDuration: watchDuration,
+      totalDuration: totalDuration,
+      loopCount: loopCount,
+      completedVideo: completedVideo,
+    );
+  }
+
+  /// Track detailed video interaction events with user identification
+  Future<void> trackDetailedVideoViewWithUser(VideoEvent video, {
+    required String? userId,
     required String source,
     required String eventType, // 'view_start', 'view_end', 'loop', 'pause', 'resume', 'skip'
     Duration? watchDuration,
@@ -114,7 +147,7 @@ class AnalyticsService  implements BackgroundAwareService {
     }
 
     // Fire-and-forget analytics to avoid blocking the UI
-    _trackDetailedVideoViewWithRetry(video, source, eventType, 
+    _trackDetailedVideoViewWithRetry(video, userId, source, eventType, 
       watchDuration: watchDuration,
       totalDuration: totalDuration,
       loopCount: loopCount,
@@ -128,6 +161,7 @@ class AnalyticsService  implements BackgroundAwareService {
   /// Internal method to track detailed video view with retry logic
   Future<void> _trackDetailedVideoViewWithRetry(
     VideoEvent video, 
+    String? userId,
     String source, 
     String eventType, {
     Duration? watchDuration,
@@ -141,6 +175,7 @@ class AnalyticsService  implements BackgroundAwareService {
       // Prepare detailed view data
       final viewData = {
         'eventId': video.id,
+        'userId': userId, // Include user ID for proper unique viewer counting
         'source': source,
         'eventType': eventType,
         'creatorPubkey': video.pubkey,
@@ -149,12 +184,12 @@ class AnalyticsService  implements BackgroundAwareService {
         'timestamp': DateTime.now().toIso8601String(),
       };
 
-      // Add optional engagement metrics
+      // Add optional engagement metrics (backend expects these field names)
       if (watchDuration != null) {
-        viewData['watchDurationMs'] = watchDuration.inMilliseconds;
+        viewData['watchDuration'] = watchDuration.inMilliseconds;
       }
       if (totalDuration != null) {
-        viewData['totalDurationMs'] = totalDuration.inMilliseconds;
+        viewData['totalDuration'] = totalDuration.inMilliseconds;
         if (watchDuration != null) {
           viewData['completionRate'] = (watchDuration.inMilliseconds / totalDuration.inMilliseconds).clamp(0.0, 1.0);
         }
@@ -205,7 +240,7 @@ class AnalyticsService  implements BackgroundAwareService {
       if (attempt < maxAttempts) {
         final delay = Duration(milliseconds: 1000 * attempt); // 1s, 2s, 3s...
         await Future.delayed(delay);
-        await _trackDetailedVideoViewWithRetry(video, source, eventType,
+        await _trackDetailedVideoViewWithRetry(video, userId, source, eventType,
             watchDuration: watchDuration,
             totalDuration: totalDuration,
             loopCount: loopCount,

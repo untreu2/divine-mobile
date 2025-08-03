@@ -237,58 +237,6 @@ class MockINostrService extends _i1.Mock implements _i3.INostrService {
       ) as _i4.Future<_i3.NostrBroadcastResult>);
 
   @override
-  _i4.Future<_i3.NostrBroadcastResult> publishVideoEvent({
-    required String? videoUrl,
-    required String? content,
-    String? title,
-    String? thumbnailUrl,
-    int? duration,
-    String? dimensions,
-    String? mimeType,
-    String? sha256,
-    int? fileSize,
-    List<String>? hashtags = const [],
-  }) =>
-      (super.noSuchMethod(
-        Invocation.method(
-          #publishVideoEvent,
-          [],
-          {
-            #videoUrl: videoUrl,
-            #content: content,
-            #title: title,
-            #thumbnailUrl: thumbnailUrl,
-            #duration: duration,
-            #dimensions: dimensions,
-            #mimeType: mimeType,
-            #sha256: sha256,
-            #fileSize: fileSize,
-            #hashtags: hashtags,
-          },
-        ),
-        returnValue: _i4.Future<_i3.NostrBroadcastResult>.value(
-            _FakeNostrBroadcastResult_1(
-          this,
-          Invocation.method(
-            #publishVideoEvent,
-            [],
-            {
-              #videoUrl: videoUrl,
-              #content: content,
-              #title: title,
-              #thumbnailUrl: thumbnailUrl,
-              #duration: duration,
-              #dimensions: dimensions,
-              #mimeType: mimeType,
-              #sha256: sha256,
-              #fileSize: fileSize,
-              #hashtags: hashtags,
-            },
-          ),
-        )),
-      ) as _i4.Future<_i3.NostrBroadcastResult>);
-
-  @override
   _i4.Future<bool> addRelay(String? relayUrl) => (super.noSuchMethod(
         Invocation.method(
           #addRelay,

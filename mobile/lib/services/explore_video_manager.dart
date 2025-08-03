@@ -50,16 +50,10 @@ class ExploreVideoManager  {
 
   /// Sync all curation collections to VideoManager
   Future<void> _syncAllCollections() async {
-    // IMPORTANT: Do NOT add videos to VideoManager here!
-    // Riverpod providers handle video additions from Nostr subscriptions.
-    // ExploreVideoManager only needs to check which curated videos are available.
-
-    // Sync each collection by checking what's available in VideoManager
+    // Sync each collection and ensure videos are added to VideoManager
     for (final type in CurationSetType.values) {
       await _syncCollectionInternal(type);
     }
-
-
   }
 
   /// Internal sync method that doesn't notify listeners
@@ -68,8 +62,12 @@ class ExploreVideoManager  {
       // Get videos from curation service
       final curatedVideos = _curationService.getVideosForSetType(type);
 
-      // FIXED: Return curated videos directly instead of filtering through VideoManager
-      // The CurationService already has access to all videos from VideoEventService
+      // Ensure all curated videos are added to VideoManager
+      for (final video in curatedVideos) {
+        videoManager.addVideoEvent(video);
+      }
+
+      // Store videos in our collection
       _availableCollections[type] = curatedVideos;
 
       // Debug: Log what we're getting (reduce spam by only logging on changes)

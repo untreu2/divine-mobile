@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -7,17 +9,22 @@ import 'package:openvine/models/video_event.dart';
 import 'package:openvine/providers/app_providers.dart';
 import 'package:openvine/providers/profile_stats_provider.dart';
 import 'package:openvine/providers/profile_videos_provider.dart';
-import 'package:openvine/screens/video_feed_screen.dart';
+import 'package:openvine/providers/user_profile_providers.dart';
+import 'package:openvine/providers/video_manager_providers.dart';
+import 'package:openvine/widgets/video_feed_item.dart';
 import 'package:openvine/screens/debug_video_test.dart';
 import 'package:openvine/screens/key_import_screen.dart';
 import 'package:openvine/screens/profile_setup_screen.dart';
 import 'package:openvine/screens/relay_settings_screen.dart';
 import 'package:openvine/screens/universal_camera_screen.dart';
+import 'package:openvine/services/global_video_registry.dart';
 import 'package:openvine/services/social_service.dart';
 import 'package:openvine/theme/vine_theme.dart';
 import 'package:openvine/utils/nostr_encoding.dart';
 import 'package:openvine/utils/unified_logger.dart';
-import 'package:openvine/widgets/video_fullscreen_overlay.dart';
+import 'package:openvine/providers/optimistic_follow_provider.dart';
+import 'package:openvine/screens/followers_screen.dart';
+import 'package:openvine/screens/following_screen.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   // If null, shows current user's profile
@@ -34,7 +41,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
   late TabController _tabController;
   bool _isOwnProfile = true;
   String? _targetPubkey;
-  String? _playingVideoId;
+  
+  // Video feed state for embedded video viewing
+  bool _isInVideoMode = false;
+  VideoEvent? _selectedVideo;
 
   @override
   void initState() {
@@ -49,19 +59,30 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
 
   Future<void> _initializeProfile() async {
     final authService = ref.read(authServiceProvider);
+    
+    // Wait for AuthService to be properly initialized
+    if (!authService.isAuthenticated) {
+      Log.warning('AuthService not ready, waiting for authentication',
+          name: 'ProfileScreen', category: LogCategory.ui);
+      
+      // Use proper async pattern instead of Future.delayed
+      final completer = Completer<void>();
+      
+      void checkAuth() {
+        if (authService.isAuthenticated && authService.currentPublicKeyHex != null) {
+          completer.complete();
+        } else {
+          // Check again on next frame
+          WidgetsBinding.instance.addPostFrameCallback((_) => checkAuth());
+        }
+      }
+      
+      checkAuth();
+      await completer.future;
+    }
+    
     final currentUserPubkey = authService.currentPublicKeyHex;
 
-    // Ensure AuthService is properly initialized before proceeding
-    if (!authService.isAuthenticated || currentUserPubkey == null) {
-      Log.warning('AuthService not ready, deferring profile initialization',
-          name: 'ProfileScreen', category: LogCategory.ui);
-      // Retry after a short delay
-      Future.delayed(const Duration(milliseconds: 100), _initializeProfile);
-      return;
-    }
-
-    // Clear any playing video when switching profiles
-    _playingVideoId = null;
 
     // Determine target pubkey and ownership
     setState(() {
@@ -75,16 +96,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
         '  - widget.profilePubkey: ${widget.profilePubkey?.substring(0, 8) ?? "null"}',
         name: 'ProfileScreen',
         category: LogCategory.ui);
-    Log.info('  - currentUserPubkey: ${currentUserPubkey.substring(0, 8)}',
+    Log.info('  - currentUserPubkey: ${currentUserPubkey?.substring(0, 8) ?? "unknown"}',
         name: 'ProfileScreen', category: LogCategory.ui);
     Log.info('  - _isOwnProfile: $_isOwnProfile',
         name: 'ProfileScreen', category: LogCategory.ui);
-    Log.info('  - _targetPubkey: ${_targetPubkey?.substring(0, 8) ?? "null"}',
+    Log.info('  - _targetPubkey: ${_targetPubkey != null ? _targetPubkey!.substring(0, 8) : "null"}',
         name: 'ProfileScreen', category: LogCategory.ui);
 
     // Log current cached profile
-    final userProfileService = ref.read(userProfileServiceProvider);
-    final cachedProfile = userProfileService.getCachedProfile(_targetPubkey!);
+    final profileState = ref.read(userProfileNotifierProvider);
+    final cachedProfile = profileState.getCachedProfile(_targetPubkey!);
     if (cachedProfile != null) {
       Log.info('📋 ProfileScreen: Cached profile found on init:',
           name: 'ProfileScreen', category: LogCategory.ui);
@@ -180,8 +201,19 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
 
     // Defer profile loading to avoid triggering during build
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final userProfileService = ref.read(userProfileServiceProvider);
-      userProfileService.fetchProfile(_targetPubkey!);
+      final userProfileNotifier = ref.read(userProfileNotifierProvider.notifier);
+      
+      // Only fetch if not already cached - show cached data immediately
+      if (!userProfileNotifier.hasProfile(_targetPubkey!)) {
+        Log.debug('📥 Fetching uncached profile: ${_targetPubkey!.substring(0, 8)}',
+            name: 'ProfileScreen', category: LogCategory.ui);
+        userProfileNotifier.fetchProfile(_targetPubkey!);
+      } else {
+        Log.debug('📋 Using cached profile: ${_targetPubkey!.substring(0, 8)}',
+            name: 'ProfileScreen', category: LogCategory.ui);
+        // Still call fetchProfile to trigger background refresh if needed
+        userProfileNotifier.fetchProfile(_targetPubkey!);
+      }
     });
   }
 
@@ -219,10 +251,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
       // Get profile for display name in app bar
       final authProfile = _isOwnProfile ? authService.currentProfile : null;
       
-      // Use the UserProfileService directly for synchronous access
-      final userProfileService = ref.watch(userProfileServiceProvider);
+      // Use the unified Riverpod provider for synchronous access
+      final profileState = ref.watch(userProfileNotifierProvider);
       final cachedProfile = _targetPubkey != null 
-          ? userProfileService.getCachedProfile(_targetPubkey!)
+          ? profileState.getCachedProfile(_targetPubkey!)
           : null;
       
       final userName = cachedProfile?.bestDisplayName ??
@@ -286,94 +318,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
             ),
             body: Stack(
               children: [
-                NestedScrollView(
-                  headerSliverBuilder: (context, innerBoxIsScrolled) => [
-                    SliverToBoxAdapter(
-                      child: Column(
-                        children: [
-                          // Profile header
-                          _buildProfileHeader(
-                              socialService, profileStatsState),
-
-                          // Stats row - wrapped in error boundary
-                          Builder(
-                            builder: (context) {
-                              try {
-                                return _buildStatsRow(profileStatsState);
-                              } catch (e) {
-                                Log.error('Error building stats row: $e',
-                                    name: 'ProfileScreen',
-                                    category: LogCategory.ui);
-                                return Container(
-                                  height: 50,
-                                  color: Colors.grey[800],
-                                  child: const Center(
-                                    child: Text('Stats loading...',
-                                        style: TextStyle(color: Colors.white)),
-                                  ),
-                                );
-                              }
-                            },
-                          ),
-
-                          // Action buttons - wrapped in error boundary
-                          Builder(
-                            builder: (context) {
-                              try {
-                                return _buildActionButtons();
-                              } catch (e) {
-                                Log.error('Error building action buttons: $e',
-                                    name: 'ProfileScreen',
-                                    category: LogCategory.ui);
-                                return Container(height: 50);
-                              }
-                            },
-                          ),
-
-                          const SizedBox(height: 20),
-                        ],
-                      ),
-                    ),
-                    SliverPersistentHeader(
-                      pinned: true,
-                      delegate: _StickyTabBarDelegate(
-                        TabBar(
-                          controller: _tabController,
-                          indicatorColor: Colors.white,
-                          indicatorWeight: 2,
-                          labelColor: Colors.white,
-                          unselectedLabelColor: Colors.grey,
-                          tabs: const [
-                            Tab(icon: Icon(Icons.grid_on, size: 20)),
-                            Tab(icon: Icon(Icons.favorite_border, size: 20)),
-                            Tab(icon: Icon(Icons.repeat, size: 20)),
-                            Tab(icon: Icon(Icons.playlist_play, size: 20)),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                  body: MediaQuery.removePadding(
-                    context: context,
-                    removeTop: true,
-                    removeBottom: true,
-                    removeLeft: true,
-                    removeRight: true,
-                    child: TabBarView(
-                      key: ValueKey('tab_view_${_targetPubkey ?? 'unknown'}'),
-                      controller: _tabController,
-                      children: [
-                        _buildVinesGrid(),
-                        _buildLikedGrid(),
-                        _buildRepostsGrid(),
-                        _buildListsTab(),
-                      ],
-                    ),
-                  ),
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 300),
+                  child: _isInVideoMode
+                      ? _buildVideoModeView()
+                      : _buildProfileView(socialService, profileStatsState),
                 ),
 
-                // Video overlay for full-screen playback
-                if (_playingVideoId != null) _buildVideoOverlay(),
               ],
             ),
           );
@@ -420,10 +371,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     // Get the profile data for the target user (could be current user or another user)
     final authProfile = _isOwnProfile ? authService.currentProfile : null;
     
-    // Use the UserProfileService directly for synchronous access
-    final userProfileService = ref.watch(userProfileServiceProvider);
+    // Use the unified Riverpod provider for synchronous access
+    final profileState = ref.watch(userProfileNotifierProvider);
     final cachedProfile = _targetPubkey != null 
-        ? userProfileService.getCachedProfile(_targetPubkey!)
+        ? profileState.getCachedProfile(_targetPubkey!)
         : null;
 
     final profilePictureUrl =
@@ -553,6 +504,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                                 : null,
                             'Followers',
                             profileStatsState.isLoading,
+                            onTap: _showFollowersList,
                           ),
                           _buildDynamicStatColumn(
                             profileStatsState.hasData
@@ -560,6 +512,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                                 : null,
                             'Following',
                             profileStatsState.isLoading,
+                            onTap: _showFollowingList,
                           ),
                         ],
                       ),
@@ -675,40 +628,56 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
           );
   }
 
-  /// Build a stat column with loading state support
-  Widget _buildDynamicStatColumn(int? count, String label, bool isLoading) =>
-      Column(
-        children: [
-          AnimatedSwitcher(
-            duration: const Duration(milliseconds: 300),
-            child: isLoading
-                ? const Text(
-                    '—',
-                    style: TextStyle(
-                      color: Colors.grey,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                    ),
-                  )
-                : Text(
-                    count != null ? _formatCount(count) : '—',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                    ),
+  /// Build a stat column with loading state support and optional tap handler
+  Widget _buildDynamicStatColumn(int? count, String label, bool isLoading, {VoidCallback? onTap}) {
+    final content = Column(
+      children: [
+        AnimatedSwitcher(
+          duration: const Duration(milliseconds: 300),
+          child: isLoading
+              ? const Text(
+                  '—',
+                  style: TextStyle(
+                    color: Colors.grey,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
                   ),
+                )
+              : Text(
+                  count != null ? _formatCount(count) : '—',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                  ),
+                ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          label,
+          style: const TextStyle(
+            color: Colors.grey,
+            fontSize: 12,
           ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: const TextStyle(
-              color: Colors.grey,
-              fontSize: 12,
-            ),
+        ),
+      ],
+    );
+
+    if (onTap != null) {
+      return GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
           ),
-        ],
+          child: content,
+        ),
       );
+    }
+
+    return content;
+  }
 
   /// Format large numbers (e.g., 1234 -> "1.2K")
   String _formatCount(int count) {
@@ -844,9 +813,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
               Expanded(
                 child: Consumer(
                   builder: (context, ref, child) {
-                    final socialService = ref.watch(socialServiceProvider);
-                    final isFollowing =
-                        socialService.isFollowing(_targetPubkey!);
+                    final isFollowing = ref.watch(isFollowingProvider(_targetPubkey!));
                     return ElevatedButton(
                       onPressed: isFollowing ? _unfollowUser : _followUser,
                       style: ElevatedButton.styleFrom(
@@ -1318,7 +1285,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
               // Convert Events to VideoEvents for display
               final videoEvents = likedEvents
                   .where((event) =>
-                      event.kind == 22) // Filter for NIP-71 video events
+                      event.kind == 32222) // Filter for NIP-32222 video events
                   .map((event) {
                     try {
                       return VideoEvent.fromNostrEvent(event);
@@ -1444,7 +1411,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     }
 
     // Get all video events and filter for reposts by this user
-    final allVideos = videoEventService.videoEvents;
+    final allVideos = videoEventService.discoveryVideos;
     final userReposts = allVideos
               .where(
                 (video) =>
@@ -1768,9 +1735,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
           name: 'ProfileScreen', category: LogCategory.ui);
 
       // Force refresh AuthService profile from latest cached data
-      final authService = ref.read(authServiceProvider);
-      final userProfileService = ref.read(userProfileServiceProvider);
-      await authService.refreshCurrentProfile(userProfileService);
+      final userProfileNotifier = ref.read(userProfileNotifierProvider.notifier);
+      
+      // For now, just refresh the profile data - we may need to update AuthService later
+      if (_targetPubkey != null) {
+        await userProfileNotifier.fetchProfile(_targetPubkey!, forceRefresh: true);
+      }
       
       // Also refresh profile stats and videos
       _loadProfileStats();
@@ -1787,12 +1757,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
         name: 'ProfileScreen', category: LogCategory.ui);
 
     // Log current profile before editing
-    final userProfileService = ref.read(userProfileServiceProvider);
+    final profileState = ref.read(userProfileNotifierProvider);
     final authService = ref.read(authServiceProvider);
     final currentPubkey = authService.currentPublicKeyHex!;
 
-    final profileBeforeEdit =
-        userProfileService.getCachedProfile(currentPubkey);
+    final profileBeforeEdit = profileState.getCachedProfile(currentPubkey);
     if (profileBeforeEdit != null) {
       Log.info('📋 Profile before edit:',
           name: 'ProfileScreen', category: LogCategory.ui);
@@ -1818,8 +1787,19 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
       Log.info('✅ Profile update successful, refreshing data...',
           name: 'ProfileScreen', category: LogCategory.ui);
 
-      // Force refresh the AuthService profile from UserProfileService
-      await authService.refreshCurrentProfile(userProfileService);
+      // Force refresh profile from Nostr relay first
+      if (_targetPubkey != null) {
+        await ref.read(userProfileNotifierProvider.notifier).fetchProfile(_targetPubkey!, forceRefresh: true);
+      }
+
+      // Force refresh the AuthService profile from unified cache
+      await authService.refreshCurrentProfile(ref.read(userProfileServiceProvider));
+
+      // Invalidate Riverpod providers to force refresh from updated cache  
+      if (_targetPubkey != null) {
+        ref.invalidate(profileStatsProvider(_targetPubkey!));
+        ref.invalidate(profileVideosProvider(_targetPubkey!));
+      }
 
       // Also refresh profile stats and videos
       _loadProfileStats();
@@ -1834,6 +1814,44 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     // TODO: Implement profile sharing
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Sharing profile...')),
+    );
+  }
+
+  void _showFollowersList() {
+    if (_targetPubkey == null) return;
+    
+    Log.info('👥 Followers list tapped', name: 'ProfileScreen', category: LogCategory.ui);
+    
+    final profileState = ref.read(userProfileNotifierProvider);
+    final profile = profileState.getCachedProfile(_targetPubkey!);
+    final displayName = profile?.bestDisplayName ?? _targetPubkey!.substring(0, 8);
+    
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => FollowersScreen(
+          pubkey: _targetPubkey!,
+          displayName: displayName,
+        ),
+      ),
+    );
+  }
+
+  void _showFollowingList() {
+    if (_targetPubkey == null) return;
+    
+    Log.info('👥 Following list tapped', name: 'ProfileScreen', category: LogCategory.ui);
+    
+    final profileState = ref.read(userProfileNotifierProvider);
+    final profile = profileState.getCachedProfile(_targetPubkey!);
+    final displayName = profile?.bestDisplayName ?? _targetPubkey!.substring(0, 8);
+    
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => FollowingScreen(
+          pubkey: _targetPubkey!,
+          displayName: displayName,
+        ),
+      ),
     );
   }
 
@@ -1907,20 +1925,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     if (_targetPubkey == null) return;
 
     try {
-      final socialService = ref.read(socialServiceProvider);
-      await socialService.followUser(_targetPubkey!);
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Successfully followed user!')),
-        );
-      }
+      final optimisticMethods = ref.read(optimisticFollowMethodsProvider);
+      await optimisticMethods.followUser(_targetPubkey!);
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to follow user: $e')),
-        );
-      }
+      // Silently handle error - optimistic state will be reverted
     }
   }
 
@@ -1928,20 +1936,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     if (_targetPubkey == null) return;
 
     try {
-      final socialService = ref.read(socialServiceProvider);
-      await socialService.unfollowUser(_targetPubkey!);
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Successfully unfollowed user!')),
-        );
-      }
+      final optimisticMethods = ref.read(optimisticFollowMethodsProvider);
+      await optimisticMethods.unfollowUser(_targetPubkey!);
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to unfollow user: $e')),
-        );
-      }
+      // Silently handle error - optimistic state will be reverted
     }
   }
 
@@ -1953,55 +1951,214 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
   }
 
   void _openVine(VideoEvent videoEvent) {
-    // Navigate to the video feed screen with userProfile context
-    // This ensures only videos from this specific user are shown
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => VideoFeedScreen(
-          startingVideo: videoEvent,
-          context: FeedContext.userProfile,
-          contextValue: _targetPubkey ?? widget.profilePubkey,
+    // PAUSE ALL OTHER VIDEOS FIRST - fixes invisible video playback
+    ref.read(videoManagerProvider.notifier).pauseAllVideos();
+    
+    // Also pause all videos globally to ensure nothing from other tabs keeps playing
+    GlobalVideoRegistry().pauseAllControllers();
+    Log.info('⏸️ Paused all videos globally when entering profile video mode',
+        name: 'ProfileScreen', category: LogCategory.system);
+    
+    // CRITICAL FIX: Add profile videos to VideoManager before playing
+    // This ensures the video is available for playback by VideoFeedItem
+    final profileVideosState = ref.read(profileVideosNotifierProvider);
+    if (profileVideosState.hasVideos) {
+      ref.read(videoManagerProvider.notifier).addProfileVideos(profileVideosState.videos);
+      Log.info('✅ Added ${profileVideosState.videoCount} profile videos to VideoManager for playback',
+          name: 'ProfileScreen', category: LogCategory.system);
+    }
+    
+    setState(() {
+      _isInVideoMode = true;
+      _selectedVideo = videoEvent;
+    });
+  }
+
+  void _exitVideoMode() {
+    // Pause all videos when exiting video mode
+    ref.read(videoManagerProvider.notifier).pauseAllVideos();
+    GlobalVideoRegistry().pauseAllControllers();
+    Log.info('⏸️ Paused all videos when exiting profile video mode',
+        name: 'ProfileScreen', category: LogCategory.system);
+    
+    setState(() {
+      _isInVideoMode = false;
+      _selectedVideo = null;
+    });
+  }
+
+  Widget _buildVideoModeView() {
+    if (_selectedVideo == null) {
+      return const Center(
+        child: Text(
+          'No video selected',
+          style: TextStyle(color: Colors.white),
+        ),
+      );
+    }
+
+    final profileState = ref.read(userProfileNotifierProvider);
+    final cachedProfile = _targetPubkey != null 
+        ? profileState.getCachedProfile(_targetPubkey!)
+        : null;
+    final displayName = cachedProfile?.bestDisplayName ?? 'Anonymous';
+
+    return GestureDetector(
+      onHorizontalDragEnd: (details) {
+        // Swipe right to exit video mode
+        if (details.primaryVelocity! > 0) {
+          _exitVideoMode();
+        }
+      },
+      child: Column(
+        children: [
+          // Minimal header with just the name (tappable to go back)
+          Container(
+            padding: const EdgeInsets.all(16),
+            child: GestureDetector(
+              onTap: _exitVideoMode,
+              child: Row(
+                children: [
+                  Icon(Icons.arrow_back, color: Colors.white, size: 20),
+                  const SizedBox(width: 8),
+                  Text(
+                    displayName,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          // Video takes up the rest of the space
+          Expanded(
+            child: VideoFeedItem(
+              key: const ValueKey('video_mode_item'),
+              video: _selectedVideo!,
+              isActive: true, // Always active since it's the focused video
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProfileView(SocialService socialService, ProfileStatsState profileStatsState) {
+    return NestedScrollView(
+      headerSliverBuilder: (context, innerBoxIsScrolled) => [
+        SliverToBoxAdapter(
+          child: Column(
+            children: [
+              // Profile header
+              GestureDetector(
+                onTap: _isInVideoMode ? _exitVideoMode : null,
+                child: _buildProfileHeader(socialService, profileStatsState),
+              ),
+
+              // Stats row - wrapped in error boundary
+              Builder(
+                builder: (context) {
+                  try {
+                    return _buildStatsRow(profileStatsState);
+                  } catch (e) {
+                    Log.error('Error building stats row: $e',
+                        name: 'ProfileScreen',
+                        category: LogCategory.ui);
+                    return Container(
+                      height: 50,
+                      color: Colors.grey[800],
+                      child: const Center(
+                        child: Text('Stats loading...',
+                            style: TextStyle(color: Colors.white)),
+                      ),
+                    );
+                  }
+                },
+              ),
+
+              // Action buttons - wrapped in error boundary
+              Builder(
+                builder: (context) {
+                  try {
+                    return _buildActionButtons();
+                  } catch (e) {
+                    Log.error('Error building action buttons: $e',
+                        name: 'ProfileScreen',
+                        category: LogCategory.ui);
+                    return Container(height: 50);
+                  }
+                },
+              ),
+
+              const SizedBox(height: 20),
+            ],
+          ),
+        ),
+        SliverPersistentHeader(
+          pinned: true,
+          delegate: _StickyTabBarDelegate(
+            TabBar(
+              controller: _tabController,
+              indicatorColor: Colors.white,
+              indicatorWeight: 2,
+              labelColor: Colors.white,
+              unselectedLabelColor: Colors.grey,
+              tabs: const [
+                Tab(icon: Icon(Icons.grid_on, size: 20)),
+                Tab(icon: Icon(Icons.favorite_border, size: 20)),
+                Tab(icon: Icon(Icons.repeat, size: 20)),
+                Tab(icon: Icon(Icons.playlist_play, size: 20)),
+              ],
+            ),
+          ),
+        ),
+      ],
+      body: MediaQuery.removePadding(
+        context: context,
+        removeTop: true,
+        removeBottom: true,
+        removeLeft: true,
+        removeRight: true,
+        child: TabBarView(
+          key: ValueKey('tab_view_${_targetPubkey ?? 'unknown'}'),
+          controller: _tabController,
+          children: [
+            _buildVinesGrid(),
+            _buildLikedGrid(),
+            _buildRepostsGrid(),
+            _buildListsTab(),
+          ],
         ),
       ),
     );
   }
 
-  void _navigateToNextVideo() {
-    final profileVideosState = ref.read(profileVideosNotifierProvider);
-    final currentIndex = profileVideosState.videos.indexWhere((v) => v.id == _playingVideoId);
-    
-    if (currentIndex != -1 && currentIndex < profileVideosState.videos.length - 1) {
-      final nextVideo = profileVideosState.videos[currentIndex + 1];
-      setState(() {
-        _playingVideoId = nextVideo.id;
-      });
-    }
-  }
 
-  void _navigateToPreviousVideo() {
-    final profileVideosState = ref.read(profileVideosNotifierProvider);
-    final currentIndex = profileVideosState.videos.indexWhere((v) => v.id == _playingVideoId);
-    
-    if (currentIndex > 0) {
-      final previousVideo = profileVideosState.videos[currentIndex - 1];
-      setState(() {
-        _playingVideoId = previousVideo.id;
-      });
-    }
-  }
+
 
   void _openLikedVideo(VideoEvent videoEvent) {
-    // Navigate to the video feed screen - for now show just this video
-    // TODO: In the future, could create a "liked videos" feed context
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => VideoFeedScreen(
-          startingVideo: videoEvent,
-          context: FeedContext.general, // Show in general feed for now
-          contextValue: null,
-        ),
-      ),
-    );
+    // PAUSE ALL OTHER VIDEOS FIRST - fixes invisible video playback
+    ref.read(videoManagerProvider.notifier).pauseAllVideos();
+    
+    // Also pause all videos globally to ensure nothing from other tabs keeps playing
+    GlobalVideoRegistry().pauseAllControllers();
+    Log.info('⏸️ Paused all videos globally when entering liked video mode',
+        name: 'ProfileScreen', category: LogCategory.system);
+    
+    // CRITICAL FIX: Add the liked video to VideoManager before playing
+    // Since liked videos might not be in any feed, ensure it's available for playback
+    ref.read(videoManagerProvider.notifier).addProfileVideos([videoEvent]);
+    Log.info('✅ Added liked video to VideoManager for playback',
+        name: 'ProfileScreen', category: LogCategory.system);
+    
+    // Use embedded video feed for liked videos too
+    setState(() {
+      _isInVideoMode = true;
+      _selectedVideo = videoEvent;
+    });
   }
 
   /// Build lists tab showing user's curated lists, bookmarks, and follow sets
@@ -2275,46 +2432,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       );
 
-  Widget _buildVideoOverlay() => Consumer(
-        builder: (context, ref, child) {
-          final profileVideosState = ref.watch(profileVideosNotifierProvider);
-          // Find the video in profile videos first
-          var video = profileVideosState.videos.firstWhere(
-            (v) => v.id == _playingVideoId,
-            orElse: () => VideoEvent(
-              id: _playingVideoId!,
-              pubkey: _targetPubkey ?? '',
-              createdAt: DateTime.now().millisecondsSinceEpoch ~/ 1000,
-              content: 'Video not found',
-              timestamp: DateTime.now(),
-            ),
-          );
-
-          // If not found in profile videos, try to find in liked videos or reposts
-          if (video.content == 'Video not found') {
-            // Get from VideoEventService which has all videos
-            final videoEventService =
-                ref.read(videoEventServiceProvider);
-            final allVideos = videoEventService.videoEvents;
-            final foundVideo = allVideos.firstWhere(
-              (v) => v.id == _playingVideoId,
-              orElse: () => video, // Use the placeholder if still not found
-            );
-            video = foundVideo;
-          }
-
-          return VideoFullscreenOverlay(
-            video: video,
-            onClose: () {
-              setState(() {
-                _playingVideoId = null;
-              });
-            },
-            onSwipeNext: _navigateToNextVideo,
-            onSwipePrevious: _navigateToPreviousVideo,
-          );
-        },
-      );
 
   void _openSettings() {
     // Show settings menu with debug options
@@ -3102,94 +3219,3 @@ class _StickyTabBarDelegate extends SliverPersistentHeaderDelegate {
       tabBar != oldDelegate.tabBar;
 }
 
-/// PageView widget for smooth video transitions when viewing from profile
-class _ProfileVideoPageView extends ConsumerStatefulWidget {
-  const _ProfileVideoPageView({
-    required this.videos,
-    required this.initialIndex,
-    required this.profilePubkey,
-    required this.onVideoChanged,
-  });
-
-  final List<VideoEvent> videos;
-  final int initialIndex;
-  final String profilePubkey;
-  final Function(String) onVideoChanged;
-
-  @override
-  ConsumerState<_ProfileVideoPageView> createState() => _ProfileVideoPageViewState();
-}
-
-class _ProfileVideoPageViewState extends ConsumerState<_ProfileVideoPageView> {
-  late PageController _pageController;
-  late int _currentIndex;
-
-  @override
-  void initState() {
-    super.initState();
-    _currentIndex = widget.initialIndex;
-    _pageController = PageController(initialPage: widget.initialIndex);
-  }
-
-  @override
-  void dispose() {
-    _pageController.dispose();
-    super.dispose();
-  }
-
-  void _onPageChanged(int index) {
-    setState(() {
-      _currentIndex = index;
-    });
-    widget.onVideoChanged(widget.videos[index].id);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.black,
-      child: Stack(
-        children: [
-          PageView.builder(
-            controller: _pageController,
-            onPageChanged: _onPageChanged,
-            itemCount: widget.videos.length,
-            scrollDirection: Axis.vertical,
-            pageSnapping: true,
-            itemBuilder: (context, index) {
-              final video = widget.videos[index];
-              return VideoFullscreenOverlay(
-                video: video,
-                onClose: () => Navigator.of(context).pop(),
-                onSwipeNext: null, // Handled by PageView
-                onSwipePrevious: null, // Handled by PageView
-                isFromProfile: true,
-                profilePubkey: widget.profilePubkey,
-              );
-            },
-          ),
-          // Page indicator
-          Positioned(
-            right: 16,
-            top: MediaQuery.of(context).padding.top + 60,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.5),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                '${_currentIndex + 1} / ${widget.videos.length}',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}

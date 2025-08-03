@@ -23,6 +23,7 @@ import { handleBatchVideoLookup, handleBatchVideoOptions } from './handlers/batc
 // Analytics service
 import { VideoAnalyticsService } from './services/analytics';
 import { VideoAnalyticsEngineService } from './services/analytics-engine';
+import { AnalyticsFallbackService } from './services/analytics-fallback';
 
 // Thumbnail service
 import { ThumbnailService } from './services/ThumbnailService';
@@ -68,11 +69,27 @@ import { handleAdminCleanupSimple, handleAdminCleanupSimpleOptions } from './han
 // File check API
 import { handleFileCheckBySha256, handleBatchFileCheck, handleFileCheckOptions } from './handlers/file-check';
 
+// Analytics handlers (migrated from analytics-worker)
+import { handleViewTracking } from './handlers/view-tracking';
+import { handleTrending, handleVideoStats } from './handlers/trending';
+import { handleTrendingVines } from './handlers/trending-vines';
+import { handleTrendingViners } from './handlers/trending-viners';
+import { handleHashtagTrending } from './handlers/hashtag-trending';
+import { handleVelocityTrending } from './handlers/velocity-trending';
+import { calculateTrending } from './services/trending-calculator';
+import { handleAnalyticsCleanup } from './handlers/analytics-cleanup';
+import type { AnalyticsEnv } from './types/analytics';
+
 // Event mapping API
 import { handleEventMapping, handleEventMappingOptions } from './handlers/event-mapping';
 
 // Media lookup API
 import { handleMediaLookup, handleMediaLookupOptions } from './handlers/media-lookup';
+
+// KV stats handler
+import { handleKVStats, handleKVStatsOptions } from './handlers/kv-stats';
+import { handleKVQuickStats, handleKVQuickStatsOptions } from './handlers/kv-quick-stats';
+import { handleKVCount, handleKVCountOptions } from './handlers/kv-count';
 
 // Export Durable Object
 export { UploadJobManager } from './services/upload-job-manager';
@@ -148,31 +165,6 @@ export default {
 				return handleVideoStatusOptions();
 			}
 
-			// Ready events endpoint (for VideoEventPublisher)
-			if (pathname === '/v1/media/ready-events' && method === 'GET') {
-				// For now, return empty list - this endpoint would poll for processed videos
-				// In a full implementation, this would check for videos ready to publish to Nostr
-				return new Response(JSON.stringify({
-					events: [],
-					timestamp: new Date().toISOString()
-				}), {
-					headers: {
-						'Content-Type': 'application/json',
-						'Access-Control-Allow-Origin': '*'
-					}
-				});
-			}
-
-			if (pathname === '/v1/media/ready-events' && method === 'OPTIONS') {
-				return new Response(null, {
-					status: 200,
-					headers: {
-						'Access-Control-Allow-Origin': '*',
-						'Access-Control-Allow-Methods': 'GET, OPTIONS',
-						'Access-Control-Allow-Headers': 'Content-Type, Authorization'
-					}
-				});
-			}
 
 			// Video caching API endpoint
 			if (pathname.startsWith('/api/video/') && method === 'GET') {
@@ -231,6 +223,7 @@ export default {
 					// Extract video tracking data
 					const { 
 						eventId, 
+						userId,
 						source, 
 						creatorPubkey, 
 						hashtags, 
@@ -252,6 +245,17 @@ export default {
 						});
 					}
 					
+					// Log incoming analytics data for debugging
+					console.log('📊 Analytics request received:', {
+						eventId: eventId?.substring(0, 8) + '...',
+						userId: userId ? userId.substring(0, 8) + '...' : 'null',
+						eventType,
+						watchDuration,
+						totalDuration,
+						loopCount,
+						completedVideo
+					});
+					
 					// Calculate completion rate if durations are provided
 					let completionRate = undefined;
 					if (watchDuration && totalDuration) {
@@ -261,7 +265,7 @@ export default {
 					// Track the video view using Analytics Engine
 					await analyticsEngine.trackVideoView({
 						videoId: eventId,
-						userId: undefined, // Not provided by mobile app yet
+						userId: userId || undefined, // Now properly reading userId from mobile app
 						creatorPubkey,
 						source: source || 'mobile',
 						eventType,
@@ -306,6 +310,95 @@ export default {
 						'Access-Control-Max-Age': '86400'
 					}
 				});
+			}
+
+			// Migrated analytics-worker endpoints
+			// GET /analytics/trending/videos - Get trending videos (legacy endpoint)
+			if (pathname === '/analytics/trending/videos' && method === 'GET') {
+				const analyticsEnv = env as unknown as AnalyticsEnv;
+				return wrapResponse(handleTrending(request, analyticsEnv));
+			}
+
+			// GET /analytics/trending/vines - Get trending vines (videos)
+			if (pathname === '/analytics/trending/vines' && method === 'GET') {
+				const analyticsEnv = env as unknown as AnalyticsEnv;
+				return wrapResponse(handleTrendingVines(request, analyticsEnv));
+			}
+
+			// GET /analytics/trending/viners - Get trending viners (creators)
+			if (pathname === '/analytics/trending/viners' && method === 'GET') {
+				const analyticsEnv = env as unknown as AnalyticsEnv;
+				return wrapResponse(handleTrendingViners(request, analyticsEnv));
+			}
+
+			// GET /analytics/video/:eventId/stats - Get video statistics
+			const videoStatsMatch = pathname.match(/^\/analytics\/video\/([a-f0-9]{64})\/stats$/i);
+			if (videoStatsMatch && method === 'GET') {
+				const analyticsEnv = env as unknown as AnalyticsEnv;
+				return wrapResponse(handleVideoStats(request, analyticsEnv, videoStatsMatch[1]));
+			}
+
+			// GET /analytics/hashtag/:hashtag/trending - Get trending for specific hashtag
+			const hashtagMatch = pathname.match(/^\/analytics\/hashtag\/([^\/]+)\/trending$/);
+			if (hashtagMatch && method === 'GET') {
+				const analyticsEnv = env as unknown as AnalyticsEnv;
+				return wrapResponse(handleHashtagTrending(request, analyticsEnv, hashtagMatch[1]));
+			}
+
+			// GET /analytics/hashtags/trending - Get trending hashtags
+			if (pathname === '/analytics/hashtags/trending' && method === 'GET') {
+				const analyticsEnv = env as unknown as AnalyticsEnv;
+				return wrapResponse(handleHashtagTrending(request, analyticsEnv));
+			}
+
+			// GET /analytics/trending/velocity - Get rapidly ascending content
+			if (pathname === '/analytics/trending/velocity' && method === 'GET') {
+				const analyticsEnv = env as unknown as AnalyticsEnv;
+				return wrapResponse(handleVelocityTrending(request, analyticsEnv));
+			}
+
+			// POST /analytics/refresh/trending - Background refresh of trending data (internal)
+			if (pathname === '/analytics/refresh/trending' && method === 'POST') {
+				const analyticsEnv = env as unknown as AnalyticsEnv;
+				// Trigger background calculation without waiting
+				calculateTrending(analyticsEnv).catch(e => console.error('Background trending calculation failed:', e));
+				
+				return new Response(
+					JSON.stringify({ status: 'refresh_triggered' }),
+					{
+						status: 200,
+						headers: {
+							'Content-Type': 'application/json',
+							'Access-Control-Allow-Origin': '*'
+						}
+					}
+				);
+			}
+			
+			// POST /analytics/cleanup - Clean up stale analytics data (protected)
+			if (pathname === '/analytics/cleanup' && method === 'POST') {
+				const analyticsEnv = env as unknown as AnalyticsEnv;
+				return wrapResponse(handleAnalyticsCleanup(request, analyticsEnv));
+			}
+
+			// Analytics health check endpoint
+			if (pathname === '/analytics/health' && method === 'GET') {
+				const analyticsEnv = env as unknown as AnalyticsEnv;
+				return new Response(
+					JSON.stringify({
+						status: 'healthy',
+						environment: analyticsEnv.ENVIRONMENT || 'production',
+						timestamp: new Date().toISOString(),
+						// Future: could add KV connection status, etc.
+					}),
+					{
+						status: 200,
+						headers: {
+							'Content-Type': 'application/json',
+							'Access-Control-Allow-Origin': '*'
+						}
+					}
+				);
 			}
 
 			// Video-specific analytics
@@ -399,16 +492,19 @@ export default {
 
 			if (pathname === '/api/analytics/dashboard' && method === 'GET') {
 				try {
+					// Use both analytics services - legacy for dashboard, engine for popular videos
+					const analytics = new VideoAnalyticsService(env, ctx);
 					const analyticsEngine = new VideoAnalyticsEngineService(env, ctx);
-					const [healthStatus, realtimeMetrics, popular24h] = await Promise.all([
-						analyticsEngine.getHealthStatus(),
-						analyticsEngine.getRealtimeMetrics(),
+					
+					const [healthStatus, currentMetrics, popular24h] = await Promise.all([
+						analytics.getHealthStatus(),
+						analytics.getCurrentMetrics(),
 						analyticsEngine.getPopularVideos('24h', 5)
 					]);
 					
 					return new Response(JSON.stringify({
 						health: healthStatus,
-						metrics: realtimeMetrics,
+						metrics: currentMetrics,
 						popularVideos: popular24h,
 						timestamp: new Date().toISOString()
 					}), {
@@ -419,11 +515,157 @@ export default {
 						}
 					});
 				} catch (error) {
-					return new Response(JSON.stringify({ error: 'Failed to fetch dashboard data' }), {
+					console.error('Dashboard data fetch error:', error);
+					return new Response(JSON.stringify({ 
+						error: 'Failed to fetch dashboard data',
+						message: error instanceof Error ? error.message : 'Unknown error'
+					}), {
 						status: 500,
 						headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
 					});
 				}
+			}
+
+			// Video social metrics endpoint
+			if (pathname.startsWith('/api/analytics/video/') && pathname.endsWith('/social') && method === 'GET') {
+				try {
+					const analyticsEngine = new VideoAnalyticsEngineService(env, ctx);
+					const videoId = pathname.split('/api/analytics/video/')[1].replace('/social', '');
+					
+					const socialMetrics = await analyticsEngine.getVideoSocialMetrics(videoId);
+					
+					return new Response(JSON.stringify(socialMetrics), {
+						headers: {
+							'Content-Type': 'application/json',
+							'Access-Control-Allow-Origin': '*',
+							'Cache-Control': 'public, max-age=300'
+						}
+					});
+				} catch (error) {
+					return new Response(JSON.stringify({ error: 'Failed to fetch video social metrics' }), {
+						status: 500,
+						headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+					});
+				}
+			}
+
+			// Batch video social metrics endpoint
+			if (pathname === '/api/analytics/social/batch' && method === 'POST') {
+				try {
+					const analyticsEngine = new VideoAnalyticsEngineService(env, ctx);
+					const { videoIds } = await request.json() as { videoIds: string[] };
+					
+					if (!videoIds || !Array.isArray(videoIds)) {
+						return new Response(JSON.stringify({ error: 'videoIds array is required' }), {
+							status: 400,
+							headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+						});
+					}
+
+					// Limit batch size to prevent abuse
+					if (videoIds.length > 50) {
+						return new Response(JSON.stringify({ error: 'Maximum 50 video IDs allowed per batch' }), {
+							status: 400,
+							headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+						});
+					}
+					
+					const batchSocialMetrics = await analyticsEngine.getBatchVideoSocialMetrics(videoIds);
+					
+					return new Response(JSON.stringify(batchSocialMetrics), {
+						headers: {
+							'Content-Type': 'application/json',
+							'Access-Control-Allow-Origin': '*',
+							'Cache-Control': 'public, max-age=300'
+						}
+					});
+				} catch (error) {
+					return new Response(JSON.stringify({ error: 'Failed to fetch batch social metrics' }), {
+						status: 500,
+						headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+					});
+				}
+			}
+
+			// Social interaction tracking endpoint (for bot ingestion)
+			if (pathname === '/api/analytics/social' && method === 'POST') {
+				try {
+					const analyticsEngine = new VideoAnalyticsEngineService(env, ctx);
+					const data = await request.json() as {
+						videoId: string;
+						userId?: string;
+						interactionType: 'like' | 'repost' | 'comment';
+						nostrEventId: string;
+						nostrEventKind: number;
+						content?: string;
+						timestamp?: number;
+						creatorPubkey?: string;
+					};
+					
+					const { videoId, userId, interactionType, nostrEventId, nostrEventKind, content, timestamp, creatorPubkey } = data;
+					
+					if (!videoId || !interactionType || !nostrEventId || !nostrEventKind) {
+						return new Response(JSON.stringify({ 
+							error: 'videoId, interactionType, nostrEventId, and nostrEventKind are required' 
+						}), {
+							status: 400,
+							headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+						});
+					}
+
+					if (!['like', 'repost', 'comment'].includes(interactionType)) {
+						return new Response(JSON.stringify({ 
+							error: 'interactionType must be one of: like, repost, comment' 
+						}), {
+							status: 400,
+							headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+						});
+					}
+					
+					await analyticsEngine.trackSocialInteraction({
+						videoId,
+						userId,
+						interactionType,
+						nostrEventId,
+						nostrEventKind,
+						content,
+						timestamp: timestamp || Date.now(),
+						creatorPubkey
+					}, request);
+					
+					return new Response(JSON.stringify({ 
+						success: true,
+						videoId,
+						interactionType,
+						timestamp: new Date().toISOString()
+					}), {
+						headers: {
+							'Content-Type': 'application/json',
+							'Access-Control-Allow-Origin': '*'
+						}
+					});
+				} catch (error) {
+					console.error('Social interaction tracking error:', error);
+					return new Response(JSON.stringify({ error: 'Failed to track social interaction' }), {
+						status: 500,
+						headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+					});
+				}
+			}
+
+			// OPTIONS handlers for social analytics endpoints
+			if (((pathname.startsWith('/api/analytics/video/') && pathname.endsWith('/social')) || 
+				pathname === '/api/analytics/social/batch' || 
+				pathname === '/api/analytics/social') && method === 'OPTIONS') {
+				return new Response(null, {
+					status: 200,
+					headers: {
+						'Access-Control-Allow-Origin': '*',
+						'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+						'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+						'Access-Control-Max-Age': '86400'
+					}
+				});
 			}
 
 			// File check endpoints - check if file exists before upload
@@ -456,6 +698,72 @@ export default {
 
 			if (pathname === '/api/media/lookup' && method === 'OPTIONS') {
 				return wrapResponse(Promise.resolve(handleMediaLookupOptions()));
+			}
+
+			// KV stats endpoint
+			if (pathname === '/api/kv-stats' && method === 'GET') {
+				return wrapResponse(handleKVStats(request, env));
+			}
+			
+			if (pathname === '/api/kv-stats' && method === 'OPTIONS') {
+				return handleKVStatsOptions();
+			}
+			
+			if (pathname === '/api/kv-quick-stats' && method === 'GET') {
+				return wrapResponse(handleKVQuickStats(request, env));
+			}
+			
+			if (pathname === '/api/kv-quick-stats' && method === 'OPTIONS') {
+				return handleKVQuickStatsOptions();
+			}
+			
+			if (pathname === '/api/kv-count' && method === 'GET') {
+				return wrapResponse(handleKVCount(request, env));
+			}
+			
+			if (pathname === '/api/kv-count' && method === 'OPTIONS') {
+				return handleKVCountOptions();
+			}
+			
+			// Debug video metadata endpoint
+			if (pathname === '/api/debug/video-metadata' && method === 'GET') {
+				const url = new URL(request.url);
+				const videoId = url.searchParams.get('videoId') || '1753764858668-00941579';
+				
+				const results: Record<string, any> = {};
+				
+				// Check different key patterns that might exist
+				const keyPatterns = [
+					`v1:video:${videoId}`,
+					`video:${videoId}`,
+					`${videoId}`,
+					`file:${videoId}`,
+					`metadata:${videoId}`
+				];
+				
+				for (const key of keyPatterns) {
+					try {
+						const value = await env.METADATA_CACHE.get(key, 'json');
+						results[key] = value || null;
+					} catch (e) {
+						results[key] = `Error: ${e.message}`;
+					}
+				}
+				
+				// Also check vine_id mapping
+				try {
+					const vineMapping = await env.METADATA_CACHE.get('vine_id:00941579178', 'json');
+					results['vine_id:00941579178'] = vineMapping;
+				} catch (e) {
+					results['vine_id:00941579178'] = `Error: ${e.message}`;
+				}
+				
+				return new Response(JSON.stringify(results, null, 2), {
+					headers: {
+						'Content-Type': 'application/json',
+						'Access-Control-Allow-Origin': '*'
+					}
+				});
 			}
 
 			// Feature flag endpoints
@@ -960,6 +1268,79 @@ export default {
             font-weight: bold;
         }
         
+        .video-preview {
+            width: 80px;
+            height: 80px;
+            border-radius: 8px;
+            overflow: hidden;
+            background: rgba(0, 0, 0, 0.3);
+            cursor: pointer;
+            margin-right: 15px;
+            flex-shrink: 0;
+            position: relative;
+        }
+        
+        .video-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .video-preview .play-icon {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 30px;
+            height: 30px;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #00ff87;
+        }
+        
+        .video-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .video-modal.active {
+            display: flex;
+        }
+        
+        .video-modal-content {
+            position: relative;
+            max-width: 90%;
+            max-height: 90%;
+        }
+        
+        .video-modal video {
+            max-width: 100%;
+            max-height: 80vh;
+            border-radius: 10px;
+        }
+        
+        .video-modal-close {
+            position: absolute;
+            top: -40px;
+            right: 0;
+            color: #fff;
+            font-size: 2rem;
+            cursor: pointer;
+            background: none;
+            border: none;
+        }
+        
         .refresh-btn {
             background: linear-gradient(45deg, #00ff87, #60efff);
             color: #1e3c72;
@@ -1098,6 +1479,9 @@ export default {
                 <div class="endpoint">POST /analytics/view - Track video views</div>
                 <div class="endpoint">GET /api/analytics/popular?window=24h&limit=10 - Popular videos</div>
                 <div class="endpoint">GET /api/analytics/video/{videoId}?days=30 - Video-specific analytics</div>
+                <div class="endpoint">GET /api/analytics/video/{videoId}/social - Video social metrics (likes, reposts, comments)</div>
+                <div class="endpoint">POST /api/analytics/social/batch - Batch video social metrics</div>
+                <div class="endpoint">POST /api/analytics/social - Track social interactions (for bot ingestion)</div>
                 <div class="endpoint">GET /api/analytics/creator?pubkey={pubkey} - Creator analytics</div>
                 <div class="endpoint">GET /api/analytics/hashtag?hashtag={tag} - Hashtag analytics</div>
             </div>
@@ -1108,12 +1492,23 @@ export default {
         </div>
     </div>
     
+    <!-- Video Modal -->
+    <div id="videoModal" class="video-modal" onclick="closeVideoModal(event)">
+        <div class="video-modal-content" onclick="event.stopPropagation()">
+            <button class="video-modal-close" onclick="closeVideoModal()">×</button>
+            <video id="modalVideo" controls autoplay loop></video>
+        </div>
+    </div>
+    
     <script>
         let refreshInterval;
+        let currentVideos = [];
         
         async function fetchDashboardData() {
             try {
-                const response = await fetch('/api/analytics/dashboard');
+                // Use the same domain as the current page
+                const baseUrl = window.location.origin;
+                const response = await fetch(\`\${baseUrl}/api/analytics/dashboard\`);
                 if (!response.ok) {
                     throw new Error(\`HTTP \${response.status}: \${response.statusText}\`);
                 }
@@ -1126,7 +1521,9 @@ export default {
         
         async function fetchPopularVideos() {
             try {
-                const response = await fetch('/api/analytics/popular?window=24h&limit=10');
+                // Use the same domain as the current page
+                const baseUrl = window.location.origin;
+                const response = await fetch(\`\${baseUrl}/api/analytics/popular?window=24h&limit=10\`);
                 if (!response.ok) {
                     throw new Error(\`HTTP \${response.status}: \${response.statusText}\`);
                 }
@@ -1165,7 +1562,8 @@ export default {
         
         function updatePopularVideos(data) {
             const container = document.getElementById('popularVideosList');
-            const videos = data.videos || [];
+            const videos = data.popularVideos || data.videos || [];
+            currentVideos = videos; // Store for video playback
             
             if (videos.length === 0) {
                 container.innerHTML = \`
@@ -1178,15 +1576,22 @@ export default {
                 return;
             }
             
-            container.innerHTML = videos.map(video => \`
+            container.innerHTML = videos.map((video, index) => \`
                 <div class="video-item">
+                    <div class="video-preview" onclick="playVideo('\${video.videoId}', \${index})">
+                        <img src="https://api.openvine.co/thumbnail/\${video.videoId}?size=small" 
+                             alt="Video thumbnail" 
+                             onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Crect width=%27100%27 height=%27100%27 fill=%27%23333%27/%3E%3Ctext x=%2750%27 y=%2750%27 text-anchor=%27middle%27 dy=%27.3em%27 fill=%27%23999%27 font-family=%27sans-serif%27%3E🍇%3C/text%3E%3C/svg%3E'">
+                        <div class="play-icon">▶</div>
+                    </div>
                     <div class="video-info">
-                        <h4>\${video.videoId?.substring(0, 12) || 'Unknown Video'}...</h4>
+                        <h4>\${video.title || video.videoId?.substring(0, 12) + '...' || 'Unknown Video'}</h4>
                         <p>Views: \${video.views || 0} • Unique: \${video.uniqueViewers || 0}</p>
                     </div>
                     <div class="video-stats">
                         <div class="views">\${video.views || 0} views</div>
                         <p>Avg: \${Math.round(video.avgWatchTime || 0)}ms</p>
+                        <p>Loops: \${video.totalLoops || 0}</p>
                     </div>
                 </div>
             \`).join('');
@@ -1216,7 +1621,7 @@ export default {
                 ]);
                 
                 updateStats(dashboardData);
-                updatePopularVideos(popularData);
+                updatePopularVideos(dashboardData);
                 
             } catch (error) {
                 console.error('Dashboard refresh failed:', error);
@@ -1226,6 +1631,50 @@ export default {
                 refreshBtn.textContent = '🔄 Refresh Data';
             }
         }
+        
+        // Video playback functions
+        async function playVideo(videoId, index) {
+            const modal = document.getElementById('videoModal');
+            const videoElement = document.getElementById('modalVideo');
+            const baseUrl = window.location.origin;
+            
+            // First, try to get the video URL from the media lookup API
+            try {
+                const response = await fetch(\`\${baseUrl}/api/media/lookup?vine_id=\${videoId}\`);
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.media_url) {
+                        videoElement.src = data.media_url;
+                        modal.classList.add('active');
+                        return;
+                    }
+                }
+            } catch (error) {
+                console.error('Media lookup failed:', error);
+            }
+            
+            // Fallback: Try the direct media endpoint
+            videoElement.src = \`\${baseUrl}/media/\${videoId}\`;
+            modal.classList.add('active');
+        }
+        
+        function closeVideoModal(event) {
+            if (!event || event.target.id === 'videoModal') {
+                const modal = document.getElementById('videoModal');
+                const videoElement = document.getElementById('modalVideo');
+                
+                modal.classList.remove('active');
+                videoElement.pause();
+                videoElement.src = '';
+            }
+        }
+        
+        // Escape key handler
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                closeVideoModal();
+            }
+        });
         
         // Initial load
         refreshDashboard();
@@ -1345,6 +1794,9 @@ export default {
 					'/api/analytics/popular (Popular Videos)',
 					'/api/analytics/dashboard (Analytics Dashboard)',
 					'/api/analytics/video/{videoId} (Video Analytics)',
+					'/api/analytics/video/{videoId}/social (Video Social Metrics)',
+					'/api/analytics/social/batch (Batch Social Metrics)',
+					'/api/analytics/social (Track Social Interactions)',
 					'/api/analytics/hashtag?hashtag={tag} (Hashtag Analytics)',
 					'/api/analytics/creator?pubkey={pubkey} (Creator Analytics)',
 					'/api/media/lookup (Media Lookup by vine_id or filename)',
@@ -1407,6 +1859,35 @@ export default {
 					'Access-Control-Allow-Headers': 'Content-Type, Authorization'
 				}
 			});
+		}
+	},
+	
+	// Scheduled handler for periodic cleanup tasks
+	async scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext): Promise<void> {
+		const analyticsEnv = env as unknown as AnalyticsEnv;
+		
+		console.log(`Running scheduled cleanup at ${new Date().toISOString()}`);
+		
+		try {
+			// Create a fake request with auth header for the cleanup handler
+			const cleanupRequest = new Request('https://api.openvine.co/analytics/cleanup', {
+				method: 'POST',
+				headers: {
+					'Authorization': `Bearer ${analyticsEnv.CLEANUP_AUTH_TOKEN || 'default-cleanup-token'}`
+				}
+			});
+			
+			// Run the cleanup
+			const response = await handleAnalyticsCleanup(cleanupRequest, analyticsEnv);
+			const result = await response.json();
+			
+			console.log('Scheduled cleanup completed:', result);
+			
+			// Also trigger trending recalculation after cleanup
+			calculateTrending(analyticsEnv).catch(e => console.error('Post-cleanup trending calculation failed:', e));
+			
+		} catch (error) {
+			console.error('Scheduled cleanup failed:', error);
 		}
 	},
 } satisfies ExportedHandler<Env>;

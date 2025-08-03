@@ -120,6 +120,17 @@ class MockUserProfileService extends _i1.Mock
       ) as _i5.Future<_i3.UserProfile?>);
 
   @override
+  _i5.Future<void> prefetchProfilesImmediately(List<String>? pubkeys) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #prefetchProfilesImmediately,
+          [pubkeys],
+        ),
+        returnValue: _i5.Future<void>.value(),
+        returnValueForMissingStub: _i5.Future<void>.value(),
+      ) as _i5.Future<void>);
+
+  @override
   _i5.Future<void> fetchMultipleProfiles(
     List<String>? pubkeys, {
     bool? forceRefresh = false,

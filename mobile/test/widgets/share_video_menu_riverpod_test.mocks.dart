@@ -277,58 +277,6 @@ class MockINostrService extends _i1.Mock implements _i3.INostrService {
       ) as _i7.Future<_i3.NostrBroadcastResult>);
 
   @override
-  _i7.Future<_i3.NostrBroadcastResult> publishVideoEvent({
-    required String? videoUrl,
-    required String? content,
-    String? title,
-    String? thumbnailUrl,
-    int? duration,
-    String? dimensions,
-    String? mimeType,
-    String? sha256,
-    int? fileSize,
-    List<String>? hashtags = const [],
-  }) =>
-      (super.noSuchMethod(
-        Invocation.method(
-          #publishVideoEvent,
-          [],
-          {
-            #videoUrl: videoUrl,
-            #content: content,
-            #title: title,
-            #thumbnailUrl: thumbnailUrl,
-            #duration: duration,
-            #dimensions: dimensions,
-            #mimeType: mimeType,
-            #sha256: sha256,
-            #fileSize: fileSize,
-            #hashtags: hashtags,
-          },
-        ),
-        returnValue: _i7.Future<_i3.NostrBroadcastResult>.value(
-            _FakeNostrBroadcastResult_1(
-          this,
-          Invocation.method(
-            #publishVideoEvent,
-            [],
-            {
-              #videoUrl: videoUrl,
-              #content: content,
-              #title: title,
-              #thumbnailUrl: thumbnailUrl,
-              #duration: duration,
-              #dimensions: dimensions,
-              #mimeType: mimeType,
-              #sha256: sha256,
-              #fileSize: fileSize,
-              #hashtags: hashtags,
-            },
-          ),
-        )),
-      ) as _i7.Future<_i3.NostrBroadcastResult>);
-
-  @override
   _i7.Future<bool> addRelay(String? relayUrl) => (super.noSuchMethod(
         Invocation.method(
           #addRelay,
@@ -1030,6 +978,16 @@ class MockCuratedListService extends _i1.Mock
           ),
         ),
       ) as String);
+
+  @override
+  _i7.Future<void> fetchUserListsFromRelays() => (super.noSuchMethod(
+        Invocation.method(
+          #fetchUserListsFromRelays,
+          [],
+        ),
+        returnValue: _i7.Future<void>.value(),
+        returnValueForMissingStub: _i7.Future<void>.value(),
+      ) as _i7.Future<void>);
 }
 
 /// A class which mocks [SocialService].
@@ -1068,10 +1026,19 @@ class MockSocialService extends _i1.Mock implements _i15.SocialService {
       ) as bool);
 
   @override
-  bool hasReposted(String? eventId) => (super.noSuchMethod(
+  bool hasReposted(
+    String? eventId, {
+    String? pubkey,
+    String? dTag,
+  }) =>
+      (super.noSuchMethod(
         Invocation.method(
           #hasReposted,
           [eventId],
+          {
+            #pubkey: pubkey,
+            #dTag: dTag,
+          },
         ),
         returnValue: false,
       ) as bool);
@@ -1479,6 +1446,17 @@ class MockUserProfileService extends _i1.Mock
         ),
         returnValue: _i7.Future<_i17.UserProfile?>.value(),
       ) as _i7.Future<_i17.UserProfile?>);
+
+  @override
+  _i7.Future<void> prefetchProfilesImmediately(List<String>? pubkeys) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #prefetchProfilesImmediately,
+          [pubkeys],
+        ),
+        returnValue: _i7.Future<void>.value(),
+        returnValueForMissingStub: _i7.Future<void>.value(),
+      ) as _i7.Future<void>);
 
   @override
   _i7.Future<void> fetchMultipleProfiles(

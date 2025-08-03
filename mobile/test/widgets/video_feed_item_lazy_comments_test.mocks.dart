@@ -4,17 +4,18 @@
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'dart:async' as _i4;
+import 'dart:io' as _i10;
 
 import 'package:mockito/mockito.dart' as _i1;
-import 'package:mockito/src/dummies.dart' as _i13;
+import 'package:mockito/src/dummies.dart' as _i14;
 import 'package:nostr_sdk/event.dart' as _i5;
-import 'package:openvine/models/user_profile.dart' as _i11;
+import 'package:openvine/models/user_profile.dart' as _i12;
 import 'package:openvine/models/video_event.dart' as _i7;
 import 'package:openvine/models/video_state.dart' as _i8;
 import 'package:openvine/services/auth_service.dart' as _i2;
-import 'package:openvine/services/profile_cache_service.dart' as _i12;
+import 'package:openvine/services/profile_cache_service.dart' as _i13;
 import 'package:openvine/services/social_service.dart' as _i3;
-import 'package:openvine/services/user_profile_service.dart' as _i10;
+import 'package:openvine/services/user_profile_service.dart' as _i11;
 import 'package:openvine/services/video_manager_interface.dart' as _i6;
 import 'package:video_player/video_player.dart' as _i9;
 
@@ -78,10 +79,19 @@ class MockSocialService extends _i1.Mock implements _i3.SocialService {
       ) as bool);
 
   @override
-  bool hasReposted(String? eventId) => (super.noSuchMethod(
+  bool hasReposted(
+    String? eventId, {
+    String? pubkey,
+    String? dTag,
+  }) =>
+      (super.noSuchMethod(
         Invocation.method(
           #hasReposted,
           [eventId],
+          {
+            #pubkey: pubkey,
+            #dTag: dTag,
+          },
         ),
         returnValue: false,
       ) as bool);
@@ -469,6 +479,60 @@ class MockIVideoManager extends _i1.Mock implements _i6.IVideoManager {
       ) as _i4.Future<void>);
 
   @override
+  _i4.Future<_i9.VideoPlayerController?> createNetworkController(
+    String? videoId,
+    String? videoUrl, {
+    _i6.PreloadPriority? priority = _i6.PreloadPriority.nearby,
+  }) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #createNetworkController,
+          [
+            videoId,
+            videoUrl,
+          ],
+          {#priority: priority},
+        ),
+        returnValue: _i4.Future<_i9.VideoPlayerController?>.value(),
+      ) as _i4.Future<_i9.VideoPlayerController?>);
+
+  @override
+  _i4.Future<_i9.VideoPlayerController?> createFileController(
+    String? videoId,
+    _i10.File? videoFile, {
+    _i6.PreloadPriority? priority = _i6.PreloadPriority.nearby,
+  }) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #createFileController,
+          [
+            videoId,
+            videoFile,
+          ],
+          {#priority: priority},
+        ),
+        returnValue: _i4.Future<_i9.VideoPlayerController?>.value(),
+      ) as _i4.Future<_i9.VideoPlayerController?>);
+
+  @override
+  _i4.Future<_i9.VideoPlayerController?> createThumbnailController(
+    String? videoId,
+    String? videoUrl, {
+    double? seekTimeSeconds = 2.5,
+  }) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #createThumbnailController,
+          [
+            videoId,
+            videoUrl,
+          ],
+          {#seekTimeSeconds: seekTimeSeconds},
+        ),
+        returnValue: _i4.Future<_i9.VideoPlayerController?>.value(),
+      ) as _i4.Future<_i9.VideoPlayerController?>);
+
+  @override
   void preloadAroundIndex(
     int? currentIndex, {
     int? preloadRange,
@@ -569,19 +633,19 @@ class MockIVideoManager extends _i1.Mock implements _i6.IVideoManager {
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockUserProfileService extends _i1.Mock
-    implements _i10.UserProfileService {
+    implements _i11.UserProfileService {
   MockUserProfileService() {
     _i1.throwOnMissingStub(this);
   }
 
   @override
-  Map<String, _i11.UserProfile> get allProfiles => (super.noSuchMethod(
+  Map<String, _i12.UserProfile> get allProfiles => (super.noSuchMethod(
         Invocation.getter(#allProfiles),
-        returnValue: <String, _i11.UserProfile>{},
-      ) as Map<String, _i11.UserProfile>);
+        returnValue: <String, _i12.UserProfile>{},
+      ) as Map<String, _i12.UserProfile>);
 
   @override
-  void setPersistentCache(_i12.ProfileCacheService? cacheService) =>
+  void setPersistentCache(_i13.ProfileCacheService? cacheService) =>
       super.noSuchMethod(
         Invocation.method(
           #setPersistentCache,
@@ -591,11 +655,11 @@ class MockUserProfileService extends _i1.Mock
       );
 
   @override
-  _i11.UserProfile? getCachedProfile(String? pubkey) =>
+  _i12.UserProfile? getCachedProfile(String? pubkey) =>
       (super.noSuchMethod(Invocation.method(
         #getCachedProfile,
         [pubkey],
-      )) as _i11.UserProfile?);
+      )) as _i12.UserProfile?);
 
   @override
   bool hasProfile(String? pubkey) => (super.noSuchMethod(
@@ -625,7 +689,7 @@ class MockUserProfileService extends _i1.Mock
       );
 
   @override
-  _i4.Future<void> updateCachedProfile(_i11.UserProfile? profile) =>
+  _i4.Future<void> updateCachedProfile(_i12.UserProfile? profile) =>
       (super.noSuchMethod(
         Invocation.method(
           #updateCachedProfile,
@@ -646,7 +710,7 @@ class MockUserProfileService extends _i1.Mock
       ) as _i4.Future<void>);
 
   @override
-  _i4.Future<_i11.UserProfile?> fetchProfile(
+  _i4.Future<_i12.UserProfile?> fetchProfile(
     String? pubkey, {
     bool? forceRefresh = false,
   }) =>
@@ -656,8 +720,19 @@ class MockUserProfileService extends _i1.Mock
           [pubkey],
           {#forceRefresh: forceRefresh},
         ),
-        returnValue: _i4.Future<_i11.UserProfile?>.value(),
-      ) as _i4.Future<_i11.UserProfile?>);
+        returnValue: _i4.Future<_i12.UserProfile?>.value(),
+      ) as _i4.Future<_i12.UserProfile?>);
+
+  @override
+  _i4.Future<void> prefetchProfilesImmediately(List<String>? pubkeys) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #prefetchProfilesImmediately,
+          [pubkeys],
+        ),
+        returnValue: _i4.Future<void>.value(),
+        returnValueForMissingStub: _i4.Future<void>.value(),
+      ) as _i4.Future<void>);
 
   @override
   _i4.Future<void> fetchMultipleProfiles(
@@ -680,7 +755,7 @@ class MockUserProfileService extends _i1.Mock
           #getDisplayName,
           [pubkey],
         ),
-        returnValue: _i13.dummyValue<String>(
+        returnValue: _i14.dummyValue<String>(
           this,
           Invocation.method(
             #getDisplayName,
@@ -848,7 +923,7 @@ class MockAuthService extends _i1.Mock implements _i2.AuthService {
 
   @override
   _i4.Future<void> refreshCurrentProfile(
-          _i10.UserProfileService? userProfileService) =>
+          _i11.UserProfileService? userProfileService) =>
       (super.noSuchMethod(
         Invocation.method(
           #refreshCurrentProfile,

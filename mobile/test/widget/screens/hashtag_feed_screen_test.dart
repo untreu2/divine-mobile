@@ -16,7 +16,7 @@ class MockVideoEventService extends Mock implements VideoEventService {}
 class MockHashtagService extends Mock implements HashtagService {
   @override
   Future<void> subscribeToHashtagVideos(List<String> hashtags,
-      {int limit = 100}) async {
+      {int limit = 100, int? until}) async {
     return;
   }
 }

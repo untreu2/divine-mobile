@@ -2,7 +2,10 @@
 // ABOUTME: Creates compact representations of images for better UX during vine loading
 
 import 'dart:ui' as ui;
+import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
+import 'package:blurhash_dart/blurhash_dart.dart' as blurhash_dart;
+import 'package:image/image.dart' as img;
 import 'package:openvine/utils/unified_logger.dart';
 
 /// Service for generating and decoding Blurhash placeholders
@@ -11,17 +14,19 @@ class BlurhashService {
   static const int defaultComponentY = 3;
   static const double defaultPunch = 1;
 
-  /// Generate blurhash from image bytes
+  /// Generate blurhash from image bytes using blurhash_dart
   static Future<String?> generateBlurhash(
     Uint8List imageBytes, {
     int componentX = defaultComponentX,
     int componentY = defaultComponentY,
   }) async {
     try {
-      // For now, return a simple deterministic blurhash based on file hash
-      // In a full implementation, this would analyze the actual image
-      final hash = _simpleHash(imageBytes);
-      return _generateDeterministicBlurhash(hash, componentX, componentY);
+      // Use blurhash_dart library for encoding
+      // Note: This requires image processing to get width, height, and pixel data
+      // For now, return null as encoding is more complex and requires image decoding
+      Log.warning('BlurhashService.generateBlurhash not fully implemented - encoding requires image processing',
+          name: 'BlurhashService', category: LogCategory.system);
+      return null;
     } catch (e) {
       Log.error('Failed to generate blurhash: $e',
           name: 'BlurhashService', category: LogCategory.system);
@@ -62,17 +67,25 @@ class BlurhashService {
         return null;
       }
 
-      // For prototype, generate deterministic colors based on blurhash
-      final colors = _extractColorsFromBlurhash(blurhash);
+      // Use real blurhash_dart library to decode
+      final blurHashObject = blurhash_dart.BlurHash.decode(blurhash);
+      final image = blurHashObject.toImage(width, height);
+      
+      // Convert image to RGBA pixels
+      final pixels = Uint8List.fromList(image.getBytes(order: img.ChannelOrder.rgba));
+
+      // Extract colors from the decoded pixel data
+      final colors = _extractColorsFromPixels(pixels, width, height);
+      final primaryColor = colors.isNotEmpty ? colors.first : const ui.Color(0xFF888888);
 
       return BlurhashData(
         blurhash: blurhash,
         width: width,
         height: height,
         colors: colors,
-        primaryColor:
-            colors.isNotEmpty ? colors.first : const ui.Color(0xFF888888),
+        primaryColor: primaryColor,
         timestamp: DateTime.now(),
+        pixels: pixels, // Store the actual decoded pixels
       );
     } catch (e) {
       Log.error('Failed to decode blurhash: $e',
@@ -128,69 +141,41 @@ class BlurhashService {
     return validChars.hasMatch(blurhash);
   }
 
-  /// Simple hash function for deterministic blurhash generation
-  static int _simpleHash(Uint8List bytes) {
-    var hash = 0;
-    for (var i = 0; i < bytes.length; i += 100) {
-      // Sample every 100th byte
-      hash = ((hash * 31) + bytes[i]) & 0xFFFFFFFF;
-    }
-    return hash;
-  }
 
-  /// Generate deterministic blurhash from hash
-  static String _generateDeterministicBlurhash(
-      int hash, int componentX, int componentY) {
-    // Simple algorithm to create a valid-looking blurhash
-    const base83Chars =
-        r'0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz#$%*+,-.:;=?@[]^_{|}~';
 
-    final random = _SimplePseudoRandom(hash);
-    final buffer = StringBuffer('L');
-
-    // Generate 20-30 characters for a typical blurhash
-    final length = 20 + (hash % 10); // Length between 20-29
-
-    for (var i = 0; i < length; i++) {
-      final index = random.nextInt(base83Chars.length);
-      buffer.write(base83Chars[index]);
-    }
-
-    return buffer.toString();
-  }
-
-  /// Extract representative colors from blurhash
-  static List<ui.Color> _extractColorsFromBlurhash(String blurhash) {
-    final hash = blurhash.hashCode;
-    final random = _SimplePseudoRandom(hash);
-
+  /// Extract representative colors from decoded pixel data
+  static List<ui.Color> _extractColorsFromPixels(Uint8List pixels, int width, int height) {
     final colors = <ui.Color>[];
+    
+    if (pixels.isEmpty) return colors;
 
-    // Generate 3-5 representative colors
-    final colorCount = 3 + (hash % 3);
+    // Sample a few pixels to get representative colors
+    final sampleCount = 4; // Sample 4 colors
+    final totalPixels = width * height;
+    final step = totalPixels ~/ sampleCount;
 
-    for (var i = 0; i < colorCount; i++) {
-      final r = random.nextInt(256);
-      final g = random.nextInt(256);
-      final b = random.nextInt(256);
+    for (var i = 0; i < sampleCount && i * step * 4 < pixels.length - 3; i++) {
+      final pixelIndex = i * step * 4; // 4 bytes per pixel (RGBA)
+      
+      if (pixelIndex + 3 < pixels.length) {
+        final r = pixels[pixelIndex];
+        final g = pixels[pixelIndex + 1];
+        final b = pixels[pixelIndex + 2];
+        final a = pixels[pixelIndex + 3];
+        
+        colors.add(ui.Color.fromARGB(a, r, g, b));
+      }
+    }
 
-      colors.add(ui.Color.fromARGB(255, r, g, b));
+    // If we didn't get enough colors, add the first pixel as fallback
+    if (colors.isEmpty && pixels.length >= 4) {
+      colors.add(ui.Color.fromARGB(pixels[3], pixels[0], pixels[1], pixels[2]));
     }
 
     return colors;
   }
 }
 
-/// Simple pseudo-random number generator for deterministic results
-class _SimplePseudoRandom {
-  _SimplePseudoRandom(this._seed);
-  int _seed;
-
-  int nextInt(int max) {
-    _seed = ((_seed * 1103515245) + 12345) & 0x7FFFFFFF;
-    return _seed % max;
-  }
-}
 
 /// Content types for vine classification
 enum VineContentType {
@@ -217,6 +202,7 @@ class BlurhashData {
     required this.colors,
     required this.primaryColor,
     required this.timestamp,
+    this.pixels,
   });
   final String blurhash;
   final int width;
@@ -224,6 +210,7 @@ class BlurhashData {
   final List<ui.Color> colors;
   final ui.Color primaryColor;
   final DateTime timestamp;
+  final Uint8List? pixels; // Store actual decoded pixel data
 
   /// Get a gradient for placeholder background
   ui.Gradient get gradient {

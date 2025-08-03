@@ -34,13 +34,16 @@ class PendingUploadAdapter extends TypeAdapter<PendingUpload> {
       nostrEventId: fields[12] as String?,
       completedAt: fields[13] as DateTime?,
       retryCount: fields[14] as int?,
+      videoWidth: fields[17] as int?,
+      videoHeight: fields[18] as int?,
+      videoDuration: fields[19] as Duration?,
     );
   }
 
   @override
   void write(BinaryWriter writer, PendingUpload obj) {
     writer
-      ..writeByte(17)
+      ..writeByte(20)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -74,7 +77,13 @@ class PendingUploadAdapter extends TypeAdapter<PendingUpload> {
       ..writeByte(13)
       ..write(obj.completedAt)
       ..writeByte(14)
-      ..write(obj.retryCount);
+      ..write(obj.retryCount)
+      ..writeByte(17)
+      ..write(obj.videoWidth)
+      ..writeByte(18)
+      ..write(obj.videoHeight)
+      ..writeByte(19)
+      ..write(obj.videoDuration);
   }
 
   @override

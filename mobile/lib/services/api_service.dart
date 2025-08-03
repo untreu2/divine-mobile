@@ -6,7 +6,6 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 import 'package:openvine/config/app_config.dart';
-import 'package:openvine/models/ready_event_data.dart';
 import 'package:openvine/services/network/rate_limiter.dart'
     show RateLimiter, RateLimitStatus;
 import 'package:openvine/services/nip98_auth_service.dart';
@@ -41,104 +40,7 @@ class ApiService  {
   final Nip98AuthService? _authService;
   final RateLimiter? _rateLimiter;
 
-  /// Get ready events from the backend
-  Future<List<ReadyEventData>> getReadyEvents() async {
-    Log.debug('📱 Fetching ready events from backend',
-        name: 'ApiService', category: LogCategory.api);
 
-    try {
-      // Check rate limit if configured
-      if (_rateLimiter != null) {
-        await _rateLimiter!.checkLimit('/v1/media/ready-events');
-      }
-
-      final uri = Uri.parse('$_baseUrl/v1/media/ready-events');
-
-      final response = await _client
-          .get(
-            uri,
-            headers:
-                await _getHeaders(url: uri.toString(), method: HttpMethod.get),
-          )
-          .timeout(_defaultTimeout);
-
-      Log.debug('API Response: ${response.statusCode}',
-          name: 'ApiService', category: LogCategory.api);
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body) as Map<String, dynamic>;
-        final events =
-            (data['events'] as List<dynamic>?)?.cast<Map<String, dynamic>>() ??
-                [];
-
-        final readyEvents = events.map(ReadyEventData.fromJson).toList();
-
-        Log.info('Fetched ${readyEvents.length} ready events',
-            name: 'ApiService', category: LogCategory.api);
-        return readyEvents;
-      } else if (response.statusCode == 204 || response.statusCode == 404) {
-        // No ready events available
-        Log.debug('No ready events available (${response.statusCode})',
-            name: 'ApiService', category: LogCategory.api);
-        return [];
-      } else {
-        throw ApiException(
-          'Failed to fetch ready events',
-          statusCode: response.statusCode,
-          responseBody: response.body,
-        );
-      }
-    } on TimeoutException {
-      throw const ApiException('Request timeout while fetching ready events');
-    } on FormatException catch (e) {
-      throw ApiException('Invalid response format: $e');
-    } catch (e) {
-      if (e is ApiException) rethrow;
-      throw ApiException('Network error: $e');
-    }
-  }
-
-  /// Clean up a processed event on the backend
-  Future<void> cleanupRemoteEvent(String publicId) async {
-    Log.debug('🧹 Cleaning up remote event: $publicId',
-        name: 'ApiService', category: LogCategory.api);
-
-    try {
-      // Check rate limit if configured
-      if (_rateLimiter != null) {
-        await _rateLimiter!.checkLimit('/v1/media/cleanup');
-      }
-
-      final uri = Uri.parse('$_baseUrl/v1/media/cleanup/$publicId');
-
-      final response = await _client
-          .delete(
-            uri,
-            headers: await _getHeaders(
-                url: uri.toString(), method: HttpMethod.delete),
-          )
-          .timeout(_defaultTimeout);
-
-      if (response.statusCode == 200 || response.statusCode == 204) {
-        Log.info('Remote event cleaned up: $publicId',
-            name: 'ApiService', category: LogCategory.api);
-      } else if (response.statusCode == 404) {
-        Log.warning('Remote event not found (already cleaned?): $publicId',
-            name: 'ApiService', category: LogCategory.api);
-      } else {
-        throw ApiException(
-          'Failed to cleanup remote event',
-          statusCode: response.statusCode,
-          responseBody: response.body,
-        );
-      }
-    } on TimeoutException {
-      throw const ApiException('Request timeout while cleaning up event');
-    } catch (e) {
-      if (e is ApiException) rethrow;
-      throw ApiException('Network error during cleanup: $e');
-    }
-  }
 
   /// Request signed upload parameters (from previous implementation)
   Future<Map<String, dynamic>> requestSignedUpload({

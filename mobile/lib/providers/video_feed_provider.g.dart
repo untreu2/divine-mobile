@@ -6,7 +6,7 @@ part of 'video_feed_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$videoFeedLoadingHash() => r'5a3880107474b0dfe89252742f62772f581bf585';
+String _$videoFeedLoadingHash() => r'd202ed92cf906a603f676488ea4115de75d6242a';
 
 /// Provider to check if video feed is loading
 ///
@@ -44,25 +44,6 @@ final videoFeedCountProvider = AutoDisposeProvider<int>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef VideoFeedCountRef = AutoDisposeProviderRef<int>;
-String _$currentFeedModeHash() => r'51e2a476506a909c456c5af5731812f3bba47337';
-
-/// Provider to get current feed mode
-///
-/// Copied from [currentFeedMode].
-@ProviderFor(currentFeedMode)
-final currentFeedModeProvider = AutoDisposeProvider<FeedMode>.internal(
-  currentFeedMode,
-  name: r'currentFeedModeProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$currentFeedModeHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
-
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef CurrentFeedModeRef = AutoDisposeProviderRef<FeedMode>;
 String _$hasVideosHash() => r'2780fade78b3238a1979632f42151a3400b482b7';
 
 /// Provider to check if we have videos
@@ -81,9 +62,9 @@ final hasVideosProvider = AutoDisposeProvider<bool>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef HasVideosRef = AutoDisposeProviderRef<bool>;
-String _$videoFeedHash() => r'c13fbb067e375abf73b0f09672f91638fc2cde50';
+String _$videoFeedHash() => r'fe84bd39c62a39cbfa738b136bdc5097b1a610bd';
 
-/// Main video feed provider that orchestrates all video-related state
+/// Simple discovery video feed provider
 ///
 /// Copied from [VideoFeed].
 @ProviderFor(VideoFeed)

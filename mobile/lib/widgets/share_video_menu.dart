@@ -651,6 +651,17 @@ class _ShareVideoMenuState extends ConsumerState<ShareVideoMenu> {
           ),
           const SizedBox(height: 12),
 
+          // Edit content option
+          _buildActionTile(
+            icon: Icons.edit,
+            iconColor: VineTheme.vineGreen,
+            title: 'Edit Video',
+            subtitle: 'Update title, description, and hashtags',
+            onTap: _showEditDialog,
+          ),
+
+          const SizedBox(height: 8),
+
           // Delete content option
           _buildActionTile(
             icon: Icons.delete_outline,
@@ -661,6 +672,14 @@ class _ShareVideoMenuState extends ConsumerState<ShareVideoMenu> {
           ),
         ],
       );
+
+  /// Show edit dialog
+  void _showEditDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => _EditVideoDialog(video: widget.video),
+    );
+  }
 
   /// Show delete confirmation dialog
   void _showDeleteDialog() {
@@ -1268,12 +1287,14 @@ class _CreateListDialogState extends ConsumerState<_CreateListDialog> {
         // Add the video to the new list
         await listService.addVideoToList(newList.id, widget.video.id);
 
-        Navigator.of(context).pop(); // Close dialog
-        Navigator.of(context).pop(); // Close share menu
+        if (mounted) {
+          Navigator.of(context).pop(); // Close dialog
+          Navigator.of(context).pop(); // Close share menu
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Created list "$name" and added video')),
-        );
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Created list "$name" and added video')),
+          );
+        }
       }
     } catch (e) {
       Log.error('Failed to create list: $e',
@@ -1359,7 +1380,7 @@ class _SelectListDialog extends StatelessWidget {
         success = await listService.addVideoToList(list.id, video.id);
       }
 
-      if (success) {
+      if (success && context.mounted) {
         final message = isCurrentlyInList
             ? 'Removed from ${list.name}'
             : 'Added to ${list.name}';
@@ -1675,7 +1696,7 @@ class _SelectFollowSetDialog extends StatelessWidget {
         success = await socialService.addToFollowSet(set.id, authorPubkey);
       }
 
-      if (success) {
+      if (success && context.mounted) {
         final message = isCurrentlyInSet
             ? 'Removed from ${set.name}'
             : 'Added to ${set.name}';
@@ -1688,5 +1709,249 @@ class _SelectFollowSetDialog extends StatelessWidget {
       Log.error('Failed to toggle user in follow set: $e',
           name: 'ShareVideoMenu', category: LogCategory.ui);
     }
+  }
+}
+
+/// Dialog for editing video metadata
+class _EditVideoDialog extends ConsumerStatefulWidget {
+  const _EditVideoDialog({required this.video});
+  final VideoEvent video;
+
+  @override
+  ConsumerState<_EditVideoDialog> createState() => _EditVideoDialogState();
+}
+
+class _EditVideoDialogState extends ConsumerState<_EditVideoDialog> {
+  late TextEditingController _titleController;
+  late TextEditingController _descriptionController;
+  late TextEditingController _hashtagsController;
+  bool _isUpdating = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _titleController = TextEditingController(text: widget.video.title ?? '');
+    _descriptionController = TextEditingController(text: widget.video.content);
+    
+    // Convert hashtags list to comma-separated string
+    final hashtagsText = widget.video.hashtags.join(', ');
+    _hashtagsController = TextEditingController(text: hashtagsText);
+  }
+
+  @override
+  Widget build(BuildContext context) => AlertDialog(
+        backgroundColor: VineTheme.cardBackground,
+        title: const Text('Edit Video',
+            style: TextStyle(color: VineTheme.whiteText)),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: _titleController,
+                enabled: !_isUpdating,
+                enableInteractiveSelection: true,
+                style: const TextStyle(color: VineTheme.whiteText),
+                decoration: const InputDecoration(
+                  labelText: 'Title',
+                  labelStyle: TextStyle(color: VineTheme.secondaryText),
+                  hintText: 'Enter video title',
+                  hintStyle: TextStyle(color: VineTheme.secondaryText),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _descriptionController,
+                enabled: !_isUpdating,
+                enableInteractiveSelection: true,
+                style: const TextStyle(color: VineTheme.whiteText),
+                decoration: const InputDecoration(
+                  labelText: 'Description',
+                  labelStyle: TextStyle(color: VineTheme.secondaryText),
+                  hintText: 'Enter video description',
+                  hintStyle: TextStyle(color: VineTheme.secondaryText),
+                ),
+                maxLines: 3,
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _hashtagsController,
+                enabled: !_isUpdating,
+                enableInteractiveSelection: true,
+                style: const TextStyle(color: VineTheme.whiteText),
+                decoration: const InputDecoration(
+                  labelText: 'Hashtags',
+                  labelStyle: TextStyle(color: VineTheme.secondaryText),
+                  hintText: 'comma, separated, hashtags',
+                  hintStyle: TextStyle(color: VineTheme.secondaryText),
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Note: Only metadata can be edited. Video content cannot be changed.',
+                style: TextStyle(
+                  color: VineTheme.secondaryText,
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: _isUpdating ? null : () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: _isUpdating ? null : _updateVideo,
+            child: _isUpdating
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: VineTheme.vineGreen,
+                    ),
+                  )
+                : const Text('Update'),
+          ),
+        ],
+      );
+
+  Future<void> _updateVideo() async {
+    setState(() => _isUpdating = true);
+
+    try {
+      // Parse hashtags from comma-separated string
+      final hashtagsText = _hashtagsController.text.trim();
+      final hashtags = hashtagsText.isEmpty
+          ? <String>[]
+          : hashtagsText
+              .split(',')
+              .map((tag) => tag.trim())
+              .where((tag) => tag.isNotEmpty)
+              .toList();
+
+      // Get auth service to create and sign the updated event
+      final authService = ref.read(authServiceProvider);
+      if (!authService.isAuthenticated) {
+        throw Exception('User not authenticated');
+      }
+
+      // Create updated tags for the addressable event
+      final tags = <List<String>>[];
+      
+      // Required 'd' tag - must use the same identifier
+      tags.add(['d', widget.video.vineId ?? widget.video.id]);
+      
+      // Build imeta tag components (preserve existing media data)
+      final imetaComponents = <String>[];
+      if (widget.video.videoUrl != null) {
+        imetaComponents.add('url ${widget.video.videoUrl!}');
+      }
+      imetaComponents.add('m video/mp4');
+      
+      if (widget.video.thumbnailUrl != null) {
+        imetaComponents.add('image ${widget.video.thumbnailUrl!}');
+      }
+      
+      if (widget.video.blurhash != null) {
+        imetaComponents.add('blurhash ${widget.video.blurhash!}');
+      }
+      
+      if (widget.video.dimensions != null) {
+        imetaComponents.add('dim ${widget.video.dimensions!}');
+      }
+      
+      if (widget.video.sha256 != null) {
+        imetaComponents.add('x ${widget.video.sha256!}');
+      }
+      
+      if (widget.video.fileSize != null) {
+        imetaComponents.add('size ${widget.video.fileSize!}');
+      }
+      
+      // Add the complete imeta tag
+      if (imetaComponents.isNotEmpty) {
+        tags.add(['imeta', ...imetaComponents]);
+      }
+      
+      // Add updated metadata
+      final title = _titleController.text.trim();
+      if (title.isNotEmpty) {
+        tags.add(['title', title]);
+      }
+      
+      // Add hashtags
+      for (final hashtag in hashtags) {
+        tags.add(['t', hashtag]);
+      }
+      
+      // Preserve other original tags that shouldn't be changed
+      if (widget.video.publishedAt != null) {
+        tags.add(['published_at', widget.video.publishedAt!]);
+      }
+      
+      if (widget.video.duration != null) {
+        tags.add(['duration', widget.video.duration.toString()]);
+      }
+      
+      if (widget.video.altText != null) {
+        tags.add(['alt', widget.video.altText!]);
+      }
+      
+      // Add client tag
+      tags.add(['client', 'openvine']);
+      
+      // Create and sign the updated event
+      final content = _descriptionController.text.trim();
+      final event = await authService.createAndSignEvent(
+        kind: 32222, // Addressable short looping video
+        content: content,
+        tags: tags,
+      );
+      
+      if (event == null) {
+        throw Exception('Failed to create updated event');
+      }
+      
+      // Broadcast the updated event
+      final nostrService = ref.read(nostrServiceProvider);
+      await nostrService.broadcastEvent(event);
+      
+      if (mounted) {
+        Navigator.of(context).pop(); // Close edit dialog
+        Navigator.of(context).pop(); // Close share menu
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Video updated successfully'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      Log.error('Failed to update video: $e',
+          name: 'ShareVideoMenu', category: LogCategory.ui);
+      
+      if (mounted) {
+        setState(() => _isUpdating = false);
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to update video: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _descriptionController.dispose();
+    _hashtagsController.dispose();
+    super.dispose();
   }
 }

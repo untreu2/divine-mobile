@@ -30,12 +30,12 @@ void main() {
 
     group('Initial State', () {
       test('should have correct initial state', () {
-        final notifier = container.read(profileStatsNotifierProvider);
-        expect(notifier.isLoading, false);
-        expect(notifier.stats, isNull);
-        expect(notifier.error, isNull);
-        expect(notifier.hasError, false);
-        expect(notifier.hasData, false);
+        final state = container.read(profileStatsNotifierProvider);
+        expect(state.isLoading, false);
+        expect(state.stats, isNull);
+        expect(state.error, isNull);
+        expect(state.hasError, false);
+        expect(state.hasData, false);
       });
     });
 
@@ -50,29 +50,21 @@ void main() {
         when(mockSocialService.getUserVideoCount(testPubkey)).thenAnswer(
           (_) async => 25,
         );
-        when(mockSocialService.getUserTotalLikes(testPubkey)).thenAnswer(
-          (_) async => 500,
-        );
 
-        // Track loading state changes
-        final states = <ProfileStatsLoadingState>[];
-        provider.addListener(() {
-          states.add(provider.loadingState);
-        });
+        // Load stats using the notifier
+        final notifier = container.read(profileStatsNotifierProvider.notifier);
+        await notifier.loadStats(testPubkey);
 
-        // Load stats
-        await provider.loadProfileStats(testPubkey);
-
-        // Verify state progression
-        expect(states, contains(ProfileStatsLoadingState.loading));
-        expect(provider.loadingState, ProfileStatsLoadingState.loaded);
-        expect(provider.hasData, true);
-        expect(provider.error, isNull);
+        // Verify final state
+        final state = container.read(profileStatsNotifierProvider);
+        expect(state.isLoading, false);
+        expect(state.hasData, true);
+        expect(state.error, isNull);
 
         // Verify stats content
-        final stats = provider.stats!;
+        final stats = state.stats!;
         expect(stats.videoCount, 25);
-        expect(stats.totalLikes, 500);
+        expect(stats.totalLikes, 0); // Not showing reactions for now
         expect(stats.followers, 100);
         expect(stats.following, 50);
         expect(stats.totalViews, 0); // Placeholder
@@ -80,7 +72,6 @@ void main() {
         // Verify service calls
         verify(mockSocialService.getFollowerStats(testPubkey)).called(1);
         verify(mockSocialService.getUserVideoCount(testPubkey)).called(1);
-        verify(mockSocialService.getUserTotalLikes(testPubkey)).called(1);
       });
 
       test('should handle loading errors gracefully', () async {
@@ -89,67 +80,16 @@ void main() {
           Exception('Network error'),
         );
 
-        // Load stats
-        await provider.loadProfileStats(testPubkey);
+        // Load stats using the notifier
+        final notifier = container.read(profileStatsNotifierProvider.notifier);
+        await notifier.loadStats(testPubkey);
 
         // Verify error state
-        expect(provider.loadingState, ProfileStatsLoadingState.error);
-        expect(provider.hasError, true);
-        expect(provider.error, contains('Network error'));
-        expect(provider.stats, isNull);
-      });
-
-      test('should not reload if already loaded for same user', () async {
-        // First load
-        when(mockSocialService.getFollowerStats(testPubkey)).thenAnswer(
-          (_) async => {'followers': 100, 'following': 50},
-        );
-        when(mockSocialService.getUserVideoCount(testPubkey)).thenAnswer(
-          (_) async => 25,
-        );
-        when(mockSocialService.getUserTotalLikes(testPubkey)).thenAnswer(
-          (_) async => 500,
-        );
-
-        await provider.loadProfileStats(testPubkey);
-
-        // Reset mock call counts
-        clearInteractions(mockSocialService);
-
-        // Second load for same user
-        await provider.loadProfileStats(testPubkey);
-
-        // Should not call services again
-        verifyNever(mockSocialService.getFollowerStats(any));
-        verifyNever(mockSocialService.getUserVideoCount(any));
-        verifyNever(mockSocialService.getUserTotalLikes(any));
-      });
-    });
-
-    group('Caching', () {
-      const testPubkey = 'test_pubkey_123';
-
-      test('should use cached stats when available', () async {
-        // First load
-        when(mockSocialService.getFollowerStats(testPubkey)).thenAnswer(
-          (_) async => {'followers': 100, 'following': 50},
-        );
-        when(mockSocialService.getUserVideoCount(testPubkey)).thenAnswer(
-          (_) async => 25,
-        );
-        when(mockSocialService.getUserTotalLikes(testPubkey)).thenAnswer(
-          (_) async => 500,
-        );
-
-        await provider.loadProfileStats(testPubkey);
-
-        // Create new provider instance
-        final newProvider = ProfileStatsProvider(mockSocialService);
-
-        // Cache should be empty for new instance
-        expect(newProvider.stats, isNull);
-
-        newProvider.dispose();
+        final state = container.read(profileStatsNotifierProvider);
+        expect(state.isLoading, false);
+        expect(state.hasError, true);
+        expect(state.error, contains('Network error'));
+        expect(state.stats, isNull);
       });
 
       test('should refresh stats by clearing cache', () async {
@@ -160,11 +100,9 @@ void main() {
         when(mockSocialService.getUserVideoCount(testPubkey)).thenAnswer(
           (_) async => 25,
         );
-        when(mockSocialService.getUserTotalLikes(testPubkey)).thenAnswer(
-          (_) async => 500,
-        );
 
-        await provider.loadProfileStats(testPubkey);
+        final notifier = container.read(profileStatsNotifierProvider.notifier);
+        await notifier.loadStats(testPubkey);
         clearInteractions(mockSocialService);
 
         // Mock updated stats
@@ -174,41 +112,59 @@ void main() {
         when(mockSocialService.getUserVideoCount(testPubkey)).thenAnswer(
           (_) async => 30,
         );
-        when(mockSocialService.getUserTotalLikes(testPubkey)).thenAnswer(
-          (_) async => 600,
-        );
 
         // Refresh stats
-        await provider.refreshStats();
+        await notifier.refreshStats(testPubkey);
 
         // Should have new stats
-        expect(provider.stats!.videoCount, 30);
-        expect(provider.stats!.totalLikes, 600);
-        expect(provider.stats!.followers, 150);
-        expect(provider.stats!.following, 75);
+        final state = container.read(profileStatsNotifierProvider);
+        expect(state.stats!.videoCount, 30);
+        expect(state.stats!.followers, 150);
+        expect(state.stats!.following, 75);
 
         // Should have called services again
         verify(mockSocialService.getFollowerStats(testPubkey)).called(1);
         verify(mockSocialService.getUserVideoCount(testPubkey)).called(1);
-        verify(mockSocialService.getUserTotalLikes(testPubkey)).called(1);
+      });
+
+      test('should clear error state', () async {
+        // Create error state first
+        when(mockSocialService.getFollowerStats(testPubkey)).thenThrow(
+          Exception('Network error'),
+        );
+
+        final notifier = container.read(profileStatsNotifierProvider.notifier);
+        await notifier.loadStats(testPubkey);
+
+        // Verify error state
+        var state = container.read(profileStatsNotifierProvider);
+        expect(state.hasError, true);
+
+        // Clear error
+        notifier.clearError();
+
+        // Verify error cleared
+        state = container.read(profileStatsNotifierProvider);
+        expect(state.error, isNull);
+        expect(state.hasError, false);
       });
 
       test('should clear all cache', () {
-        provider.clearAllCache();
+        clearAllProfileStatsCache();
         // Just verify it doesn't throw - internal state is private
       });
     });
 
     group('Utility Methods', () {
       test('should format counts correctly', () {
-        expect(ProfileStatsProvider.formatCount(0), '0');
-        expect(ProfileStatsProvider.formatCount(999), '999');
-        expect(ProfileStatsProvider.formatCount(1000), '1.0K');
-        expect(ProfileStatsProvider.formatCount(1500), '1.5K');
-        expect(ProfileStatsProvider.formatCount(1000000), '1.0M');
-        expect(ProfileStatsProvider.formatCount(2500000), '2.5M');
-        expect(ProfileStatsProvider.formatCount(1000000000), '1.0B');
-        expect(ProfileStatsProvider.formatCount(3200000000), '3.2B');
+        expect(formatProfileStatsCount(0), '0');
+        expect(formatProfileStatsCount(999), '999');
+        expect(formatProfileStatsCount(1000), '1.0K');
+        expect(formatProfileStatsCount(1500), '1.5K');
+        expect(formatProfileStatsCount(1000000), '1.0M');
+        expect(formatProfileStatsCount(2500000), '2.5M');
+        expect(formatProfileStatsCount(1000000000), '1.0B');
+        expect(formatProfileStatsCount(3200000000), '3.2B');
       });
     });
 

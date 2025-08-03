@@ -37,7 +37,7 @@ void main() {
 
     setUp(() {
       mockNostrService = MockNostrService();
-      mockSubscriptionManager = MockSubscriptionManager(TestNostrService());
+      mockSubscriptionManager = MockSubscriptionManager();
 
       container = ProviderContainer(
         overrides: [
@@ -68,8 +68,8 @@ void main() {
         (previous, next) {},
       );
 
-      // Give it time to set up
-      await Future.delayed(const Duration(milliseconds: 10));
+      // Wait for subscription to be created using proper async pattern
+      await pumpEventQueue();
 
       // Verify subscription was created with correct filter
       verify(
@@ -100,7 +100,7 @@ void main() {
         // Verify filter has correct authors
         expect(filter.authors, contains('pubkey1'));
         expect(filter.authors, contains('pubkey2'));
-        expect(filter.kinds, contains(22)); // Video events
+        expect(filter.kinds, contains(32222)); // Addressable video events
 
         return streamController.stream;
       });
@@ -108,7 +108,7 @@ void main() {
       // Start provider
       final _ = container.read(videoEventsProvider);
 
-      await Future.delayed(const Duration(milliseconds: 10));
+      await pumpEventQueue();
       await streamController.close();
     });
 
@@ -134,7 +134,7 @@ void main() {
       // Start provider
       final _ = container.read(videoEventsProvider);
 
-      await Future.delayed(const Duration(milliseconds: 10));
+      await pumpEventQueue();
       await streamController.close();
     });
 
@@ -143,12 +143,13 @@ void main() {
 
       // Create mock event
       final mockEvent = MockEvent();
-      when(() => mockEvent.kind).thenReturn(22);
+      when(() => mockEvent.kind).thenReturn(32222);
       when(() => mockEvent.id).thenReturn('event123');
       when(() => mockEvent.pubkey).thenReturn('pubkey123');
       when(() => mockEvent.createdAt).thenReturn(1234567890);
       when(() => mockEvent.content).thenReturn('Video content');
       when(() => mockEvent.tags).thenReturn([
+        ['d', 'test-video-id'], // Required for addressable events
         ['url', 'https://example.com/video.mp4'],
         ['title', 'Test Video'],
       ]);
@@ -168,7 +169,7 @@ void main() {
 
       // Add event to stream
       streamController.add(mockEvent);
-      await Future.delayed(const Duration(milliseconds: 50));
+      await pumpEventQueue();
 
       // Check we got the video event
       final lastState = states.last;
@@ -203,7 +204,7 @@ void main() {
       // Start provider
       final _ = container.read(videoEventsProvider);
 
-      await Future.delayed(const Duration(milliseconds: 10));
+      await pumpEventQueue();
       await streamController.close();
     });
 
@@ -230,7 +231,7 @@ void main() {
       // Start provider
       final _ = container.read(videoEventsProvider);
 
-      await Future.delayed(const Duration(milliseconds: 10));
+      await pumpEventQueue();
       await streamController.close();
     });
 
@@ -240,16 +241,17 @@ void main() {
       // Create multiple mock events with comprehensive tags for VideoEvent parsing
       final events = List.generate(3, (i) {
         final event = MockEvent();
-        when(() => event.kind).thenReturn(22);
+        when(() => event.kind).thenReturn(32222);
         when(() => event.id).thenReturn('event$i');
         when(() => event.pubkey).thenReturn('pubkey$i');
         when(() => event.createdAt).thenReturn(1234567890 + i);
         when(() => event.content).thenReturn('Video $i content');
         when(() => event.tags).thenReturn([
+          ['d', 'video-$i'], // Required for addressable events
           ['url', 'https://example.com/video$i.mp4'],
           ['title', 'Video $i'],
           ['duration', '10'],
-          ['h', 'vine'], // Required vine tag
+          ['h', 'vine'], // Optional group tag
         ]);
         when(() => event.sig).thenReturn('signature$i');
         return event;
@@ -257,10 +259,11 @@ void main() {
 
       // Create a stream that emits events with delays to simulate real-time behavior
       Stream<Event> createEventStream() async* {
-        // Emit events one by one with delays
+        // Emit events one by one using proper async pattern
         for (final event in events) {
           yield event;
-          await Future.delayed(const Duration(milliseconds: 50));
+          // Allow event loop to process
+          await Future(() => {});
         }
       }
 
@@ -301,8 +304,8 @@ void main() {
         Log.info('Timeout waiting for event accumulation');
       }
 
-      // Give a bit more time for final processing
-      await Future.delayed(const Duration(milliseconds: 100));
+      // Wait for final processing using proper async pattern
+      await pumpEventQueue();
 
       // Debug: print final states
       Log.info('Final states count: ${states.length}');
@@ -354,7 +357,7 @@ void main() {
 
       // Add error to stream
       streamController.addError(Exception('Network error'));
-      await Future.delayed(const Duration(milliseconds: 10));
+      await pumpEventQueue();
 
       // Should handle error
       final lastState = states.last;

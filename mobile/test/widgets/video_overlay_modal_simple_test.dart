@@ -1,11 +1,10 @@
 // ABOUTME: Simple failing test to verify VideoOverlayModal needs Riverpod migration
 // ABOUTME: Tests that current implementation fails with Riverpod-only providers
 
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:openvine/models/video_event.dart';
 import 'package:openvine/widgets/video_overlay_modal.dart';
+import '../helpers/test_provider_overrides.dart';
 
 void main() {
   group('VideoOverlayModal TDD Baseline', () {
@@ -21,15 +20,13 @@ void main() {
         timestamp: DateTime.now(),
       );
 
-      // Arrange - Only ProviderScope, no Provider ancestor
+      // Arrange - Use test helper to provide proper mocks
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: VideoOverlayModal(
-              startingVideo: testVideo,
-              videoList: [testVideo],
-              contextTitle: 'Test Context',
-            ),
+        createTestWidget(
+          child: VideoOverlayModal(
+            startingVideo: testVideo,
+            videoList: [testVideo],
+            contextTitle: 'Test Context',
           ),
         ),
       );

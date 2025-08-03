@@ -31,9 +31,9 @@ Future<SharedPreferences> sharedPreferences(Ref ref) =>
 @riverpod
 class Analytics extends _$Analytics {
   static const String _analyticsEndpoint =
-      'https://analytics.openvine.co/analytics/view';
+      'https://api.openvine.co/analytics/view';
   static const String _analyticsEnabledKey = 'analytics_enabled';
-  static const Duration _requestTimeout = Duration(seconds: 5);
+  static const Duration _requestTimeout = Duration(seconds: 10);
 
   // Track recent views to prevent duplicate tracking
   final Set<String> _recentlyTrackedViews = {};

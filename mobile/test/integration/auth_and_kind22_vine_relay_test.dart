@@ -1,4 +1,4 @@
-// ABOUTME: Integration tests for AUTH and Kind 22 event retrieval against real vine.hol.is relay
+// ABOUTME: Integration tests for AUTH and Kind 22 event retrieval against real relay3.openvine.co relay
 // ABOUTME: Tests the complete AUTH flow and verifies Kind 22 events can be retrieved after AUTH completion
 
 import 'dart:async';
@@ -16,7 +16,7 @@ import 'package:nostr_sdk/event.dart';
 import 'package:nostr_sdk/filter.dart';
 
 void main() {
-  group('AUTH and Kind 22 Event Retrieval - Real vine.hol.is Relay', () {
+  group('AUTH and Kind 22 Event Retrieval - Real relay3.openvine.co Relay', () {
     late NostrKeyManager keyManager;
     late NostrService nostrService;
     late VideoEventService videoEventService;
@@ -62,8 +62,8 @@ void main() {
       });
 
       try {
-        // Initialize NostrService with vine.hol.is
-        await nostrService.initialize(customRelays: ['wss://vine.hol.is']);
+        // Initialize NostrService with relay3.openvine.co
+        await nostrService.initialize(customRelays: ['wss://relay3.openvine.co']);
 
         // Verify service is initialized
         expect(nostrService.isInitialized, isTrue);
@@ -72,17 +72,17 @@ void main() {
         // Wait a bit for AUTH completion
         await Future.delayed(const Duration(seconds: 5));
 
-        // Check vine.hol.is AUTH state
+        // Check relay3.openvine.co AUTH state
         final vineAuthed = nostrService.isVineRelayAuthenticated;
-        Log.info('vine.hol.is authenticated: $vineAuthed', name: 'AuthTest', category: LogCategory.system);
+        Log.info('relay3.openvine.co authenticated: $vineAuthed', name: 'AuthTest', category: LogCategory.system);
         
         // We should have at least one AUTH state change
         expect(authStateChanges, isNotEmpty);
         
-        // If vine.hol.is is connected, it should be in the auth states
+        // If relay3.openvine.co is connected, it should be in the auth states
         final authStates = nostrService.relayAuthStates;
-        if (authStates.containsKey('wss://vine.hol.is')) {
-          Log.info('vine.hol.is AUTH state: ${authStates['wss://vine.hol.is']}', name: 'AuthTest', category: LogCategory.system);
+        if (authStates.containsKey('wss://relay3.openvine.co')) {
+          Log.info('relay3.openvine.co AUTH state: ${authStates['wss://relay3.openvine.co']}', name: 'AuthTest', category: LogCategory.system);
         }
         
         // Log relay statuses for debugging
@@ -95,12 +95,12 @@ void main() {
       }
     }, timeout: const Timeout(Duration(minutes: 2)));
 
-    test('Kind 22 events can be retrieved from vine.hol.is after AUTH', () async {
+    test('Kind 22 events can be retrieved from relay3.openvine.co after AUTH', () async {
       // Set a longer timeout for real relay testing
       nostrService.setAuthTimeout(const Duration(seconds: 30));
       
       // Initialize NostrService
-      await nostrService.initialize(customRelays: ['wss://vine.hol.is']);
+      await nostrService.initialize(customRelays: ['wss://relay3.openvine.co']);
       expect(nostrService.isInitialized, isTrue);
 
       // Wait for AUTH completion
@@ -113,7 +113,7 @@ void main() {
       // Using polling approach to check for new events
       Timer? eventPollingTimer;
       void checkForNewEvents() {
-        final newEvents = videoEventService.videoEvents;
+        final newEvents = videoEventService.discoveryVideos;
         for (final event in newEvents) {
           if (!receivedEvents.any((e) => e.id == event.id)) {
             receivedEvents.add(event);
@@ -125,6 +125,7 @@ void main() {
       // Subscribe to Kind 22 video events with a reasonable limit
       Log.info('Subscribing to Kind 22 video events...', name: 'AuthTest', category: LogCategory.system);
       await videoEventService.subscribeToVideoFeed(
+        subscriptionType: SubscriptionType.discovery,
         limit: 20, // Reasonable limit for testing
         replace: true,
         includeReposts: false,
@@ -144,32 +145,32 @@ void main() {
 
       // Check if we received any Kind 22 events
       Log.info('Total events received: ${receivedEvents.length}', name: 'AuthTest', category: LogCategory.system);
-      Log.info('VideoEventService event count: ${videoEventService.eventCount}', name: 'AuthTest', category: LogCategory.system);
+      Log.info('VideoEventService event count: ${videoEventService.discoveryVideos.length}', name: 'AuthTest', category: LogCategory.system);
       Log.info('Is subscribed: ${videoEventService.isSubscribed}', name: 'AuthTest', category: LogCategory.system);
       
       // Log AUTH status
-      Log.info('vine.hol.is authenticated: ${nostrService.isVineRelayAuthenticated}', name: 'AuthTest', category: LogCategory.system);
+      Log.info('relay3.openvine.co authenticated: ${nostrService.isVineRelayAuthenticated}', name: 'AuthTest', category: LogCategory.system);
       Log.debug('Relay auth states: ${nostrService.relayAuthStates}', name: 'AuthTest', category: LogCategory.system);
 
-      // We should have received some events (vine.hol.is should have Kind 22 events)
-      // Note: This might fail if vine.hol.is is empty or not responding, but that's valuable info too
+      // We should have received some events (relay3.openvine.co should have Kind 22 events)
+      // Note: This might fail if relay3.openvine.co is empty or not responding, but that's valuable info too
       if (receivedEvents.isEmpty) {
-        Log.warning('No Kind 22 events received from vine.hol.is', name: 'AuthTest', category: LogCategory.system);
+        Log.warning('No Kind 22 events received from relay3.openvine.co', name: 'AuthTest', category: LogCategory.system);
         Log.warning('This could indicate:', name: 'AuthTest', category: LogCategory.system);
         Log.warning('1. AUTH not completed properly', name: 'AuthTest', category: LogCategory.system);
-        Log.warning('2. No Kind 22 events stored on vine.hol.is', name: 'AuthTest', category: LogCategory.system);
+        Log.warning('2. No Kind 22 events stored on relay3.openvine.co', name: 'AuthTest', category: LogCategory.system);
         Log.warning('3. Relay not responding to subscriptions', name: 'AuthTest', category: LogCategory.system);
         
         // Still check that AUTH completed
         if (nostrService.isVineRelayAuthenticated) {
           Log.warning('AUTH completed but no events - relay may be empty', name: 'AuthTest', category: LogCategory.system);
         } else {
-          fail('AUTH did not complete for vine.hol.is');
+          fail('AUTH did not complete for relay3.openvine.co');
         }
       } else {
         // Success case - we got events
         expect(receivedEvents, isNotEmpty);
-        Log.info('✅ Successfully retrieved ${receivedEvents.length} Kind 22 events from vine.hol.is', name: 'AuthTest', category: LogCategory.system);
+        Log.info('✅ Successfully retrieved ${receivedEvents.length} Kind 22 events from relay3.openvine.co', name: 'AuthTest', category: LogCategory.system);
         
         // Verify events are properly parsed
         for (final event in receivedEvents.take(3)) {
@@ -186,7 +187,7 @@ void main() {
       nostrService.setAuthTimeout(const Duration(seconds: 5)); // Shorter timeout to force timeout
       
       // Initialize NostrService
-      await nostrService.initialize(customRelays: ['wss://vine.hol.is']);
+      await nostrService.initialize(customRelays: ['wss://relay3.openvine.co']);
       expect(nostrService.isInitialized, isTrue);
 
       // Try to subscribe immediately (might happen before AUTH)
@@ -196,7 +197,7 @@ void main() {
       // Using polling approach to check for new events
       Timer? retryEventPollingTimer;
       void checkForRetryEvents() {
-        final newEvents = videoEventService.videoEvents;
+        final newEvents = videoEventService.discoveryVideos;
         for (final event in newEvents) {
           if (!receivedEvents.any((e) => e.id == event.id)) {
             receivedEvents.add(event);
@@ -207,6 +208,7 @@ void main() {
 
       Log.info('Subscribing before AUTH completion...', name: 'AuthTest', category: LogCategory.system);
       await videoEventService.subscribeToVideoFeed(
+        subscriptionType: SubscriptionType.discovery,
         limit: 10,
         replace: true,
         includeReposts: false,
@@ -227,7 +229,7 @@ void main() {
 
       Log.info('Final results:', name: 'AuthTest', category: LogCategory.system);
       Log.info('- Events received: ${receivedEvents.length}', name: 'AuthTest', category: LogCategory.system);
-      Log.info('- vine.hol.is authenticated: ${nostrService.isVineRelayAuthenticated}', name: 'AuthTest', category: LogCategory.system);
+      Log.info('- relay3.openvine.co authenticated: ${nostrService.isVineRelayAuthenticated}', name: 'AuthTest', category: LogCategory.system);
       Log.info('- Video service subscribed: ${videoEventService.isSubscribed}', name: 'AuthTest', category: LogCategory.system);
 
       // The retry mechanism should work regardless of initial AUTH state
@@ -249,14 +251,14 @@ void main() {
         firstService = NostrService(keyManager);
         firstService.setAuthTimeout(const Duration(seconds: 30));
         
-        await firstService.initialize(customRelays: ['wss://vine.hol.is']);
+        await firstService.initialize(customRelays: ['wss://relay3.openvine.co']);
         expect(firstService.isInitialized, isTrue);
 
         // Wait for AUTH completion
         await Future.delayed(const Duration(seconds: 10));
         
         final firstAuthState = firstService.isVineRelayAuthenticated;
-        Log.info('First service vine.hol.is AUTH: $firstAuthState', name: 'AuthTest', category: LogCategory.system);
+        Log.info('First service relay3.openvine.co AUTH: $firstAuthState', name: 'AuthTest', category: LogCategory.system);
 
         // Dispose first service
         firstService.dispose();
@@ -264,12 +266,12 @@ void main() {
 
         // Create second service (should load persisted AUTH state)
         secondService = NostrService(keyManager);
-        await secondService.initialize(customRelays: ['wss://vine.hol.is']);
+        await secondService.initialize(customRelays: ['wss://relay3.openvine.co']);
         expect(secondService.isInitialized, isTrue);
 
         // Check if AUTH state was restored
         final secondAuthState = secondService.isVineRelayAuthenticated;
-        Log.info('Second service vine.hol.is AUTH: $secondAuthState', name: 'AuthTest', category: LogCategory.system);
+        Log.info('Second service relay3.openvine.co AUTH: $secondAuthState', name: 'AuthTest', category: LogCategory.system);
         
         // If first service was authenticated, check if state persisted
         if (firstAuthState) {
@@ -302,11 +304,11 @@ void main() {
         final stopwatch = Stopwatch()..start();
         
         try {
-          await testService.initialize(customRelays: ['wss://vine.hol.is']);
+          await testService.initialize(customRelays: ['wss://relay3.openvine.co']);
           stopwatch.stop();
           
           Log.info('Service initialized in ${stopwatch.elapsedMilliseconds}ms', name: 'AuthTest', category: LogCategory.system);
-          Log.info('vine.hol.is authenticated: ${testService.isVineRelayAuthenticated}', name: 'AuthTest', category: LogCategory.system);
+          Log.info('relay3.openvine.co authenticated: ${testService.isVineRelayAuthenticated}', name: 'AuthTest', category: LogCategory.system);
           
           // AUTH timeout should be respected (allowing some margin for processing)
           expect(stopwatch.elapsed.inSeconds, lessThanOrEqualTo(timeout.inSeconds + 5));
@@ -322,7 +324,7 @@ void main() {
 
     test('Multiple relays AUTH state tracking', () async {
       final testRelays = [
-        'wss://vine.hol.is',
+        'wss://relay3.openvine.co',
         'wss://relay.damus.io', // Non-auth relay for comparison
         'wss://nos.lol', // Another relay
       ];
@@ -346,8 +348,8 @@ void main() {
         expect(authStates.containsKey(relay), isTrue);
       }
 
-      // vine.hol.is should require auth
-      Log.info('vine.hol.is specifically: ${nostrService.isVineRelayAuthenticated}', name: 'AuthTest', category: LogCategory.system);
+      // relay3.openvine.co should require auth
+      Log.info('relay3.openvine.co specifically: ${nostrService.isVineRelayAuthenticated}', name: 'AuthTest', category: LogCategory.system);
       
       Log.info('✅ Multiple relay AUTH tracking completed', name: 'AuthTest', category: LogCategory.system);
     }, timeout: const Timeout(Duration(minutes: 2)));

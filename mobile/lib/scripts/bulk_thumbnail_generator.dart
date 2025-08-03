@@ -1,5 +1,5 @@
 // ABOUTME: Bulk thumbnail generation script for videos without thumbnails
-// ABOUTME: Fetches Kind 22 events from relay1.openvine.co and generates thumbnails via API service
+// ABOUTME: Fetches video events from relay1.openvine.co and generates thumbnails via API service
 
 import 'dart:io';
 import 'package:nostr_sdk/filter.dart';
@@ -12,7 +12,7 @@ import 'package:openvine/utils/unified_logger.dart';
 /// Bulk thumbnail generation script
 ///
 /// This script:
-/// 1. Connects to relay1.openvine.co relay to fetch Kind 22 video events
+/// 1. Connects to relay1.openvine.co relay to fetch video events
 /// 2. Filters events that don't have thumbnails
 /// 3. Makes API requests to generate thumbnails via api.openvine.co thumbnail service
 /// 4. Reports progress and statistics
@@ -45,7 +45,7 @@ class BulkThumbnailGenerator {
           name: 'BulkThumbnailGenerator');
 
       // Step 1: Fetch video events from relay
-      Log.info('Fetching Kind 22 events from $relayUrl...',
+      Log.info('Fetching video events from $relayUrl...',
           name: 'BulkThumbnailGenerator');
       final videoEvents =
           await _fetchVideoEvents(options['limit'] ?? maxVideosToProcess);
@@ -132,7 +132,7 @@ Examples:
     final videoEvents = <VideoEvent>[];
 
     try {
-      Log.info('Connecting to Nostr relay to fetch Kind 22 events...',
+      Log.info('Connecting to Nostr relay to fetch video events...',
           name: 'BulkThumbnailGenerator');
 
       // Create Nostr service to connect to relay
@@ -142,13 +142,13 @@ Examples:
       // Initialize with only the relay we want to query
       await nostrService.initialize(customRelays: [relayUrl]);
       
-      // Create filter for Kind 22 video events
+      // Create filter for video events
       final filter = Filter(
-        kinds: [22],
+        kinds: [32222],
         limit: limit,
       );
 
-      Log.info('Subscribing to Kind 22 events with limit: $limit',
+      Log.info('Subscribing to video events with limit: $limit',
           name: 'BulkThumbnailGenerator');
 
       // Subscribe to events and collect them

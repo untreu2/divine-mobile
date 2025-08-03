@@ -80,7 +80,7 @@ class _VideoOverlayModalState extends ConsumerState<VideoOverlayModal> {
   void dispose() {
     _pageController.dispose();
     _pauseAllVideos();
-    
+    super.dispose();
   }
 
   Future<void> _initializeVideoManager() async {

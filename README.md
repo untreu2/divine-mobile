@@ -133,6 +133,83 @@ wrangler dev
 - **NIPs Supported**: NIP-01, NIP-02, NIP-18, NIP-25, NIP-71, NIP-94, NIP-98
 - **Relays**: Multi-relay support for redundancy and performance
 
+## API Endpoints
+
+OpenVine uses two separate Cloudflare Workers with distinct domains for different purposes:
+
+### Main Backend API (`api.openvine.co`)
+
+**File Upload & Media:**
+- `POST /api/upload` - NIP-96 compliant video upload
+- `POST /api/import-url` - Import video from external URL
+- `GET /api/status/{jobId}` - Check upload job status
+- `GET /api/check-hash/{sha256}` - Check if file exists by hash
+- `POST /api/set-vine-mapping` - Map original Vine URLs to fileIds
+- `GET /media/{fileId}` - Serve media files
+
+**Video Management:**
+- `POST /v1/media/request-upload` - Cloudflare Stream upload request
+- `POST /v1/webhooks/stream-complete` - Stream processing webhook
+- `GET /v1/media/status/{videoId}` - Video processing status
+- `GET /v1/media/list` - List uploaded media
+- `GET /v1/media/metadata/{publicId}` - Get video metadata
+
+**Video Cache & Lookup:**
+- `GET /api/video/{videoId}` - Get video metadata from cache
+- `POST /api/videos/batch` - Batch video metadata lookup
+- `GET /api/media/lookup` - Media lookup by vine_id or filename
+
+**Thumbnails:**
+- `GET /thumbnail/{videoId}` - Get or generate video thumbnail
+- `POST /thumbnail/{videoId}/upload` - Upload custom thumbnail
+- `GET /thumbnail/{videoId}/list` - List available thumbnails
+
+**NIP-05 Identity:**
+- `GET /.well-known/nostr.json` - NIP-05 verification endpoint
+- `POST /api/nip05/register` - Register NIP-05 username
+
+**Feature Flags:**
+- `GET /api/feature-flags` - List all feature flags
+- `GET /api/feature-flags/{flagName}/check` - Check specific flag
+
+**Content Moderation:**
+- `POST /api/moderation/report` - Report content
+- `GET /api/moderation/status/{videoId}` - Check moderation status
+- `GET /api/moderation/queue` - Admin: View moderation queue
+- `POST /api/moderation/action` - Admin: Take moderation action
+
+**Legacy & Compatibility:**
+- `GET /r/videos_h264high/{vineId}` - Vine URL compatibility
+- `GET /r/videos/{vineId}` - Vine URL compatibility  
+- `GET /v/{vineId}` - Vine URL compatibility
+- `GET /t/{vineId}` - Vine URL compatibility
+
+### Analytics API (`api.openvine.co/analytics`)
+
+**View Tracking:**
+- `POST /analytics/view` - Track video view events
+
+**Trending Content:**
+- `GET /analytics/trending/vines` - Get trending videos
+- `GET /analytics/trending/viners` - Get trending creators
+- `GET /analytics/trending/velocity` - Get rapidly ascending content
+
+**Video Analytics:**
+- `GET /analytics/video/{eventId}/stats` - Get video statistics
+
+**Hashtag Analytics:**
+- `GET /analytics/hashtag/{hashtag}/trending` - Get trending for hashtag
+- `GET /analytics/hashtags/trending` - Get trending hashtags
+
+**Health Check:**
+- `GET /analytics/health` - Analytics service health status
+
+### Domain Usage Summary
+
+| Domain | Purpose | Examples |
+|--------|---------|----------|
+| `api.openvine.co` | File uploads, media serving, video management, user identity, analytics | Upload videos, serve thumbnails, NIP-05 verification, track video views, get trending content |
+
 ## Contributing
 
 1. Fork the repository

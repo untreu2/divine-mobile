@@ -438,10 +438,10 @@ class NostrService  implements INostrService, BackgroundAwareService {
         name: 'NostrService', category: LogCategory.relay);
     
     // Compare to working nak format for debugging
-    if (sdkFilters.length == 1 && sdkFilters[0]['kinds']?.contains(22) == true) {
-      Log.info('🔍 NostrService: This is a Kind 22 subscription - comparing to working nak:',
+    if (sdkFilters.length == 1 && sdkFilters[0]['kinds']?.contains(32222) == true) {
+      Log.info('🔍 NostrService: This is a video event subscription - comparing to working nak:',
           name: 'NostrService', category: LogCategory.relay);
-      Log.info('  - Working nak: ["REQ","test_kind22",{"kinds":[22],"limit":5}]',
+      Log.info('  - Working nak: ["REQ","test_video",{"kinds":[32222],"limit":5}]',
           name: 'NostrService', category: LogCategory.relay);
       Log.info('  - Our message: $webSocketMessage',
           name: 'NostrService', category: LogCategory.relay);
@@ -504,12 +504,24 @@ class NostrService  implements INostrService, BackgroundAwareService {
         name: 'NostrService', category: LogCategory.relay);
     Log.info('  - Kind: ${event.kind}',
         name: 'NostrService', category: LogCategory.relay);
-    Log.info('  - Pubkey: ${event.pubkey.substring(0, 8)}...',
+    Log.info('  - Pubkey: ${event.pubkey}',
         name: 'NostrService', category: LogCategory.relay);
-    Log.info(
-        '  - Content: ${event.content.substring(0, math.min(100, event.content.length))}...',
-        name: 'NostrService',
-        category: LogCategory.relay);
+    Log.info('  - Created At: ${event.createdAt}',
+        name: 'NostrService', category: LogCategory.relay);
+    Log.info('  - Content: "${event.content}"',
+        name: 'NostrService', category: LogCategory.relay);
+    Log.info('  - Tags (${event.tags.length}):',
+        name: 'NostrService', category: LogCategory.relay);
+    for (final tag in event.tags) {
+      Log.info('    - ${tag.join(", ")}',
+          name: 'NostrService', category: LogCategory.relay);
+    }
+    Log.info('  - Signature: ${event.sig}',
+        name: 'NostrService', category: LogCategory.relay);
+    Log.info('  - Is Valid: ${event.isValid}',
+        name: 'NostrService', category: LogCategory.relay);
+    Log.info('  - Is Signed: ${event.isSigned}',
+        name: 'NostrService', category: LogCategory.relay);
     Log.info('  - Created at: ${event.createdAt}',
         name: 'NostrService', category: LogCategory.relay);
     Log.info('  - Tags: ${event.tags}',
@@ -620,7 +632,24 @@ class NostrService  implements INostrService, BackgroundAwareService {
             name: 'NostrService', category: LogCategory.relay);
       }
 
+      // Log the event JSON before sending
+      try {
+        final eventMap = event.toJson();
+        final eventJson = jsonEncode(eventMap);
+        Log.info('📋 Event JSON to send:',
+            name: 'NostrService', category: LogCategory.relay);
+        Log.info(eventJson,
+            name: 'NostrService', category: LogCategory.relay);
+      } catch (e) {
+        Log.warning('Could not serialize event to JSON: $e',
+            name: 'NostrService', category: LogCategory.relay);
+      }
+
+      Log.info('🚀 Calling sendEvent on NostrClient...',
+          name: 'NostrService', category: LogCategory.relay);
       final sentEvent = await _nostrClient!.sendEvent(event);
+      Log.info('🔄 sendEvent call completed',
+          name: 'NostrService', category: LogCategory.relay);
 
       if (sentEvent != null) {
         Log.info('✅ Event broadcast successful:',
@@ -647,6 +676,12 @@ class NostrService  implements INostrService, BackgroundAwareService {
         );
       } else {
         Log.error('❌ sendEvent returned null',
+            name: 'NostrService', category: LogCategory.relay);
+        Log.error('  - Event was valid: ${event.isValid}',
+            name: 'NostrService', category: LogCategory.relay);
+        Log.error('  - Event was signed: ${event.isSigned}',
+            name: 'NostrService', category: LogCategory.relay);
+        Log.error('  - Connected relays: $_connectedRelays',
             name: 'NostrService', category: LogCategory.relay);
         throw NostrServiceException('Failed to broadcast event');
       }
@@ -707,63 +742,6 @@ class NostrService  implements INostrService, BackgroundAwareService {
     return broadcastEvent(event);
   }
 
-  @override
-  Future<NostrBroadcastResult> publishVideoEvent({
-    required String videoUrl,
-    required String content,
-    String? title,
-    String? thumbnailUrl,
-    int? duration,
-    String? dimensions,
-    String? mimeType,
-    String? sha256,
-    int? fileSize,
-    List<String> hashtags = const [],
-  }) async {
-    if (!_isInitialized || !hasKeys) {
-      throw NostrServiceException(
-          'NostrService not initialized or no keys available');
-    }
-
-    // Build tags for NIP-71 video event
-    final tags = <List<String>>[];
-
-    // Required: video URL
-    tags.add(['url', videoUrl]);
-
-    // Optional metadata
-    if (title != null && title.isNotEmpty) tags.add(['title', title]);
-    if (thumbnailUrl != null && thumbnailUrl.isNotEmpty) {
-      tags.add(['thumb', thumbnailUrl]);
-    }
-    if (duration != null) tags.add(['duration', duration.toString()]);
-    if (dimensions != null && dimensions.isNotEmpty) {
-      tags.add(['dim', dimensions]);
-    }
-    if (mimeType != null && mimeType.isNotEmpty) tags.add(['m', mimeType]);
-    if (sha256 != null && sha256.isNotEmpty) tags.add(['x', sha256]);
-    if (fileSize != null) tags.add(['size', fileSize.toString()]);
-
-    // Add hashtags
-    for (final tag in hashtags) {
-      if (tag.isNotEmpty) {
-        tags.add(['t', tag.toLowerCase()]);
-      }
-    }
-
-    // Add client tag
-    tags.add(['client', 'openvine']);
-
-    // Create event
-    final event = Event(
-      publicKey!,
-      22, // Kind 22 for short video (NIP-71)
-      tags,
-      content,
-    );
-
-    return broadcastEvent(event);
-  }
 
   /// Add a new relay
   @override
@@ -1189,7 +1167,7 @@ class NostrService  implements INostrService, BackgroundAwareService {
 
     // Create search filter with NIP-50 search field
     final searchFilter = Filter(
-      kinds: [22], // Video events (Kind 22)
+      kinds: [32222], // NIP-32222 addressable video events
       search: query.trim(),
       authors: authors,
       since: since != null ? since.millisecondsSinceEpoch ~/ 1000 : null,

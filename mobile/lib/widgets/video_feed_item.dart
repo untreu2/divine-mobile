@@ -11,17 +11,24 @@ import 'package:openvine/main.dart';
 import 'package:openvine/models/video_event.dart';
 import 'package:openvine/models/video_state.dart';
 import 'package:openvine/providers/app_providers.dart';
+import 'package:openvine/providers/user_profile_providers.dart';
 import 'package:openvine/services/curated_list_service.dart';
 import 'package:openvine/providers/social_providers.dart' as social_providers;
+import 'package:openvine/providers/tab_visibility_provider.dart';
 import 'package:openvine/providers/video_manager_providers.dart';
 import 'package:openvine/screens/comments_screen.dart';
+import 'package:openvine/services/global_video_registry.dart';
 import 'package:openvine/screens/hashtag_feed_screen.dart';
-import 'package:openvine/services/social_service.dart';
 import 'package:openvine/theme/vine_theme.dart';
 import 'package:openvine/utils/unified_logger.dart';
 import 'package:openvine/widgets/clickable_hashtag_text.dart';
 import 'package:openvine/widgets/share_video_menu.dart';
+import 'package:openvine/widgets/video_metrics_tracker.dart';
 import 'package:video_player/video_player.dart';
+import 'package:openvine/providers/optimistic_follow_provider.dart';
+
+/// Context enum to specify which tab the VideoFeedItem belongs to
+enum TabContext { feed, explore }
 
 /// Individual video item widget implementing TDD specifications
 ///
@@ -38,10 +45,12 @@ class VideoFeedItem extends ConsumerStatefulWidget {
     required this.isActive,
     super.key,
     this.onVideoError,
+    this.tabContext = TabContext.feed,
   });
   final VideoEvent video;
   final bool isActive;
   final Function(String)? onVideoError;
+  final TabContext tabContext;
 
   @override
   ConsumerState<VideoFeedItem> createState() => _VideoFeedItemState();
@@ -54,9 +63,6 @@ class _VideoFeedItemState extends ConsumerState<VideoFeedItem>
   bool _userPaused = false; // Track if user manually paused the video
   late AnimationController _iconAnimationController;
 
-  // Lazy comment loading state
-  bool _hasLoadedComments = false;
-  int? _commentCount;
   
   // Loading state management
   Timer? _readinessCheckTimer;
@@ -93,8 +99,6 @@ class _VideoFeedItemState extends ConsumerState<VideoFeedItem>
           '🔄 Video changed from ${oldWidget.video.id.substring(0, 8)}... to ${widget.video.id.substring(0, 8)}... - resetting comment state',
           name: 'VideoFeedItem',
           category: LogCategory.ui);
-      _hasLoadedComments = false;
-      _commentCount = null;
       // Check reactions for the new video
       _checkVideoReactions();
     }
@@ -312,7 +316,17 @@ class _VideoFeedItemState extends ConsumerState<VideoFeedItem>
           name: 'VideoFeedItem',
           category: LogCategory.ui);
       setState(() {
+        // Unregister old controller if it exists
+        if (_controller != null) {
+          GlobalVideoRegistry().unregisterController(_controller!);
+        }
+        
         _controller = newController;
+        
+        // Register new controller with global video registry
+        if (_controller != null) {
+          GlobalVideoRegistry().registerController(_controller!);
+        }
       });
 
       // Auto-play video when controller becomes available and video is active
@@ -381,6 +395,7 @@ class _VideoFeedItemState extends ConsumerState<VideoFeedItem>
         name: 'VideoFeedItem',
         category: LogCategory.ui,
       );
+      
       return;
     }
 
@@ -392,6 +407,8 @@ class _VideoFeedItemState extends ConsumerState<VideoFeedItem>
         name: 'VideoFeedItem',
         category: LogCategory.ui,
       );
+      
+      
       ref.read(videoManagerProvider.notifier).resumeVideo(widget.video.id);
       // Only loop when the video is active (not in background/comments)
       _controller!.setLooping(widget.isActive);
@@ -403,9 +420,14 @@ class _VideoFeedItemState extends ConsumerState<VideoFeedItem>
 
   void _trackVideoView() {
     try {
-      final analyticsService =
-          ref.read(analyticsServiceProvider);
-      analyticsService.trackVideoView(widget.video);
+      final analyticsService = ref.read(analyticsServiceProvider);
+      final authService = ref.read(authServiceProvider);
+      
+      // Track with current user's pubkey for proper unique viewer counting
+      analyticsService.trackVideoViewWithUser(
+        widget.video,
+        userId: authService.currentPublicKeyHex,
+      );
     } catch (e) {
       // Analytics is optional - don't crash if service is not available
       Log.warning('Analytics service not available: $e',
@@ -414,8 +436,12 @@ class _VideoFeedItemState extends ConsumerState<VideoFeedItem>
   }
 
   void _checkAutoPlay(VideoState videoState) {
-    // Only auto-play if video is ready, widget is active, and user hasn't manually paused
+    // Check if this video's tab is currently active
+    final isTabActive = _getTabActiveStatus();
+    
+    // Only auto-play if video is ready, widget is active, tab is active, and user hasn't manually paused
     if (widget.isActive &&
+        isTabActive &&
         videoState.loadingState == VideoLoadingState.ready &&
         _controller != null &&
         _controller!.value.isInitialized &&
@@ -424,11 +450,19 @@ class _VideoFeedItemState extends ConsumerState<VideoFeedItem>
       // Don't auto-play if user manually paused
 
       Log.info(
-        '🎬 Auto-playing video: ${widget.video.id.substring(0, 8)}',
+        '🎬 Auto-playing video: ${widget.video.id.substring(0, 8)} (tab active: $isTabActive)',
         name: 'VideoFeedItem',
         category: LogCategory.ui,
       );
       _playVideo();
+    } else if (!isTabActive && _controller != null && _controller!.value.isPlaying) {
+      // Pause video if tab is no longer active
+      Log.info(
+        '⏸️ Pausing video due to tab switch: ${widget.video.id.substring(0, 8)} (tab active: $isTabActive)',
+        name: 'VideoFeedItem',
+        category: LogCategory.ui,
+      );
+      _pauseVideo();
     }
   }
 
@@ -534,14 +568,36 @@ class _VideoFeedItemState extends ConsumerState<VideoFeedItem>
     }
   }
 
+  /// Check if this video's tab is currently active
+  bool _getTabActiveStatus() {
+    // FIXED: Use specific tab context to prevent cross-tab video continuation
+    // CRITICAL: Also check if profile tab is active to prevent background playback
+    final isProfileTabActive = ref.watch(isProfileTabActiveProvider);
+    
+    // If profile tab is active, no videos should auto-play
+    if (isProfileTabActive) {
+      return false;
+    }
+    
+    switch (widget.tabContext) {
+      case TabContext.feed:
+        return ref.watch(isFeedTabActiveProvider);
+      case TabContext.explore:
+        return ref.watch(isExploreTabActiveProvider);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     // Watch VideoManagerProvider to trigger rebuilds when state changes
     final videoManagerState = ref.watch(videoManagerProvider);
     final videoState = videoManagerState.getVideoState(widget.video.id);
+
+    // Check if this video's tab is currently active
+    final isTabActive = _getTabActiveStatus();
     
     Log.info(
-        '🔵 Build triggered for ${widget.video.id.substring(0, 8)}...',
+        '🔵 Build triggered for ${widget.video.id.substring(0, 8)}... (tab active: $isTabActive)',
         name: 'VideoFeedItem',
         category: LogCategory.ui);
 
@@ -576,7 +632,12 @@ class _VideoFeedItemState extends ConsumerState<VideoFeedItem>
       });
     }
 
-    return _buildVideoContent(videoState);
+    // Wrap with VideoMetricsTracker to track engagement
+    return VideoMetricsTracker(
+      video: widget.video,
+      controller: _controller,
+      child: _buildVideoContent(videoState),
+    );
   }
 
   /// Estimate the height needed for text content below video
@@ -1372,9 +1433,10 @@ class _VideoFeedItemState extends ConsumerState<VideoFeedItem>
 
   Widget _buildCreatorInfo() => Consumer(
         builder: (context, ref, child) {
-          final profileService = ref.watch(userProfileServiceProvider);
+          // Watch the Riverpod profile provider for reactive updates
+          final profileState = ref.watch(userProfileNotifierProvider);
           final authService = ref.watch(authServiceProvider);
-          final profile = profileService.getCachedProfile(widget.video.pubkey);
+          final profile = profileState.getCachedProfile(widget.video.pubkey);
           final displayName = profile?.displayName ??
               profile?.name ??
               '@${widget.video.pubkey.substring(0, 8)}...';
@@ -1449,11 +1511,9 @@ class _VideoFeedItemState extends ConsumerState<VideoFeedItem>
                 const SizedBox(width: 12),
                 Consumer(
                   builder: (context, ref, child) {
-                    final socialService = ref.watch(socialServiceProvider);
-                    final isFollowing =
-                        socialService.isFollowing(widget.video.pubkey);
+                    final isFollowing = ref.watch(isFollowingProvider(widget.video.pubkey));
                     return ElevatedButton(
-                      onPressed: () => _handleFollow(context, socialService),
+                      onPressed: () => _handleFollow(context, ref),
                       style: ElevatedButton.styleFrom(
                         backgroundColor:
                             isFollowing ? Colors.grey[700] : Colors.blue,
@@ -1481,13 +1541,13 @@ class _VideoFeedItemState extends ConsumerState<VideoFeedItem>
 
   Widget _buildRepostAttribution() => Consumer(
         builder: (context, ref, child) {
-          final profileService = ref.watch(userProfileServiceProvider);
+          // Watch the Riverpod profile provider for reactive updates
+          final profileState = ref.watch(userProfileNotifierProvider);
           if (widget.video.reposterPubkey == null) {
             return const SizedBox.shrink();
           }
 
-          final repostProfile =
-              profileService.getCachedProfile(widget.video.reposterPubkey!);
+          final repostProfile = profileState.getCachedProfile(widget.video.reposterPubkey!);
           final reposterName = repostProfile?.displayName ??
               repostProfile?.name ??
               '@${widget.video.reposterPubkey!.substring(0, 8)}...';
@@ -1537,54 +1597,19 @@ class _VideoFeedItemState extends ConsumerState<VideoFeedItem>
               builder: (context, ref, child) {
                 final socialState = ref.watch(social_providers.socialNotifierProvider);
                 final isLiked = socialState.isLiked(widget.video.id);
-                final likeCount = socialState.likeCounts[widget.video.id] ?? 0;
 
-                return Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    _buildActionButton(
-                      icon: isLiked ? Icons.favorite : Icons.favorite_border,
-                      color: isLiked ? Colors.red : Colors.white,
-                      onPressed: () => _handleLike(context),
-                    ),
-                    if (likeCount > 0) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        _formatLikeCount(likeCount),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ],
+                return _buildActionButton(
+                  icon: isLiked ? Icons.favorite : Icons.favorite_border,
+                  color: isLiked ? Colors.red : Colors.white,
+                  onPressed: () => _handleLike(context),
                 );
               },
             ),
 
-            // Comment button with lazy loading count
-            Stack(
-              alignment: Alignment.center,
-              children: [
-                _buildActionButton(
-                  icon: Icons.comment_outlined,
-                  onPressed: () => _handleCommentTap(context),
-                ),
-                Positioned(
-                  top: 32,
-                  child: Text(
-                    _hasLoadedComments
-                        ? (_commentCount != null && _commentCount! > 0
-                            ? _commentCount!.toString()
-                            : '')
-                        : '?',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                    ),
-                  ),
-                ),
-              ],
+            // Comment button
+            _buildActionButton(
+              icon: Icons.comment_outlined,
+              onPressed: () => _handleCommentTap(context),
             ),
 
             // Repost button
@@ -1701,45 +1726,9 @@ class _VideoFeedItemState extends ConsumerState<VideoFeedItem>
     });
   }
 
-  Future<int> _getCommentCount() async {
-    try {
-      final socialService = ref.read(socialServiceProvider);
-      var count = 0;
 
-      await for (final _
-          in socialService.fetchCommentsForEvent(widget.video.id).take(100)) {
-        count++;
-      }
-
-      return count;
-    } catch (e) {
-      Log.error('Error getting comment count: $e',
-          name: 'VideoFeedItem', category: LogCategory.ui);
-      return 0;
-    }
-  }
-
-  /// Handle comment icon tap - loads comments lazily and then opens comments screen
+  /// Handle comment icon tap - opens comments screen
   Future<void> _handleCommentTap(BuildContext context) async {
-    if (!_hasLoadedComments) {
-      try {
-        setState(() {
-          _hasLoadedComments = true; // Show loading state immediately
-        });
-
-        final count = await _getCommentCount();
-        setState(() {
-          _commentCount = count;
-        });
-      } catch (e) {
-        Log.error('Error loading comment count: $e',
-            name: 'VideoFeedItem', category: LogCategory.ui);
-        setState(() {
-          _commentCount = 0;
-        });
-      }
-    }
-
     _openComments(context);
   }
 
@@ -1760,15 +1749,6 @@ class _VideoFeedItemState extends ConsumerState<VideoFeedItem>
     }
   }
 
-  String _formatLikeCount(int count) {
-    if (count >= 1000000) {
-      return '${(count / 1000000).toStringAsFixed(1)}M';
-    } else if (count >= 1000) {
-      return '${(count / 1000).toStringAsFixed(1)}K';
-    } else {
-      return count.toString();
-    }
-  }
 
   void _handleShare(BuildContext context) {
     // Pause video before showing share menu
@@ -1791,7 +1771,7 @@ class _VideoFeedItemState extends ConsumerState<VideoFeedItem>
   }
 
   Future<void> _handleFollow(
-      BuildContext context, SocialService socialService) async {
+      BuildContext context, WidgetRef ref) async {
     try {
       final authService = ref.read(authServiceProvider);
       if (!authService.isAuthenticated) {
@@ -1806,37 +1786,16 @@ class _VideoFeedItemState extends ConsumerState<VideoFeedItem>
         return;
       }
 
-      final isFollowing = socialService.isFollowing(widget.video.pubkey);
+      final optimisticMethods = ref.read(optimisticFollowMethodsProvider);
+      final isFollowing = ref.read(isFollowingProvider(widget.video.pubkey));
+      
       if (isFollowing) {
-        await socialService.unfollowUser(widget.video.pubkey);
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('User unfollowed'),
-              backgroundColor: Colors.grey,
-            ),
-          );
-        }
+        await optimisticMethods.unfollowUser(widget.video.pubkey);
       } else {
-        await socialService.followUser(widget.video.pubkey);
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('User followed successfully!'),
-              backgroundColor: Colors.green,
-            ),
-          );
-        }
+        await optimisticMethods.followUser(widget.video.pubkey);
       }
     } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to follow/unfollow user: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+      // Silently handle error - optimistic state will be reverted
     }
   }
 

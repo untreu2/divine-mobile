@@ -1,5 +1,5 @@
 // ABOUTME: Vine-style preview screen for reviewing recorded videos before publishing
-// ABOUTME: Allows users to add title, description, and manage their vine before publishing
+// ABOUTME: Uses VideoManager providers for secure controller creation and memory management
 
 import 'dart:io';
 
@@ -7,6 +7,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openvine/models/pending_upload.dart';
 import 'package:openvine/providers/app_providers.dart';
+import 'package:openvine/providers/video_manager_providers.dart';
+import 'package:openvine/services/video_manager_interface.dart';
 import 'package:openvine/theme/vine_theme.dart';
 import 'package:openvine/utils/unified_logger.dart';
 import 'package:video_player/video_player.dart';
@@ -30,7 +32,7 @@ class _VinePreviewScreenState extends ConsumerState<VinePreviewScreen> {
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _hashtagsController = TextEditingController();
-  VideoPlayerController? _videoController;
+  String? _videoControllerId;
   bool _isUploading = false;
   bool _isPlaying = false;
   bool _isExpiringPost = false;
@@ -51,7 +53,11 @@ class _VinePreviewScreenState extends ConsumerState<VinePreviewScreen> {
 
   @override
   void dispose() {
-    _videoController?.dispose();
+    if (_videoControllerId != null) {
+      // VideoManager will handle cleanup and GlobalVideoRegistry coordination
+      ref.read(videoManagerProvider.notifier).disposeVideo(_videoControllerId!);
+      _videoControllerId = null;
+    }
     _titleController.dispose();
     _descriptionController.dispose();
     _hashtagsController.dispose();
@@ -60,11 +66,21 @@ class _VinePreviewScreenState extends ConsumerState<VinePreviewScreen> {
   }
 
   Future<void> _initializeVideoPlayer() async {
-    _videoController = VideoPlayerController.file(widget.videoFile);
     try {
-      await _videoController!.initialize();
-      _videoController!.setLooping(true);
-      if (mounted) {
+      // Use VideoManager to create file controller securely
+      final videoManager = ref.read(videoManagerProvider.notifier);
+      final controllerId = 'vine_preview_${widget.videoFile.path.hashCode}';
+      
+      final controller = await videoManager.createFileController(
+        controllerId,
+        widget.videoFile,
+        priority: PreloadPriority.current,
+      );
+      
+      if (controller != null && mounted) {
+        _videoControllerId = controllerId;
+        
+        await controller.setLooping(true);
         setState(() {});
         // Auto-play the video
         _playVideo();
@@ -76,20 +92,26 @@ class _VinePreviewScreenState extends ConsumerState<VinePreviewScreen> {
   }
 
   void _playVideo() {
-    if (_videoController?.value.isInitialized == true) {
-      _videoController!.play();
-      setState(() {
-        _isPlaying = true;
-      });
+    if (_videoControllerId != null) {
+      final controller = ref.read(videoPlayerControllerProvider(_videoControllerId!));
+      if (controller?.value.isInitialized == true) {
+        controller!.play();
+        setState(() {
+          _isPlaying = true;
+        });
+      }
     }
   }
 
   void _pauseVideo() {
-    if (_videoController?.value.isInitialized == true) {
-      _videoController!.pause();
-      setState(() {
-        _isPlaying = false;
-      });
+    if (_videoControllerId != null) {
+      final controller = ref.read(videoPlayerControllerProvider(_videoControllerId!));
+      if (controller?.value.isInitialized == true) {
+        controller!.pause();
+        setState(() {
+          _isPlaying = false;
+        });
+      }
     }
   }
 
@@ -102,7 +124,13 @@ class _VinePreviewScreenState extends ConsumerState<VinePreviewScreen> {
   }
 
   @override
-  Widget build(BuildContext context) => Scaffold(
+  Widget build(BuildContext context) {
+    // Get controller from VideoManager
+    final controller = _videoControllerId != null 
+        ? ref.watch(videoPlayerControllerProvider(_videoControllerId!))
+        : null;
+
+    return Scaffold(
         backgroundColor: Colors.black,
         body: SafeArea(
           child: Column(
@@ -169,7 +197,7 @@ class _VinePreviewScreenState extends ConsumerState<VinePreviewScreen> {
                       alignment: Alignment.center,
                       children: [
                         // Video player
-                        if (_videoController?.value.isInitialized == true)
+                        if (controller?.value.isInitialized == true)
                           GestureDetector(
                             onTap: _togglePlayPause,
                             child: SizedBox(
@@ -178,9 +206,9 @@ class _VinePreviewScreenState extends ConsumerState<VinePreviewScreen> {
                               child: FittedBox(
                                 fit: BoxFit.cover,
                                 child: SizedBox(
-                                  width: _videoController!.value.size.width,
-                                  height: _videoController!.value.size.height,
-                                  child: VideoPlayer(_videoController!),
+                                  width: controller!.value.size.width,
+                                  height: controller.value.size.height,
+                                  child: VideoPlayer(controller),
                                 ),
                               ),
                             ),
@@ -209,7 +237,7 @@ class _VinePreviewScreenState extends ConsumerState<VinePreviewScreen> {
                           ),
 
                         // Play/pause overlay
-                        if (_videoController?.value.isInitialized == true &&
+                        if (controller?.value.isInitialized == true &&
                             !_isPlaying)
                           GestureDetector(
                             onTap: _togglePlayPause,
@@ -479,6 +507,7 @@ class _VinePreviewScreenState extends ConsumerState<VinePreviewScreen> {
           ),
         ),
       );
+  }
 
   Widget _buildExpirationOption(String label, int hours) {
     final isSelected = _expirationHours == hours;

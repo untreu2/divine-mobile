@@ -37,7 +37,7 @@ void main() {
         try {
           // Initialize service with real relay
           Log.debug('🔌 Initializing NostrService with real relay...');
-          await service.initialize(customRelays: ['wss://vine.hol.is']);
+          await service.initialize(customRelays: ['wss://relay3.openvine.co']);
 
           expect(service.isInitialized, true);
           expect(service.connectedRelays.isNotEmpty, true);
@@ -124,16 +124,20 @@ void main() {
           final relayStatus = service.getRelayStatus();
           Log.debug('All relay statuses: $relayStatus');
 
-          // Test 4: Publish a video event (Kind 22)
+          // Test 4: Publish a video event (Kind 22) - using broadcastEvent instead
           Log.debug('\n🎬 Testing video event publishing...');
-          final videoResult = await service.publishVideoEvent(
-            videoUrl: 'https://example.com/test-video.mp4',
-            content: 'Test video from integration test',
-            title: 'Integration Test Video',
-            duration: 6,
-            dimensions: '1920x1080',
-            mimeType: 'video/mp4',
+          final videoEvent = Event(
+            service.publicKey ?? '',
+            22,
+            [
+              ['url', 'https://example.com/test-video.mp4'],
+              ['title', 'Integration Test Video'],
+              ['duration', '6'],
+              ['dimensions', '1920x1080'],
+            ],
+            'Test video from integration test',
           );
+          final videoResult = await service.broadcastEvent(videoEvent);
 
           expect(videoResult.successCount, greaterThan(0));
           Log.debug(

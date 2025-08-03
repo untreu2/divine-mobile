@@ -211,14 +211,9 @@ void main() {
             'height': 1080,
             'fps': 30,
             'bitrate': 5000000,
+            'duration': 6.5,
           },
           processedAt: DateTime.now(),
-          originalUploadId: 'upload-id-from-real-test',
-          mimeType: 'video/mp4',
-          fileSize: 1048576,
-          width: 1920,
-          height: 1080,
-          duration: 6.5,
         );
 
         // Verify NIP-94 tag generation
@@ -257,8 +252,6 @@ void main() {
           tags: [],
           metadata: {},
           processedAt: DateTime.now(),
-          originalUploadId: 'minimal-upload',
-          mimeType: 'video/mp4',
         );
 
         expect(minimalEvent.isReadyForPublishing, true);
@@ -274,8 +267,6 @@ void main() {
           tags: [],
           metadata: {},
           processedAt: DateTime.now(),
-          originalUploadId: 'invalid-upload',
-          mimeType: 'video/mp4',
         );
 
         expect(invalidEvent.isReadyForPublishing, false);

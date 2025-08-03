@@ -1,5 +1,5 @@
 // ABOUTME: Test that AuthService adds required expiration tag for Kind 0 events
-// ABOUTME: Verifies the fix for vine.hol.is relay compatibility
+// ABOUTME: Verifies the fix for relay3.openvine.co relay compatibility
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:openvine/utils/unified_logger.dart';
@@ -87,8 +87,8 @@ void main() {
       Log.info('✅ Expiration tag format matches Python script: $expirationTag', name: 'ExpirationTagTest');
     });
 
-    test('Required tags combination for vine.hol.is relay', () async {
-      // Test the complete tag set that vine.hol.is relay requires
+    test('Required tags combination for relay3.openvine.co relay', () async {
+      // Test the complete tag set that relay3.openvine.co relay requires
       final eventTags = <List<String>>[];
 
       // Add vine tag
@@ -108,13 +108,13 @@ void main() {
           eventTags.any((tag) => tag.length >= 2 && tag[0] == 'expiration');
 
       expect(hasVineTag, isTrue,
-          reason: 'h:vine tag is required by vine.hol.is relay');
+          reason: 'h:vine tag is required by relay3.openvine.co relay');
       expect(hasExpirationTag, isTrue,
           reason:
-              'expiration tag is required for Kind 0 events by vine.hol.is relay');
+              'expiration tag is required for Kind 0 events by relay3.openvine.co relay');
 
       Log.info(
-          '✅ Complete tag set for vine.hol.is relay compatibility: $eventTags', name: 'ExpirationTagTest');
+          '✅ Complete tag set for relay3.openvine.co relay compatibility: $eventTags', name: 'ExpirationTagTest');
     });
   });
 }

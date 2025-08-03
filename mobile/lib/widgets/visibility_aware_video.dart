@@ -47,7 +47,7 @@ mixin VideoVisibilityMixin<T extends ConsumerStatefulWidget> on ConsumerState<T>
     } catch (e) {
       // Visibility manager might not be available
     }
-    
+    super.dispose();
   }
 }
 
@@ -75,7 +75,7 @@ class _VisibilityAwareVideoState extends ConsumerState<VisibilityAwareVideo> {
   @override
   void dispose() {
     _mounted = false;
-    
+    super.dispose();
   }
 
   @override

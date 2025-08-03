@@ -98,7 +98,7 @@ class VideoNetworkService {
     _activeSubscriptionIds.add(subscriptionId);
   }
 
-  /// Query historical events
+  /// Query historical events with immediate processing
   Future<List<Event>> queryHistoricalEvents({
     int? until,
     int limit = 200,
@@ -119,25 +119,70 @@ class VideoNetworkService {
       category: LogCategory.video,
     );
 
-    // Use subscribeToEvents for one-time query
     final events = <Event>[];
     final completer = Completer<List<Event>>();
+    
+    // Track if we've received the expected number of events
+    bool hasReceivedEvents = false;
+    Timer? stabilityTimer;
 
     late StreamSubscription<Event> subscription;
     subscription = nostrService.subscribeToEvents(filters: [filter]).listen(
-      events.add,
+      (event) {
+        // Process events immediately as they arrive
+        events.add(event);
+        hasReceivedEvents = true;
+        
+        // Reset stability timer on each new event
+        stabilityTimer?.cancel();
+        
+        // If we've reached the limit, complete immediately
+        if (events.length >= limit) {
+          subscription.cancel();
+          if (!completer.isCompleted) {
+            Log.debug('Historical query completed with ${events.length} events (limit reached)',
+                name: 'VideoNetworkService', category: LogCategory.video);
+            completer.complete(events);
+          }
+          return;
+        }
+        
+        // Set a short stability timer to complete when events stop arriving
+        stabilityTimer = Timer(const Duration(milliseconds: 500), () {
+          subscription.cancel();
+          if (!completer.isCompleted) {
+            Log.debug('Historical query completed with ${events.length} events (stable)',
+                name: 'VideoNetworkService', category: LogCategory.video);
+            completer.complete(events);
+          }
+        });
+      },
       onDone: () {
-        completer.complete(events);
+        stabilityTimer?.cancel();
+        if (!completer.isCompleted) {
+          Log.debug('Historical query stream closed with ${events.length} events',
+              name: 'VideoNetworkService', category: LogCategory.video);
+          completer.complete(events);
+        }
       },
       onError: (Object error) {
-        completer.completeError(error);
+        stabilityTimer?.cancel();
+        subscription.cancel();
+        Log.error('Historical query error: $error',
+            name: 'VideoNetworkService', category: LogCategory.video);
+        if (!completer.isCompleted) {
+          completer.completeError(error);
+        }
       },
     );
 
-    // Close subscription after a short delay to allow events to arrive
-    Timer(const Duration(seconds: 2), () {
-      subscription.cancel();
-      if (!completer.isCompleted) {
+    // Fallback timeout only if no events received at all
+    Timer(const Duration(seconds: 10), () {
+      if (!hasReceivedEvents && !completer.isCompleted) {
+        stabilityTimer?.cancel();
+        subscription.cancel();
+        Log.debug('Historical query timeout with no events received',
+            name: 'VideoNetworkService', category: LogCategory.video);
         completer.complete(events);
       }
     });

@@ -4,6 +4,8 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:nostr_sdk/event.dart';
+import 'package:nostr_sdk/filter.dart';
 import 'package:openvine/services/auth_service.dart';
 import 'package:openvine/services/nostr_service_interface.dart';
 import 'package:openvine/utils/unified_logger.dart';
@@ -171,6 +173,9 @@ class CuratedListService  {
 
   final List<CuratedList> _lists = [];
   bool _isInitialized = false;
+  
+  // Track relay sync status
+  bool _hasSyncedWithRelays = false;
 
   // Getters
   List<CuratedList> get lists => List.unmodifiable(_lists);
@@ -189,6 +194,9 @@ class CuratedListService  {
       if (!hasDefaultList()) {
         await _createDefaultList();
       }
+      
+      // Sync with relays to get all user's lists
+      await fetchUserListsFromRelays();
 
       _isInitialized = true;
       Log.info('Curated list service initialized with ${_lists.length} lists',
@@ -791,6 +799,249 @@ class CuratedListService  {
       await _prefs.setString(listsStorageKey, jsonEncode(listsJson));
     } catch (e) {
       Log.error('Failed to save curated lists: $e',
+          name: 'CuratedListService', category: LogCategory.system);
+    }
+  }
+  
+  /// Fetch user's curated lists from Nostr relays on app startup
+  Future<void> fetchUserListsFromRelays() async {
+    if (!_authService.isAuthenticated) {
+      Log.warning('Cannot fetch lists from relays - user not authenticated',
+          name: 'CuratedListService', category: LogCategory.system);
+      return;
+    }
+    
+    if (_hasSyncedWithRelays) {
+      Log.debug('Already synced with relays this session',
+          name: 'CuratedListService', category: LogCategory.system);
+      return;
+    }
+    
+    final userPubkey = _authService.currentPublicKeyHex;
+    if (userPubkey == null) return;
+    
+    Log.info('📋 Fetching user\'s curated lists from relays...',
+        name: 'CuratedListService', category: LogCategory.system);
+    
+    try {
+      final completer = Completer<void>();
+      final receivedEvents = <Event>[];
+      
+      // Subscribe to user's own Kind 30005 events (NIP-51 curated lists)
+      final subscription = _nostrService.subscribeToEvents(
+        filters: [
+          Filter(
+            authors: [userPubkey],
+            kinds: [30005], // NIP-51 curated lists
+          ),
+        ],
+      );
+      
+      // Set a timeout for the subscription
+      Timer? timeoutTimer;
+      timeoutTimer = Timer(const Duration(seconds: 10), () {
+        Log.debug('Relay sync timeout reached, processing received events',
+            name: 'CuratedListService', category: LogCategory.system);
+        if (!completer.isCompleted) {
+          completer.complete();
+        }
+      });
+      
+      subscription.listen(
+        (event) {
+          receivedEvents.add(event);
+          Log.debug('Received list event from relay: ${event.id.substring(0, 8)}...',
+              name: 'CuratedListService', category: LogCategory.system);
+        },
+        onDone: () {
+          timeoutTimer?.cancel();
+          if (!completer.isCompleted) {
+            completer.complete();
+          }
+        },
+        onError: (error) {
+          Log.error('Error fetching lists from relay: $error',
+              name: 'CuratedListService', category: LogCategory.system);
+          timeoutTimer?.cancel();
+          if (!completer.isCompleted) {
+            completer.complete();
+          }
+        },
+      );
+      
+      await completer.future;
+      
+      // Process received events
+      if (receivedEvents.isNotEmpty) {
+        await _processReceivedListEvents(receivedEvents);
+      }
+      
+      _hasSyncedWithRelays = true;
+      Log.info('✅ Relay sync complete. Found ${receivedEvents.length} list events',
+          name: 'CuratedListService', category: LogCategory.system);
+      
+    } catch (e) {
+      Log.error('Failed to fetch lists from relays: $e',
+          name: 'CuratedListService', category: LogCategory.system);
+    }
+  }
+  
+  /// Process list events received from relays
+  Future<void> _processReceivedListEvents(List<Event> events) async {
+    // Group events by 'd' tag to handle replaceable events
+    final eventsByDTag = <String, Event>{};
+    
+    for (final event in events) {
+      final dTag = _extractDTag(event);
+      if (dTag != null) {
+        // Keep only the latest event for each 'd' tag
+        final existingEvent = eventsByDTag[dTag];
+        if (existingEvent == null || event.createdAt > existingEvent.createdAt) {
+          eventsByDTag[dTag] = event;
+        }
+      }
+    }
+    
+    Log.debug('Processing ${eventsByDTag.length} unique lists from relays',
+        name: 'CuratedListService', category: LogCategory.system);
+    
+    // Process each unique list
+    for (final event in eventsByDTag.values) {
+      await _processListEvent(event);
+    }
+    
+    // Save updated lists to local storage
+    await _saveLists();
+  }
+  
+  /// Extract 'd' tag value from event
+  String? _extractDTag(Event event) {
+    for (final tag in event.tags) {
+      if (tag.isNotEmpty && tag[0] == 'd' && tag.length > 1) {
+        return tag[1];
+      }
+    }
+    return null;
+  }
+  
+  /// Process a single list event from Nostr
+  Future<void> _processListEvent(Event event) async {
+    try {
+      final dTag = _extractDTag(event);
+      if (dTag == null) {
+        Log.warning('List event missing d tag: ${event.id}',
+            name: 'CuratedListService', category: LogCategory.system);
+        return;
+      }
+      
+      // Extract list metadata from tags
+      String? title;
+      String? description;
+      String? imageUrl;
+      String? thumbnailEventId;
+      String? playOrderStr;
+      final tags = <String>[];
+      final videoEventIds = <String>[];
+      bool isCollaborative = false;
+      final allowedCollaborators = <String>[];
+      
+      for (final tag in event.tags) {
+        if (tag.isEmpty) continue;
+        
+        switch (tag[0]) {
+          case 'title':
+            if (tag.length > 1) title = tag[1];
+            break;
+          case 'description':
+            if (tag.length > 1) description = tag[1];
+            break;
+          case 'image':
+            if (tag.length > 1) imageUrl = tag[1];
+            break;
+          case 'thumbnail':
+            if (tag.length > 1) thumbnailEventId = tag[1];
+            break;
+          case 'playorder':
+            if (tag.length > 1) playOrderStr = tag[1];
+            break;
+          case 't':
+            if (tag.length > 1) tags.add(tag[1]);
+            break;
+          case 'e':
+            if (tag.length > 1) videoEventIds.add(tag[1]);
+            break;
+          case 'collaborative':
+            if (tag.length > 1 && tag[1] == 'true') isCollaborative = true;
+            break;
+          case 'collaborator':
+            if (tag.length > 1) allowedCollaborators.add(tag[1]);
+            break;
+        }
+      }
+      
+      // Use title or fall back to content or default
+      final contentFirstLine = event.content.split('\n').first;
+      final name = title ?? (contentFirstLine.isNotEmpty ? contentFirstLine : 'Untitled List');
+      
+      // Check if we already have this list locally
+      final existingListIndex = _lists.indexWhere((list) => list.id == dTag);
+      
+      if (existingListIndex != -1) {
+        // Update existing list if relay version is newer
+        final existingList = _lists[existingListIndex];
+        if (event.createdAt > existingList.updatedAt.millisecondsSinceEpoch ~/ 1000) {
+          Log.debug('Updating existing list from relay: $name',
+              name: 'CuratedListService', category: LogCategory.system);
+          
+          _lists[existingListIndex] = CuratedList(
+            id: dTag,
+            name: name,
+            description: description ?? event.content,
+            imageUrl: imageUrl,
+            videoEventIds: videoEventIds,
+            createdAt: existingList.createdAt, // Keep original creation time
+            updatedAt: DateTime.fromMillisecondsSinceEpoch(event.createdAt * 1000),
+            isPublic: true, // Lists from relays are public
+            nostrEventId: event.id,
+            tags: tags,
+            isCollaborative: isCollaborative,
+            allowedCollaborators: allowedCollaborators,
+            thumbnailEventId: thumbnailEventId,
+            playOrder: playOrderStr != null 
+                ? PlayOrderExtension.fromString(playOrderStr)
+                : PlayOrder.chronological,
+          );
+        } else {
+          Log.debug('Skipping older relay version of list: $name',
+              name: 'CuratedListService', category: LogCategory.system);
+        }
+      } else {
+        // Add new list from relay
+        Log.debug('Adding new list from relay: $name',
+            name: 'CuratedListService', category: LogCategory.system);
+        
+        _lists.add(CuratedList(
+          id: dTag,
+          name: name,
+          description: description ?? event.content,
+          imageUrl: imageUrl,
+          videoEventIds: videoEventIds,
+          createdAt: DateTime.fromMillisecondsSinceEpoch(event.createdAt * 1000),
+          updatedAt: DateTime.fromMillisecondsSinceEpoch(event.createdAt * 1000),
+          isPublic: true, // Lists from relays are public
+          nostrEventId: event.id,
+          tags: tags,
+          isCollaborative: isCollaborative,
+          allowedCollaborators: allowedCollaborators,
+          thumbnailEventId: thumbnailEventId,
+          playOrder: playOrderStr != null 
+              ? PlayOrderExtension.fromString(playOrderStr)
+              : PlayOrder.chronological,
+        ));
+      }
+      
+    } catch (e) {
+      Log.error('Failed to process list event ${event.id}: $e',
           name: 'CuratedListService', category: LogCategory.system);
     }
   }

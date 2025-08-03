@@ -90,6 +90,7 @@ void main() {
         () async {
       // First subscription: Classic vines from specific author
       await videoEventService.subscribeToVideoFeed(
+        subscriptionType: SubscriptionType.discovery,
         authors: [
           '25315276cbaeb8f2ed998ed55d15ef8c9cf2027baea191d1253d9a5c69a2b856'
         ],
@@ -103,6 +104,7 @@ void main() {
 
       // Second subscription: Open feed (all videos, no author filter)
       await videoEventService.subscribeToVideoFeed(
+        subscriptionType: SubscriptionType.discovery,
         limit: 300,
         replace: false,
       );
@@ -138,6 +140,7 @@ void main() {
 
       // First subscription
       await videoEventService.subscribeToVideoFeed(
+        subscriptionType: SubscriptionType.discovery,
         authors: ['testauthor123'],
         limit: 50,
       );
@@ -146,6 +149,7 @@ void main() {
 
       // Exact same subscription
       await videoEventService.subscribeToVideoFeed(
+        subscriptionType: SubscriptionType.discovery,
         authors: ['testauthor123'],
         limit: 50,
       );
@@ -170,6 +174,7 @@ void main() {
 
       // Classic vines subscription
       await videoEventService.subscribeToVideoFeed(
+        subscriptionType: SubscriptionType.discovery,
         authors: [
           '25315276cbaeb8f2ed998ed55d15ef8c9cf2027baea191d1253d9a5c69a2b856'
         ],
@@ -181,6 +186,7 @@ void main() {
 
       // Editor picks subscription (different author)
       await videoEventService.subscribeToVideoFeed(
+        subscriptionType: SubscriptionType.discovery,
         authors: [
           '70ed6c56d6fb355f102a1e985741b5ee65f6ae9f772e028894b321bc74854082'
         ],
@@ -220,22 +226,23 @@ void main() {
       event1.id = 'video-1';
 
       // First subscription
-      await videoEventService.subscribeToVideoFeed(limit: 50);
+      await videoEventService.subscribeToVideoFeed(subscriptionType: SubscriptionType.discovery, limit: 50);
       await Future.delayed(const Duration(milliseconds: 10));
 
       eventStreamController.add(event1);
       await Future.delayed(const Duration(milliseconds: 10));
 
-      expect(videoEventService.videoEvents.length, equals(1));
+      expect(videoEventService.discoveryVideos.length, equals(1));
 
       // Second subscription with replace=true should clear existing videos
       await videoEventService.subscribeToVideoFeed(
+        subscriptionType: SubscriptionType.discovery,
         limit: 100,
         replace: true,
       );
 
       expect(
-        videoEventService.videoEvents.length,
+        videoEventService.discoveryVideos.length,
         equals(0),
         reason: 'replace=true should clear existing videos',
       );
@@ -255,6 +262,7 @@ void main() {
 
       // Subscription with specific parameters
       await videoEventService.subscribeToVideoFeed(
+        subscriptionType: SubscriptionType.discovery,
         authors: ['author1', 'author2'],
         hashtags: ['nostr', 'video'],
         limit: 75,
@@ -264,6 +272,7 @@ void main() {
 
       // Different parameters - should be allowed
       await videoEventService.subscribeToVideoFeed(
+        subscriptionType: SubscriptionType.discovery,
         authors: ['author3'],
         hashtags: ['vine'],
         limit: 50,
@@ -291,6 +300,7 @@ void main() {
 
       // Step 1: Load classic vines (specific author)
       await videoEventService.subscribeToVideoFeed(
+        subscriptionType: SubscriptionType.discovery,
         authors: [
           '25315276cbaeb8f2ed998ed55d15ef8c9cf2027baea191d1253d9a5c69a2b856'
         ],
@@ -304,6 +314,7 @@ void main() {
 
       // Step 2: Load open feed (no author filter) - THIS IS BEING WRONGLY REJECTED
       await videoEventService.subscribeToVideoFeed(
+        subscriptionType: SubscriptionType.discovery,
         limit: 300,
         replace: false,
       );
@@ -322,6 +333,7 @@ void main() {
 
       // Step 3: Load editor picks (different specific author)
       await videoEventService.subscribeToVideoFeed(
+        subscriptionType: SubscriptionType.discovery,
         authors: [
           '70ed6c56d6fb355f102a1e985741b5ee65f6ae9f772e028894b321bc74854082'
         ],

@@ -1,4 +1,4 @@
-// ABOUTME: Test to verify VideoEvent parsing of real kind 22 events from vine.hol.is
+// ABOUTME: Test to verify VideoEvent parsing of real kind 32222 events from relay3.openvine.co
 // ABOUTME: This tests the actual parsing logic with real relay data
 
 import 'package:flutter_test/flutter_test.dart';
@@ -8,14 +8,15 @@ import 'package:openvine/utils/unified_logger.dart';
 
 void main() {
   group('VideoEvent Parsing - Real Relay Data', () {
-    test('should parse kind 22 event with url tag correctly', () {
-      Log.debug('🔍 Testing VideoEvent parsing with real vine.hol.is data...', name: 'VideoEventRealParsingTest', category: LogCategory.system);
+    test('should parse kind 32222 event with url tag correctly', () {
+      Log.debug('🔍 Testing VideoEvent parsing with real relay3.openvine.co data...', name: 'VideoEventRealParsingTest', category: LogCategory.system);
       
-      // Real event from vine.hol.is relay with url tag
+      // Real event from relay3.openvine.co relay with url tag
       final event = Event(
         'd95aa8fc0eff8e488952495b8064991d27fb96ed8652f12cdedc5a4e8b5ae540',
-        22,
+        32222,
         [
+          ["d", "test-video-1751355501029"], // Required for addressable events
           ["url", "https://api.openvine.co/media/1751355501029-7553157a"],
           ["m", "video/mp4"],
           ["title", "Untitled"],
@@ -41,14 +42,15 @@ void main() {
       expect(videoEvent.group, 'vine');
     });
     
-    test('should parse kind 22 event with r tag correctly', () {
+    test('should parse kind 32222 event with r tag correctly', () {
       Log.debug('🔍 Testing VideoEvent parsing with r tag...', name: 'VideoEventRealParsingTest', category: LogCategory.system);
       
-      // Real event from vine.hol.is relay with r tag
+      // Real event from relay3.openvine.co relay with r tag
       final event = Event(
         '033877f4080835f162880482590762c0a7508851e88fe164dd89028743914da5',
-        22,
+        32222,
         [
+          ["d", "itjpUUgL6tE"], // Required for addressable events
           ["h", "vine"],
           ["r", "https://api.openvine.co/media/1751258545721-9733b197", "video"],
           ["r", "https://api.openvine.co/media/1751258547438-fb6bd5f8", "thumbnail"],
@@ -82,8 +84,9 @@ void main() {
       // We need to access the private method - let's create an event and check if it's accepted
       final event = Event(
         '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
-        22,
+        32222,
         [
+          ["d", "test-video-validation"], // Required for addressable events
           ["url", "https://api.openvine.co/media/test-video-id"]
         ],
         '',

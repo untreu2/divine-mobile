@@ -49,19 +49,16 @@ export class ThumbnailService {
     const startTime = Date.now();
     const { size = 'medium', timestamp = 1, format = 'jpg' } = options;
 
+
     try {
       // Check if this is a Nostr event ID (64 char hex) and resolve to fileId
       let actualVideoId = videoId;
+      
       if (/^[a-f0-9]{64}$/i.test(videoId)) {
-        logger.info(`Resolving Nostr event ID ${videoId.substring(0, 8)}... to fileId`);
         const eventMapping = await this.kvStore.get<{ fileId: string, videoUrl?: string }>(`event:${videoId}`, 'json');
         
         if (eventMapping?.fileId) {
           actualVideoId = eventMapping.fileId;
-          logger.info(`Resolved to fileId: ${actualVideoId}`);
-        } else {
-          logger.warn(`No mapping found for event ID ${videoId.substring(0, 8)}...`);
-          // Continue with original ID - might be a direct fileId
         }
       }
 
@@ -70,13 +67,9 @@ export class ThumbnailService {
       const cachedMetadata = await this.kvStore.get<ThumbnailMetadata>(cacheKey, 'json');
 
       if (cachedMetadata) {
-        logger.info(`Thumbnail cache hit for ${actualVideoId}`);
-        
         // Get thumbnail from R2
         const thumbnailObject = await this.r2Bucket.get(cachedMetadata.r2Key);
         if (thumbnailObject) {
-          logger.info(`Served cached thumbnail in ${Date.now() - startTime}ms`);
-
           return new Response(thumbnailObject.body, {
             headers: {
               'Content-Type': `image/${format}`,
@@ -88,15 +81,10 @@ export class ThumbnailService {
       }
 
       // Generate new thumbnail
-      logger.info(`Generating new thumbnail for ${actualVideoId} at ${timestamp}s`);
       const thumbnail = await this.generateThumbnail(actualVideoId, size, timestamp, format);
-
-      logger.info(`Generated new thumbnail in ${Date.now() - startTime}ms`);
-
       return thumbnail;
     } catch (error) {
       logger.error('Failed to get thumbnail:', error);
-
       // Return placeholder image
       return this.getPlaceholderImage();
     }
@@ -111,24 +99,98 @@ export class ThumbnailService {
     timestamp: number,
     format: 'jpg' | 'webp'
   ): Promise<Response> {
-    // First, check if this video exists in our metadata
+    // First, try to get video metadata from v1:video pattern (Stream uploads)
     const videoMetadata = await this.kvStore.get(`v1:video:${videoId}`, 'json');
-    if (!videoMetadata) {
-      throw new Error(`Video ${videoId} not found`);
+    
+    if (videoMetadata) {
+      // Check if video was processed by Cloudflare Stream
+      if (videoMetadata.stream?.uid) {
+        // Use Stream's thumbnail generation API
+        return this.generateFromStream(videoId, videoMetadata.stream, size, timestamp, format);
+      } else if (videoMetadata.directUpload?.r2Key || videoMetadata.r2Key) {
+        // Direct R2 upload - we'll need to handle this differently
+        // For now, return a placeholder as we can't process video in Workers
+        logger.warn(`Cannot generate thumbnail for direct R2 upload: ${videoId}`);
+        return this.getPlaceholderImage();
+      }
     }
 
-    // Check if video was processed by Cloudflare Stream
-    if (videoMetadata.stream?.uid) {
-      // Use Stream's thumbnail generation API
-      return this.generateFromStream(videoId, videoMetadata.stream, size, timestamp, format);
-    } else if (videoMetadata.directUpload?.r2Key || videoMetadata.r2Key) {
-      // Direct R2 upload - we'll need to handle this differently
-      // For now, return a placeholder as we can't process video in Workers
-      logger.warn(`Cannot generate thumbnail for direct R2 upload: ${videoId}`);
-      return this.getPlaceholderImage();
+    // If no v1:video metadata found, check if this is a vine_id lookup
+    // Try to find existing thumbnail file for this video
+    const existingThumbnail = await this.findExistingThumbnail(videoId);
+    if (existingThumbnail) {
+      return existingThumbnail;
     }
 
-    throw new Error('No video source available for thumbnail generation');
+    // Check if videoId might be a Nostr event ID that needs resolving
+    if (/^[a-f0-9]{64}$/i.test(videoId)) {
+      const eventMapping = await this.kvStore.get(`event:${videoId}`, 'json');      
+      if (eventMapping?.fileId) {
+        // Try again with the resolved fileId
+        return this.generateThumbnail(eventMapping.fileId, size, timestamp, format);
+      }
+    }
+
+    logger.warn(`No video metadata or thumbnail found for: ${videoId}`);
+    return this.getPlaceholderImage();
+  }
+
+  /**
+   * Find existing thumbnail file for a video
+   */
+  private async findExistingThumbnail(videoId: string): Promise<Response | null> {
+    try {
+      // Try to find vine_id that matches this videoId
+      let vineId: string | null = null;
+      
+      // Check if this is already a vine ID (11 characters, alphanumeric)
+      if (videoId.length === 11 && /^[a-zA-Z0-9]+$/.test(videoId)) {
+        vineId = videoId;
+      } else {
+        // Try to extract vine ID from filename-like videoId
+        const vineIdMatch = videoId.match(/([a-zA-Z0-9]{11})/);
+        if (vineIdMatch) {
+          vineId = vineIdMatch[1];
+        }
+      }
+      
+      if (vineId) {
+        // Look for thumbnail file in vine_id mapping
+        const vineMapping = await this.kvStore.get(`vine_id:${vineId}`, 'json');
+        
+        if (vineMapping && vineMapping.originalFilename?.includes('_thumb')) {
+          // Found thumbnail file, serve it from R2
+          const r2Key = `uploads/${vineMapping.fileId}.jpg`;
+          let thumbnailObject = await this.r2Bucket.get(r2Key);
+          
+          // If not found with .jpg, try without extension since fileId might already include it
+          if (!thumbnailObject) {
+            const altR2Key = `uploads/${vineMapping.fileId}`;
+            thumbnailObject = await this.r2Bucket.get(altR2Key);
+          }
+          
+          if (thumbnailObject) {
+            // Detect content type from object or filename
+            const contentType = thumbnailObject.httpMetadata?.contentType || 
+                              (vineMapping.originalFilename?.endsWith('.jpg') || vineMapping.originalFilename?.endsWith('.jpeg') ? 'image/jpeg' : 'image/png');
+            
+            return new Response(thumbnailObject.body, {
+              headers: {
+                'Content-Type': contentType,
+                'Cache-Control': 'public, max-age=31536000', // 1 year
+                'X-Thumbnail-Source': 'existing-file',
+                'X-Vine-ID': vineId
+              }
+            });
+          }
+        }
+      }
+      
+      return null;
+    } catch (error) {
+      logger.error('Error finding existing thumbnail:', error);
+      return null;
+    }
   }
 
   /**

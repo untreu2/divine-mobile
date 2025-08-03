@@ -55,36 +55,50 @@ This document outlines the required Nostr event types (kinds) that OpenVine uses
 ```
 
 **Required Tags:**
-- `e` tag - References the original video event ID
+- `a` tag - References the addressable video in format "32222:pubkey:d-tag-value"
 - `p` tag - References the original video author's pubkey
 
-### Kind 22 - Short Videos (NIP-71)
+### Kind 32222 - Addressable Short Looping Videos (NIP-32222)
 **Required for:** Primary video content
 
-**Purpose:** Short-form video content similar to Vine/TikTok
+**Purpose:** Addressable short-form looping video content with editable metadata
 
 **Implementation:**
-- `VideoEventService` subscribes to Kind 22 events
-- `VideoEvent.fromNostrEvent()` parses video metadata
+- `VideoEventService` subscribes to Kind 32222 events
+- `VideoEvent.fromNostrEvent()` parses video metadata including 'd' tag
 - Core content type for the feed
+- Supports metadata updates without republishing
 
 **Example Structure:**
 ```json
 {
-  "kind": 22,
-  "content": "Check out this amazing sunset!",
+  "kind": 32222,
+  "content": "Check out this perfect loop! 🔄",
   "tags": [
-    ["url", "https://example.com/video.mp4"],
-    ["title", "Amazing Sunset"],
-    ["duration", "15"],
-    ["thumb", "https://example.com/thumbnail.jpg"],
-    ["t", "sunset"],
-    ["t", "nature"]
+    ["d", "unique-video-id"],
+    ["title", "Perfect soup stirring loop"],
+    ["imeta",
+      "url https://videos.host/video.mp4",
+      "m video/mp4",
+      "dim 480x480",
+      "blurhash eNH_0EI:${M{%LRjWBaeoLofR*",
+      "image https://videos.host/thumb.jpg"
+    ],
+    ["published_at", "1698789234"],
+    ["duration", "6"],
+    ["alt", "A pot of soup being stirred in a perfect seamless loop"],
+    ["t", "perfectloops"],
+    ["t", "satisfying"]
   ],
   "pubkey": "creator_pubkey",
-  "created_at": 1672531200
+  "created_at": 1698789234
 }
 ```
+
+**Required Tags:**
+- `d` tag - Unique identifier for the addressable event
+- `title` tag - Title of the video
+- `imeta` tag - Video metadata following NIP-92 format
 
 ## Secondary Event Types
 
@@ -121,7 +135,7 @@ This document outlines the required Nostr event types (kinds) that OpenVine uses
 ```dart
 // Required filter for complete video feed functionality
 final filter = Filter(
-  kinds: [22, 6], // Videos AND reposts
+  kinds: [32222, 6], // Addressable videos AND reposts
   // ... other filter parameters
 );
 ```
@@ -156,7 +170,7 @@ Filter(kinds: [3], p: [targetPubkey])
 
 ### Repost System Requirements
 1. **Kind 6 Event Processing:** VideoEventService MUST subscribe to Kind 6 events
-2. **Original Event Fetching:** When receiving Kind 6, fetch the referenced Kind 22 event
+2. **Original Event Fetching:** When receiving Kind 6, fetch the referenced Kind 32222 event using the 'a' tag
 3. **Metadata Preservation:** Repost VideoEvents preserve original content but add repost metadata
 4. **UI Indication:** Display "Reposted by [user]" with green vine theme
 
@@ -171,8 +185,8 @@ The video feed requires both event types working together:
 
 ```dart
 // VideoFeedProvider workflow:
-1. VideoEventService receives Kind 22 (videos) and Kind 6 (reposts)
-2. For Kind 6: fetch original Kind 22 and create repost VideoEvent
+1. VideoEventService receives Kind 32222 (videos) and Kind 6 (reposts)
+2. For Kind 6: fetch original Kind 32222 using the 'a' tag reference and create repost VideoEvent
 3. UserProfileService provides Kind 0 data for user display
 4. UI shows: "Reposted by [Kind 0 name]" above "[Kind 0 name]" for original creator
 ```

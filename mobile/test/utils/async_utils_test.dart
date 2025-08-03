@@ -175,8 +175,8 @@ void main() {
       });
 
       test('should respect maxDelay', () async {
-        var attempts = 0;
         final attemptTimes = <DateTime>[];
+        var attempts = 0;
 
         try {
           await AsyncUtils.retryWithBackoff(

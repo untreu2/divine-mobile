@@ -48,13 +48,16 @@
 	 * Note: Sensitive values should be set using `wrangler secret put`
 	 */
 	"vars": {
-		"ENVIRONMENT": "development",
-		"BASE_URL": "https://nostrvine-backend.your-subdomain.workers.dev",
+		"ENVIRONMENT": "production",
+		"BASE_URL": "https://api.openvine.co",
 		"MAX_FILE_SIZE_FREE": "104857600",
 		"MAX_FILE_SIZE_PRO": "1073741824",
-		"WEBHOOK_SECRET": "nostrvine-webhook-development",
+		"WEBHOOK_SECRET": "nostrvine-webhook-production",
 		"CLOUDINARY_CLOUD_NAME": "dswu0ugmo",
-		"CLOUDFLARE_IMAGES_ACCOUNT_HASH": "your-images-account-hash"
+		"CLOUDFLARE_IMAGES_ACCOUNT_HASH": "your-images-account-hash",
+		"TRENDING_UPDATE_INTERVAL": "300",
+		"MIN_VIEWS_FOR_TRENDING": "1",
+		"CLEANUP_AUTH_TOKEN": "your-secure-cleanup-token"
 	},
 
 	/**
@@ -68,6 +71,10 @@
 		{
 			"binding": "NIP05_STORE",
 			"id": "267e3d46ecd94bea87f51fe03a098c0f"
+		},
+		{
+			"binding": "ANALYTICS_KV",
+			"id": "136757026e7b487ab79ff8bb611dcb18"
 		}
 	],
 
@@ -100,48 +107,6 @@
 				"ENVIRONMENT": "staging",
 				"BASE_URL": "https://nostrvine-backend-staging.your-subdomain.workers.dev"
 			}
-		},
-		"production": {
-			"vars": {
-				"ENVIRONMENT": "production",
-				"BASE_URL": "https://api.nostrvine.com",
-				"MAX_FILE_SIZE_FREE": "104857600",
-				"MAX_FILE_SIZE_PRO": "1073741824",
-				"WEBHOOK_SECRET": "nostrvine-webhook-production",
-				"CLOUDINARY_CLOUD_NAME": "dswu0ugmo",
-				"CLOUDFLARE_IMAGES_ACCOUNT_HASH": "your-images-account-hash"
-			},
-			"r2_buckets": [
-				{ "binding": "MEDIA_BUCKET", "bucket_name": "nostrvine-media" }
-			],
-			"durable_objects": {
-				"bindings": [
-					{
-						"name": "UPLOAD_JOBS",
-						"class_name": "UploadJobManager"
-					}
-				]
-			},
-			"kv_namespaces": [
-				{
-					"binding": "METADATA_CACHE",
-					"id": "45b500d029d24315bb447a066fe9e9df"
-				},
-				{
-					"binding": "NIP05_STORE",
-					"id": "267e3d46ecd94bea87f51fe03a098c0f"
-				}
-			],
-			"analytics_engine_datasets": [
-				{
-					"binding": "UPLOAD_ANALYTICS",
-					"dataset": "nostrvine_uploads"
-				},
-				{
-					"binding": "VIDEO_ANALYTICS",
-					"dataset": "nostrvine_video_views"
-				}
-			]
 		}
 	}
 
@@ -158,6 +123,13 @@
 	 * wrangler secret put CLOUDFLARE_STREAM_TOKEN
 	 * wrangler secret put WEBHOOK_SECRET
 	 */
+
+	/**
+	 * Cron triggers for scheduled tasks
+	 */
+	"triggers": {
+		"crons": ["0 0 * * *"]  // Run cleanup daily at midnight UTC
+	},
 
 	/**
 	 * Smart Placement for edge optimization

@@ -54,7 +54,10 @@ class VineRecordingNotifier extends StateNotifier<VineRecordingUIState> {
       canRecord: _controller.canRecord,
       segments: _controller.segments,
     ),
-  );
+  ) {
+    // Set up callback for recording progress updates
+    _controller.setStateChangeCallback(updateState);
+  }
 
   final VineRecordingController _controller;
 
@@ -99,6 +102,8 @@ class VineRecordingNotifier extends StateNotifier<VineRecordingUIState> {
 
   @override
   void dispose() {
+    // Clear callback to prevent memory leaks
+    _controller.setStateChangeCallback(null);
     _controller.dispose();
     super.dispose();
   }

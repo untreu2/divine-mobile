@@ -1,0 +1,390 @@
+// ABOUTME: Enhanced mobile camera implementation using standard camera package
+// ABOUTME: Adds zoom, focus, and improved camera controls for iOS/Android
+
+import 'dart:async';
+
+import 'package:flutter/material.dart';
+import 'package:camera/camera.dart';
+import 'package:openvine/services/vine_recording_controller.dart';
+import 'package:openvine/utils/unified_logger.dart';
+
+/// Enhanced mobile camera implementation with zoom and focus features
+class EnhancedMobileCameraInterface extends CameraPlatformInterface {
+  CameraController? _controller;
+  List<CameraDescription> _availableCameras = [];
+  int _currentCameraIndex = 0;
+  bool _isRecording = false;
+  
+  // Zoom and focus tracking
+  double _currentZoomLevel = 1.0;
+  double _minZoomLevel = 1.0;
+  double _maxZoomLevel = 1.0;
+  
+  // Flash mode tracking
+  FlashMode _currentFlashMode = FlashMode.auto;
+
+  @override
+  Future<void> initialize() async {
+    _availableCameras = await availableCameras();
+    if (_availableCameras.isEmpty) {
+      throw Exception('No cameras available');
+    }
+
+    // Default to back camera if available
+    _currentCameraIndex = _availableCameras.indexWhere(
+      (cam) => cam.lensDirection == CameraLensDirection.back,
+    );
+    if (_currentCameraIndex == -1) {
+      _currentCameraIndex = 0;
+    }
+
+    await _initializeCurrentCamera();
+  }
+
+  Future<void> _initializeCurrentCamera() async {
+    _controller?.dispose();
+
+    final camera = _availableCameras[_currentCameraIndex];
+    _controller = CameraController(
+      camera, 
+      ResolutionPreset.high, 
+      enableAudio: true,
+      imageFormatGroup: ImageFormatGroup.yuv420,
+    );
+    
+    await _controller!.initialize();
+    await _controller!.prepareForVideoRecording();
+    
+    // Initialize zoom levels
+    _minZoomLevel = await _controller!.getMinZoomLevel();
+    _maxZoomLevel = await _controller!.getMaxZoomLevel();
+    _currentZoomLevel = _minZoomLevel;
+    
+    // Set initial flash mode
+    await _controller!.setFlashMode(_currentFlashMode);
+    
+    Log.info('Enhanced camera initialized - Zoom range: $_minZoomLevel to $_maxZoomLevel',
+        name: 'EnhancedMobileCamera', category: LogCategory.system);
+  }
+
+  @override
+  Future<void> startRecordingSegment(String filePath) async {
+    if (_controller == null) {
+      throw Exception('Camera controller not initialized');
+    }
+
+    if (_isRecording) {
+      Log.warning('Already recording, skipping startVideoRecording',
+          name: 'EnhancedMobileCamera', category: LogCategory.system);
+      return;
+    }
+
+    try {
+      await _controller!.startVideoRecording();
+      _isRecording = true;
+      Log.info('Started enhanced camera recording',
+          name: 'EnhancedMobileCamera', category: LogCategory.system);
+    } catch (e) {
+      Log.error('Failed to start enhanced camera recording: $e',
+          name: 'EnhancedMobileCamera', category: LogCategory.system);
+      rethrow;
+    }
+  }
+
+  @override
+  Future<String?> stopRecordingSegment() async {
+    if (_controller == null) {
+      throw Exception('Camera controller not initialized');
+    }
+
+    if (!_isRecording) {
+      Log.warning('Not currently recording, skipping stopVideoRecording',
+          name: 'EnhancedMobileCamera', category: LogCategory.system);
+      return null;
+    }
+
+    try {
+      final xFile = await _controller!.stopVideoRecording();
+      _isRecording = false;
+      Log.info('Stopped enhanced camera recording: ${xFile.path}',
+          name: 'EnhancedMobileCamera', category: LogCategory.system);
+      return xFile.path;
+    } catch (e) {
+      _isRecording = false;
+      Log.error('Failed to stop enhanced camera recording: $e',
+          name: 'EnhancedMobileCamera', category: LogCategory.system);
+      return null;
+    }
+  }
+
+  @override
+  Future<void> switchCamera() async {
+    if (_availableCameras.length <= 1) return;
+
+    if (_controller == null || !_controller!.value.isInitialized) {
+      Log.warning('Cannot switch camera - controller not initialized',
+          name: 'EnhancedMobileCamera', category: LogCategory.system);
+      return;
+    }
+
+    if (_isRecording) {
+      try {
+        await _controller?.stopVideoRecording();
+      } catch (e) {
+        Log.error('Error stopping recording during camera switch: $e',
+            name: 'EnhancedMobileCamera', category: LogCategory.system);
+      }
+      _isRecording = false;
+    }
+
+    final oldController = _controller;
+    _controller = null;
+
+    try {
+      _currentCameraIndex = (_currentCameraIndex + 1) % _availableCameras.length;
+      await _initializeCurrentCamera();
+      await oldController?.dispose();
+
+      Log.info('✅ Successfully switched to camera $_currentCameraIndex',
+          name: 'EnhancedMobileCamera', category: LogCategory.system);
+    } catch (e) {
+      _controller = oldController;
+      Log.error('Camera switch failed, restored previous camera: $e',
+          name: 'EnhancedMobileCamera', category: LogCategory.system);
+      rethrow;
+    }
+  }
+
+  @override
+  Widget get previewWidget {
+    final controller = _controller;
+    if (controller != null && controller.value.isInitialized) {
+      return EnhancedCameraPreview(
+        controller: controller,
+        onZoomChanged: setZoom,
+        onFocusPoint: setFocusPoint,
+        currentZoom: _currentZoomLevel,
+        minZoom: _minZoomLevel,
+        maxZoom: _maxZoomLevel,
+      );
+    }
+    return const ColoredBox(
+      color: Colors.black,
+      child: Center(
+        child: CircularProgressIndicator(color: Colors.white),
+      ),
+    );
+  }
+
+  @override
+  bool get canSwitchCamera => _availableCameras.length > 1;
+
+  @override
+  void dispose() {
+    if (_isRecording) {
+      try {
+        _controller?.stopVideoRecording();
+      } catch (e) {
+        Log.error('Error stopping recording during disposal: $e',
+            name: 'EnhancedMobileCamera', category: LogCategory.system);
+      }
+      _isRecording = false;
+    }
+    _controller?.dispose();
+  }
+
+  /// Set zoom level
+  Future<void> setZoom(double zoomLevel) async {
+    if (_controller == null || !_controller!.value.isInitialized) return;
+    
+    try {
+      final clampedZoom = zoomLevel.clamp(_minZoomLevel, _maxZoomLevel);
+      await _controller!.setZoomLevel(clampedZoom);
+      _currentZoomLevel = clampedZoom;
+      
+      Log.debug('Set zoom level to ${clampedZoom.toStringAsFixed(1)}x',
+          name: 'EnhancedMobileCamera', category: LogCategory.system);
+    } catch (e) {
+      Log.error('Failed to set zoom: $e',
+          name: 'EnhancedMobileCamera', category: LogCategory.system);
+    }
+  }
+
+  /// Set focus point
+  Future<void> setFocusPoint(Offset point) async {
+    if (_controller == null || !_controller!.value.isInitialized) return;
+    
+    try {
+      await _controller!.setFocusPoint(point);
+      await _controller!.setExposurePoint(point);
+      
+      Log.debug('Set focus/exposure point to: (${point.dx.toStringAsFixed(2)}, ${point.dy.toStringAsFixed(2)})',
+          name: 'EnhancedMobileCamera', category: LogCategory.system);
+    } catch (e) {
+      Log.error('Failed to set focus point: $e',
+          name: 'EnhancedMobileCamera', category: LogCategory.system);
+    }
+  }
+
+  /// Toggle flash mode
+  Future<void> toggleFlash() async {
+    if (_controller == null || !_controller!.value.isInitialized) return;
+    
+    try {
+      _currentFlashMode = _currentFlashMode == FlashMode.off
+          ? FlashMode.auto
+          : (_currentFlashMode == FlashMode.auto ? FlashMode.torch : FlashMode.off);
+      
+      await _controller!.setFlashMode(_currentFlashMode);
+      
+      Log.info('Flash mode changed to $_currentFlashMode',
+          name: 'EnhancedMobileCamera', category: LogCategory.system);
+    } catch (e) {
+      Log.error('Failed to toggle flash: $e',
+          name: 'EnhancedMobileCamera', category: LogCategory.system);
+    }
+  }
+}
+
+/// Enhanced camera preview widget with zoom and focus controls
+class EnhancedCameraPreview extends StatefulWidget {
+  const EnhancedCameraPreview({
+    required this.controller,
+    required this.onZoomChanged,
+    required this.onFocusPoint,
+    required this.currentZoom,
+    required this.minZoom,
+    required this.maxZoom,
+    super.key,
+  });
+
+  final CameraController controller;
+  final Function(double) onZoomChanged;
+  final Function(Offset) onFocusPoint;
+  final double currentZoom;
+  final double minZoom;
+  final double maxZoom;
+
+  @override
+  State<EnhancedCameraPreview> createState() => _EnhancedCameraPreviewState();
+}
+
+class _EnhancedCameraPreviewState extends State<EnhancedCameraPreview> {
+  double _baseZoom = 1.0;
+  Offset? _focusPoint;
+  Timer? _focusTimer;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        // Camera preview
+        CameraPreview(widget.controller),
+        
+        // Gesture detector for zoom and focus
+        Positioned.fill(
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onScaleStart: (details) {
+              _baseZoom = widget.currentZoom;
+            },
+            onScaleUpdate: (details) {
+              // Calculate new zoom level
+              final newZoom = (_baseZoom * details.scale).clamp(
+                widget.minZoom,
+                widget.maxZoom,
+              );
+              widget.onZoomChanged(newZoom);
+            },
+            onTapDown: (details) {
+              // Calculate relative position for focus
+              final box = context.findRenderObject() as RenderBox?;
+              if (box != null) {
+                final offset = details.localPosition;
+                final size = box.size;
+                final x = offset.dx / size.width;
+                final y = offset.dy / size.height;
+                
+                widget.onFocusPoint(Offset(x, y));
+                
+                // Show focus indicator
+                setState(() {
+                  _focusPoint = offset;
+                });
+                
+                // Hide focus indicator after 2 seconds
+                _focusTimer?.cancel();
+                _focusTimer = Timer(const Duration(seconds: 2), () {
+                  if (mounted) {
+                    setState(() {
+                      _focusPoint = null;
+                    });
+                  }
+                });
+              }
+            },
+            child: Container(
+              color: Colors.transparent,
+            ),
+          ),
+        ),
+        
+        // Focus indicator
+        if (_focusPoint != null)
+          Positioned(
+            left: _focusPoint!.dx - 40,
+            top: _focusPoint!.dy - 40,
+            child: Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.yellow, width: 2),
+                borderRadius: BorderRadius.circular(40),
+              ),
+              child: Center(
+                child: Container(
+                  width: 10,
+                  height: 10,
+                  decoration: BoxDecoration(
+                    color: Colors.yellow,
+                    borderRadius: BorderRadius.circular(5),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        
+        // Zoom level indicator
+        if ((widget.currentZoom - widget.minZoom).abs() > 0.01)
+          Positioned(
+            bottom: 80,
+            left: 0,
+            right: 0,
+            child: Center(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.black54,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  '${widget.currentZoom.toStringAsFixed(1)}x',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  @override
+  void dispose() {
+    _focusTimer?.cancel();
+    super.dispose();
+  }
+}

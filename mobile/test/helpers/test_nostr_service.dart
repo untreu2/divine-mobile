@@ -230,11 +230,17 @@ class TestNostrService implements INostrService {
   }
 
   @override
-  bool get isVineRelayAuthenticated => isRelayAuthenticated('wss://vine.hol.is');
+  bool get isVineRelayAuthenticated => isRelayAuthenticated('wss://relay3.openvine.co');
 
   @override
   void setAuthTimeout(Duration timeout) {
     // No-op for tests
+  }
+  
+  void clearPersistedAuthStates() {
+    // Clear test auth states
+    _relayAuthStates.clear();
+    _authStateController.add(Map.from(_relayAuthStates));
   }
 
   @override

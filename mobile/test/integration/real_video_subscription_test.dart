@@ -1,4 +1,4 @@
-// ABOUTME: Real world test to verify VideoEventService works with actual vine.hol.is relay
+// ABOUTME: Real world test to verify VideoEventService works with actual relay3.openvine.co relay
 // ABOUTME: This test connects to the real relay to debug why videos aren't showing in app
 
 import 'dart:async';
@@ -59,11 +59,25 @@ void main() {
       await keyManager.initialize();
       
       nostrService = NostrService(keyManager);
-      await nostrService.initialize(customRelays: ['wss://vine.hol.is']);
+      await nostrService.initialize(customRelays: ['wss://relay3.openvine.co']);
       
-      // Wait for connection to stabilize
+      // Wait for connection to stabilize using proper async pattern
       Log.info('⏳ Waiting for relay connection...', name: 'RealVideoSubscriptionTest', category: LogCategory.system);
-      await Future.delayed(Duration(seconds: 3));
+      
+      final connectionCompleter = Completer<void>();
+      Timer.periodic(Duration(milliseconds: 200), (timer) {
+        if (nostrService.connectedRelayCount > 0) {
+          timer.cancel();
+          connectionCompleter.complete();
+        }
+      });
+      
+      try {
+        await connectionCompleter.future.timeout(Duration(seconds: 15));
+      } catch (e) {
+        Log.warning('Connection timeout, proceeding anyway: $e', name: 'RealVideoSubscriptionTest', category: LogCategory.system);
+      }
+      
       Log.info('✅ Connection status: ${nostrService.connectedRelayCount} relays connected', name: 'RealVideoSubscriptionTest', category: LogCategory.system);
       
       subscriptionManager = SubscriptionManager(nostrService);
@@ -77,15 +91,15 @@ void main() {
       subscriptionManager.dispose();
     });
 
-    test('VideoEventService should receive videos from vine.hol.is relay', () async {
-      Log.debug('🔍 Testing VideoEventService with real vine.hol.is relay...', name: 'RealVideoSubscriptionTest', category: LogCategory.system);
+    test('VideoEventService should receive videos from relay3.openvine.co relay', () async {
+      Log.debug('🔍 Testing VideoEventService with real relay3.openvine.co relay...', name: 'RealVideoSubscriptionTest', category: LogCategory.system);
       
       final receivedVideos = <VideoEvent>[];
       final completer = Completer<void>();
       
       // Listen to VideoEventService changes
       void onVideoEventChange() {
-        final events = videoEventService.videoEvents;
+        final events = videoEventService.discoveryVideos;
         Log.debug('📹 VideoEventService updated: ${events.length} total events', name: 'RealVideoSubscriptionTest', category: LogCategory.system);
         
         for (final event in events) {
@@ -114,6 +128,7 @@ void main() {
         // Subscribe to video feed (same as app does)
         Log.debug('📡 Subscribing to video feed...', name: 'RealVideoSubscriptionTest', category: LogCategory.system);
         await videoEventService.subscribeToVideoFeed(
+          subscriptionType: SubscriptionType.discovery,
           limit: 10,
           includeReposts: false,
         );
@@ -130,7 +145,7 @@ void main() {
         
         // Verify we got videos
         expect(receivedVideos.length, greaterThan(0), 
-          reason: 'Should receive videos from vine.hol.is relay');
+          reason: 'Should receive videos from relay3.openvine.co relay');
         
         // Verify the videos have proper URLs
         final videosWithUrls = receivedVideos.where((v) => v.hasVideo).toList();
@@ -143,8 +158,8 @@ void main() {
         Log.error('❌ Test failed: $e', name: 'RealVideoSubscriptionTest', category: LogCategory.system);
         Log.error('🔍 Final state:', name: 'RealVideoSubscriptionTest', category: LogCategory.system);
         Log.error('  - VideoEventService isSubscribed: ${videoEventService.isSubscribed}', name: 'RealVideoSubscriptionTest', category: LogCategory.system);
-        Log.error('  - VideoEventService eventCount: ${videoEventService.eventCount}', name: 'RealVideoSubscriptionTest', category: LogCategory.system);
-        Log.error('  - VideoEventService hasEvents: ${videoEventService.hasEvents}', name: 'RealVideoSubscriptionTest', category: LogCategory.system);
+        Log.error('  - VideoEventService eventCount: ${videoEventService.getEventCount(SubscriptionType.discovery)}', name: 'RealVideoSubscriptionTest', category: LogCategory.system);
+        Log.error('  - VideoEventService hasEvents: ${videoEventService.hasEvents(SubscriptionType.discovery)}', name: 'RealVideoSubscriptionTest', category: LogCategory.system);
         Log.error('  - VideoEventService error: ${videoEventService.error}', name: 'RealVideoSubscriptionTest', category: LogCategory.system);
         Log.error('  - Received videos: ${receivedVideos.length}', name: 'RealVideoSubscriptionTest', category: LogCategory.system);
         Log.error('  - NostrService connectedRelayCount: ${nostrService.connectedRelayCount}', name: 'RealVideoSubscriptionTest', category: LogCategory.system);

@@ -11,6 +11,7 @@ import 'package:camera_macos/camera_macos.dart' as macos;
 import 'package:path_provider/path_provider.dart';
 
 import 'package:openvine/services/camera/native_macos_camera.dart';
+import 'package:openvine/services/camera/enhanced_mobile_camera_interface.dart';
 import 'package:openvine/services/web_camera_service_stub.dart'
     if (dart.library.html) 'web_camera_service.dart' as camera_service;
 import 'package:openvine/utils/async_utils.dart';
@@ -317,6 +318,7 @@ class MacOSCameraInterface extends CameraPlatformInterface
         maxVideoDuration: 6.3, // 6.3 seconds like original Vine
         onVideoRecordingFinished: (file, exception) {
           _isRecording = false;
+          isSingleRecordingMode = false; // Reset single recording mode
           if (exception != null) {
             Log.error('macOS recording error: $exception',
                 name: 'VineRecordingController', category: LogCategory.system);
@@ -428,7 +430,7 @@ class MacOSCameraInterface extends CameraPlatformInterface
       }
 
       // Switch to next camera
-      _currentCameraIndex = (_currentCameraIndex + 1) % cameras.length;
+      _currentCameraIndex = ((_currentCameraIndex + 1) % cameras.length).toInt();
       final success = await NativeMacOSCamera.switchCamera(_currentCameraIndex);
 
       if (success) {
@@ -439,7 +441,7 @@ class MacOSCameraInterface extends CameraPlatformInterface
       } else {
         // Revert index on failure
         _currentCameraIndex =
-            (_currentCameraIndex - 1 + cameras.length) % cameras.length;
+            ((_currentCameraIndex - 1 + cameras.length) % cameras.length).toInt();
         Log.error('Failed to switch camera',
             name: 'VineRecordingController', category: LogCategory.system);
       }
@@ -501,6 +503,18 @@ class WebCameraInterface extends CameraPlatformInterface {
     } catch (e) {
       Log.error('Web camera interface initialization failed: $e',
           name: 'VineRecordingController', category: LogCategory.system);
+      
+      // Provide more specific error messages
+      if (e.toString().contains('NotFoundError')) {
+        throw Exception('No camera found. Please ensure a camera is connected and accessible.');
+      } else if (e.toString().contains('NotAllowedError') || e.toString().contains('PermissionDeniedError')) {
+        throw Exception('Camera access denied. Please allow camera permissions and try again.');
+      } else if (e.toString().contains('NotReadableError')) {
+        throw Exception('Camera is already in use by another application.');
+      } else if (e.toString().contains('MediaDevices API not available')) {
+        throw Exception('Camera API not available. Please ensure you are using HTTPS.');
+      }
+      
       rethrow;
     }
   }
@@ -597,8 +611,14 @@ class VineRecordingController  {
       Duration(milliseconds: 6300); // 6.3 seconds like original Vine
   static const Duration minSegmentDuration = Duration(milliseconds: 100);
 
-  late CameraPlatformInterface _cameraInterface;
+  CameraPlatformInterface? _cameraInterface;
   VineRecordingState _state = VineRecordingState.idle;
+  
+  // Getter for camera interface (needed for enhanced controls)
+  CameraPlatformInterface? get cameraInterface => _cameraInterface;
+
+  // Callback for notifying UI of state changes during recording
+  VoidCallback? _onStateChanged;
 
   // Recording session data
   final List<RecordingSegment> _segments = [];
@@ -624,12 +644,23 @@ class VineRecordingController  {
       remainingDuration > minSegmentDuration &&
       _state != VineRecordingState.processing;
   bool get hasSegments => _segments.isNotEmpty;
-  Widget get cameraPreview => _cameraInterface.previewWidget;
+  Widget get cameraPreview => _cameraInterface?.previewWidget ?? 
+      const ColoredBox(
+        color: Colors.black,
+        child: Center(
+          child: CircularProgressIndicator(color: Colors.white),
+        ),
+      );
   
   /// Check if camera switching is available on current platform
   bool get canSwitchCamera {
     if (_state == VineRecordingState.recording) return false;
-    return _cameraInterface.canSwitchCamera;
+    return _cameraInterface?.canSwitchCamera ?? false;
+  }
+
+  /// Set callback for state change notifications during recording
+  void setStateChangeCallback(VoidCallback? callback) {
+    _onStateChanged = callback;
   }
 
   /// Switch between front and rear cameras
@@ -650,7 +681,7 @@ class VineRecordingController  {
     }
 
     try {
-      await _cameraInterface.switchCamera();
+      await _cameraInterface?.switchCamera();
       Log.info('📱 Camera switched successfully',
           name: 'VineRecordingController', category: LogCategory.system);
     } catch (e) {
@@ -673,12 +704,15 @@ class VineRecordingController  {
       } else if (Platform.isMacOS) {
         _cameraInterface = MacOSCameraInterface();
       } else if (Platform.isIOS || Platform.isAndroid) {
-        _cameraInterface = MobileCameraInterface();
+        // Use enhanced mobile camera interface for zoom and focus features
+        _cameraInterface = EnhancedMobileCameraInterface();
+        Log.info('Using enhanced mobile camera with zoom and focus features',
+            name: 'VineRecordingController', category: LogCategory.system);
       } else {
         throw Exception('Platform not supported: ${Platform.operatingSystem}');
       }
 
-      await _cameraInterface.initialize();
+      await _cameraInterface!.initialize();
 
       // Set up temp directory for segments
       if (!kIsWeb) {
@@ -720,7 +754,7 @@ class VineRecordingController  {
 
       // Normal segmented recording for all platforms
       final segmentPath = _generateSegmentPath();
-      await _cameraInterface.startRecordingSegment(segmentPath);
+      await _cameraInterface!.startRecordingSegment(segmentPath);
 
       // Start progress timer
       _startProgressTimer();
@@ -782,7 +816,7 @@ class VineRecordingController  {
               category: LogCategory.system);
         } else {
           // Normal segment recording for other platforms
-          final filePath = await _cameraInterface.stopRecordingSegment();
+          final filePath = await _cameraInterface!.stopRecordingSegment();
 
           if (filePath != null) {
             final segment = RecordingSegment(
@@ -1094,7 +1128,7 @@ class VineRecordingController  {
     // Clean up all recordings
     _cleanupRecordings();
 
-    _cameraInterface.dispose();
+    _cameraInterface?.dispose();
     
   }
 
@@ -1103,13 +1137,13 @@ class VineRecordingController  {
   void _setState(VineRecordingState newState) {
     if (_disposed) return;
     _state = newState;
-    // With Riverpod, state changes are handled by the StateNotifier wrapper
-    // No need for manual listener notification
+    // Notify UI of state change
+    _onStateChanged?.call();
   }
 
   void _startProgressTimer() {
     _stopProgressTimer();
-    _progressTimer = Timer.periodic(const Duration(milliseconds: 50), (_) {
+    _progressTimer = Timer.periodic(const Duration(milliseconds: 100), (_) {
       if (!_disposed && _state == VineRecordingState.recording) {
         // For macOS, update the total duration based on current segment time
         if (_currentSegmentStartTime != null) {
@@ -1121,6 +1155,9 @@ class VineRecordingController  {
           );
           _totalRecordedDuration = previousDuration + currentSegmentDuration;
         }
+        
+        // Notify UI of progress update
+        _onStateChanged?.call();
       }
     });
   }
@@ -1136,10 +1173,49 @@ class VineRecordingController  {
     if (remainingTime > Duration.zero) {
       _maxDurationTimer = Timer(remainingTime, () {
         if (_state == VineRecordingState.recording) {
-          stopRecording();
+          Log.info('📱 Recording completed - reached maximum duration',
+              name: 'VineRecordingController', category: LogCategory.system);
+          
+          // For macOS, handle auto-completion differently
+          if (!kIsWeb && Platform.isMacOS && _cameraInterface is MacOSCameraInterface) {
+            _handleMacOSAutoCompletion();
+          } else {
+            stopRecording();
+          }
         }
       });
     }
+  }
+  
+  /// Handle macOS recording auto-completion after max duration
+  void _handleMacOSAutoCompletion() async {
+    final macOSInterface = _cameraInterface as MacOSCameraInterface;
+    
+    // Create a virtual segment for the entire recording duration
+    if (_currentSegmentStartTime != null) {
+      final segmentEndTime = DateTime.now();
+      final segmentDuration = segmentEndTime.difference(_currentSegmentStartTime!);
+      
+      final segment = RecordingSegment(
+        startTime: _currentSegmentStartTime!,
+        endTime: segmentEndTime,
+        duration: segmentDuration,
+        filePath: macOSInterface.currentRecordingPath,
+      );
+      
+      _segments.add(segment);
+      _totalRecordedDuration += segmentDuration;
+      
+      Log.info('Completed virtual segment ${_segments.length}: ${segmentDuration.inMilliseconds}ms',
+          name: 'VineRecordingController', category: LogCategory.system);
+    }
+    
+    _currentSegmentStartTime = null;
+    _stopProgressTimer();
+    _stopMaxDurationTimer();
+    
+    // Set state to completed since we reached max duration
+    _setState(VineRecordingState.completed);
   }
 
   void _stopMaxDurationTimer() {

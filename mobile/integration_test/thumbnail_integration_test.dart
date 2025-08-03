@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:openvine/main.dart' as app;
-import 'package:openvine/services/camera_service.dart';
+import 'package:openvine/services/vine_recording_controller.dart';
 import 'package:openvine/services/direct_upload_service.dart';
 import 'package:openvine/services/video_thumbnail_service.dart';
 import 'package:openvine/utils/unified_logger.dart';
@@ -53,36 +53,41 @@ void main() {
       // Look for record controls
       await tester.pump(const Duration(seconds: 1));
       
-      // Try to test camera service directly if UI interaction fails
-      Log.debug('🔧 Testing CameraService directly...');
+      // Try to test recording controller directly if UI interaction fails
+      Log.debug('🔧 Testing VineRecordingController directly...');
       
-      final cameraService = CameraService();
+      final recordingController = VineRecordingController();
       
       try {
-        Log.debug('📷 Initializing camera service...');
-        await cameraService.initialize();
-        Log.debug('✅ Camera service initialized successfully');
+        Log.debug('📷 Initializing recording controller...');
+        await recordingController.initialize();
+        Log.debug('✅ Recording controller initialized successfully');
         
         Log.debug('🎬 Starting video recording...');
-        await cameraService.startRecording();
+        await recordingController.startRecording();
         Log.debug('✅ Recording started');
         
         // Record for 2 seconds
         await Future.delayed(const Duration(seconds: 2));
         
         Log.debug('⏹️ Stopping recording...');
-        final result = await cameraService.stopRecording();
+        await recordingController.stopRecording();
         Log.debug('✅ Recording stopped');
         
-        Log.debug('📹 Video file: ${result.videoFile.path}');
-        Log.debug('⏱️ Duration: ${result.duration.inSeconds}s');
-        Log.debug('📦 File size: ${await result.videoFile.length()} bytes');
+        // Finish recording to get the video file
+        final videoFile = await recordingController.finishRecording();
+        if (videoFile == null) {
+          throw Exception('No video file produced');
+        }
+        
+        Log.debug('📹 Video file: ${videoFile.path}');
+        Log.debug('📦 File size: ${await videoFile.length()} bytes');
         
         // Test thumbnail generation
         Log.debug('\n🖼️ Testing thumbnail generation...');
         
         final thumbnailBytes = await VideoThumbnailService.extractThumbnailBytes(
-          videoPath: result.videoFile.path,
+          videoPath: videoFile.path,
           timeMs: 500,
           quality: 80,
         );
@@ -108,7 +113,7 @@ void main() {
             cdnUrl: 'https://cdn.example.com/real_test_video.mp4',
             thumbnailUrl: 'https://cdn.example.com/real_test_thumbnail.jpg',
             metadata: {
-              'size': await result.videoFile.length(),
+              'size': await videoFile.length(),
               'type': 'video/mp4',
               'thumbnail_size': thumbnailBytes.length,
             },
@@ -126,8 +131,9 @@ void main() {
         
         // Clean up
         try {
-          await result.videoFile.delete();
-          Log.debug('🗑️ Cleaned up video file');
+          recordingController.dispose();
+          await videoFile.delete();
+          Log.debug('🗑️ Cleaned up video file and controller');
         } catch (e) {
           Log.debug('⚠️ Could not delete video file: $e');
         }
@@ -165,7 +171,7 @@ void main() {
         // Clean up
         await tempDir.delete(recursive: true);
       } finally {
-        cameraService.dispose();
+        recordingController.dispose();
       }
       
       Log.debug('\n🎉 Thumbnail integration test completed!');

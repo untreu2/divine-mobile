@@ -59,7 +59,7 @@ void main() {
     });
 
     test(
-      'VideoEventService receives events from wss://vine.hol.is',
+      'VideoEventService receives events from wss://relay3.openvine.co',
       () async {
         Log.info('🧪 Starting VideoEventService relay test');
 
@@ -70,12 +70,13 @@ void main() {
             '✅ NostrService connected to ${nostrService.connectedRelays.length} relays: ${nostrService.connectedRelays}');
 
         // Check initial state
-        expect(videoEventService.eventCount, 0);
-        expect(videoEventService.hasEvents, false);
+        expect(videoEventService.getEventCount(SubscriptionType.discovery), 0);
+        expect(videoEventService.hasEvents(SubscriptionType.discovery), false);
 
         // Subscribe to video feed
         Log.info('📡 Subscribing to video feed...');
         await videoEventService.subscribeToVideoFeed(
+          subscriptionType: SubscriptionType.discovery,
           limit: 10, // Request 10 recent videos
         );
 
@@ -84,14 +85,14 @@ void main() {
         var waitAttempts = 0;
         const maxWaitAttempts = 30; // 15 seconds total (500ms * 30)
 
-        while (!videoEventService.hasEvents && waitAttempts < maxWaitAttempts) {
+        while (!videoEventService.hasEvents(SubscriptionType.discovery) && waitAttempts < maxWaitAttempts) {
           await Future.delayed(const Duration(milliseconds: 500));
           waitAttempts++;
 
           if (waitAttempts % 6 == 0) {
             // Log every 3 seconds
             Log.info(
-                '⏳ Still waiting for events... attempt $waitAttempts/$maxWaitAttempts (${videoEventService.eventCount} events so far)');
+                '⏳ Still waiting for events... attempt $waitAttempts/$maxWaitAttempts (${videoEventService.getEventCount(SubscriptionType.discovery)} events so far)');
 
             // Log detailed relay status
             final relayStatus = nostrService.getDetailedRelayStatus();
@@ -101,15 +102,15 @@ void main() {
 
         // Check results
         Log.info('📊 Final results after ${waitAttempts * 500}ms:');
-        Log.info('  - Events received: ${videoEventService.eventCount}');
-        Log.info('  - Has events: ${videoEventService.hasEvents}');
+        Log.info('  - Events received: ${videoEventService.getEventCount(SubscriptionType.discovery)}');
+        Log.info('  - Has events: ${videoEventService.hasEvents(SubscriptionType.discovery)}');
         Log.info('  - Is subscribed: ${videoEventService.isSubscribed}');
         Log.info('  - Error: ${videoEventService.error}');
 
         // Log individual events if any were received
-        if (videoEventService.hasEvents) {
+        if (videoEventService.hasEvents(SubscriptionType.discovery)) {
           Log.info('📝 Received events:');
-          for (final event in videoEventService.videoEvents.take(5)) {
+          for (final event in videoEventService.discoveryVideos.take(5)) {
             Log.info(
                 '  - Event ${event.id.substring(0, 8)}: author=${event.pubkey.substring(0, 8)}..., content="${event.content.length > 50 ? "${event.content.substring(0, 50)}..." : event.content}", hasVideo=${event.hasVideo}');
           }
@@ -117,23 +118,23 @@ void main() {
 
         // The main assertion - should receive at least one video event
         expect(
-          videoEventService.hasEvents,
+          videoEventService.hasEvents(SubscriptionType.discovery),
           true,
           reason:
-              'VideoEventService should receive at least one kind 22 video event from wss://vine.hol.is relay within 15 seconds. '
+              'VideoEventService should receive at least one kind 22 video event from wss://relay3.openvine.co relay within 15 seconds. '
               'This test confirms the relay connection and event subscription pipeline is working correctly. '
-              'Events received: ${videoEventService.eventCount}',
+              'Events received: ${videoEventService.getEventCount(SubscriptionType.discovery)}',
         );
 
         expect(
-          videoEventService.eventCount,
+          videoEventService.getEventCount(SubscriptionType.discovery),
           greaterThan(0),
           reason: 'Should have received at least one video event',
         );
 
         // Verify we got video events with valid video URLs
         final hasVideoEvents =
-            videoEventService.videoEvents.any((event) => event.hasVideo);
+            videoEventService.discoveryVideos.any((event) => event.hasVideo);
         expect(
           hasVideoEvents,
           true,
@@ -142,7 +143,7 @@ void main() {
         );
 
         Log.info(
-            '✅ Test passed! VideoEventService successfully received ${videoEventService.eventCount} events');
+            '✅ Test passed! VideoEventService successfully received ${videoEventService.getEventCount(SubscriptionType.discovery)} events');
       },
       timeout: const Timeout(Duration(seconds: 30)),
     );
@@ -156,7 +157,10 @@ void main() {
 
       // Start subscription
       final subscriptionFuture =
-          videoEventService.subscribeToVideoFeed(limit: 5);
+          videoEventService.subscribeToVideoFeed(
+            subscriptionType: SubscriptionType.discovery,
+            limit: 5,
+          );
 
       // Should be loading
       expect(videoEventService.isLoading, true);
@@ -178,7 +182,10 @@ void main() {
       nostrService.dispose();
 
       // Try to subscribe - should handle error gracefully
-      await videoEventService.subscribeToVideoFeed(limit: 5);
+      await videoEventService.subscribeToVideoFeed(
+        subscriptionType: SubscriptionType.discovery,
+        limit: 5,
+      );
 
       // Should have an error state
       expect(videoEventService.error, isNotNull);

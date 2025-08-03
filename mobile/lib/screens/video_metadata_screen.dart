@@ -1,15 +1,17 @@
 // ABOUTME: Screen for adding metadata to recorded videos before publishing
-// ABOUTME: Allows users to add title, description, and hashtags to their vines
+// ABOUTME: Uses VideoManager providers for secure controller creation and memory management
 
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:openvine/main.dart';
 import 'package:openvine/models/pending_upload.dart';
-import 'package:openvine/services/global_video_registry.dart';
+import 'package:openvine/providers/app_providers.dart';
+import 'package:openvine/providers/video_manager_providers.dart';
+import 'package:openvine/services/video_manager_interface.dart';
 import 'package:openvine/theme/vine_theme.dart';
 import 'package:openvine/utils/unified_logger.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:openvine/providers/app_providers.dart';
 import 'package:video_player/video_player.dart';
 
 class VideoMetadataScreen extends ConsumerStatefulWidget {
@@ -26,7 +28,7 @@ class VideoMetadataScreen extends ConsumerStatefulWidget {
 }
 
 class _VideoMetadataScreenState extends ConsumerState<VideoMetadataScreen> {
-  late VideoPlayerController _videoController;
+  String? _videoControllerId;
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
   final TextEditingController _hashtagController = TextEditingController();
@@ -35,6 +37,7 @@ class _VideoMetadataScreenState extends ConsumerState<VideoMetadataScreen> {
   String? _currentUploadId;
   bool _isExpiringPost = false;
   int _expirationHours = 24;
+  bool _isPublishing = false;
 
   @override
   void initState() {
@@ -48,9 +51,17 @@ class _VideoMetadataScreenState extends ConsumerState<VideoMetadataScreen> {
 
   @override
   void dispose() {
-    // Unregister from global registry before disposing
-    GlobalVideoRegistry().unregisterController(_videoController);
-    _videoController.dispose();
+    if (_videoControllerId != null) {
+      try {
+        // VideoManager will handle cleanup and GlobalVideoRegistry coordination
+        ref.read(videoManagerProvider.notifier).disposeVideo(_videoControllerId!);
+      } catch (e) {
+        // If ref is already disposed, log and continue
+        Log.warning('Could not dispose video controller (ref disposed): $e',
+            name: 'VideoMetadataScreen', category: LogCategory.ui);
+      }
+      _videoControllerId = null;
+    }
     _titleController.dispose();
     _descriptionController.dispose();
     _hashtagController.dispose();
@@ -68,21 +79,35 @@ class _VideoMetadataScreenState extends ConsumerState<VideoMetadataScreen> {
         name: 'VideoMetadataScreen',
         category: LogCategory.ui);
 
-    _videoController = VideoPlayerController.file(widget.videoFile);
     try {
-      await _videoController.initialize();
-      Log.info('Video initialized: ${_videoController.value.size}',
+      // Use VideoManager to create file controller securely
+      final videoManager = ref.read(videoManagerProvider.notifier);
+      final controllerId = 'metadata_${widget.videoFile.path.hashCode}';
+      
+      Log.debug('Creating video controller with ID: $controllerId for file: ${widget.videoFile.path}',
           name: 'VideoMetadataScreen', category: LogCategory.ui);
+      
+      final controller = await videoManager.createFileController(
+        controllerId,
+        widget.videoFile,
+        priority: PreloadPriority.current,
+      );
+      
+      if (controller != null && mounted) {
+        _videoControllerId = controllerId;
+        
+        Log.info('Video initialized: ${controller.value.size}',
+            name: 'VideoMetadataScreen', category: LogCategory.ui);
 
-      // Register with global registry
-      GlobalVideoRegistry().registerController(_videoController);
+        // Pause all other videos before playing this one
+        videoManager.pauseAllVideos();
 
-      // Pause all other videos before playing this one
-      GlobalVideoRegistry().pauseAllExcept(_videoController);
-
-      await _videoController.setLooping(true);
-      await _videoController.play();
-      setState(() => _isVideoInitialized = true);
+        await controller.setLooping(true);
+        await controller.play();
+        setState(() => _isVideoInitialized = true);
+      } else {
+        setState(() => _isVideoInitialized = false);
+      }
     } catch (e) {
       Log.error('Failed to initialize video: $e',
           name: 'VideoMetadataScreen', category: LogCategory.ui);
@@ -94,14 +119,19 @@ class _VideoMetadataScreenState extends ConsumerState<VideoMetadataScreen> {
   }
 
   Widget _buildVideoPreview() {
-    if (_isVideoInitialized && _videoController.value.isInitialized) {
+    // Get controller from VideoManager
+    final controller = _videoControllerId != null 
+        ? ref.watch(videoPlayerControllerProvider(_videoControllerId!))
+        : null;
+        
+    if (_isVideoInitialized && controller?.value.isInitialized == true) {
       return ClipRect(
         child: FittedBox(
           fit: BoxFit.cover,
           child: SizedBox(
-            width: _videoController.value.size.width,
-            height: _videoController.value.size.height,
-            child: VideoPlayer(_videoController),
+            width: controller!.value.size.width,
+            height: controller.value.size.height,
+            child: VideoPlayer(controller),
           ),
         ),
       );
@@ -155,15 +185,24 @@ class _VideoMetadataScreenState extends ConsumerState<VideoMetadataScreen> {
         ),
         actions: [
           TextButton(
-            onPressed: _publishVideo,
-            child: const Text(
-              'PUBLISH',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-              ),
-            ),
+            onPressed: _isPublishing ? null : _publishVideo,
+            child: _isPublishing
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    ),
+                  )
+                : const Text(
+                    'PUBLISH',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
           ),
         ],
       ),
@@ -647,6 +686,18 @@ class _VideoMetadataScreenState extends ConsumerState<VideoMetadataScreen> {
       // Get user's public key
       final userPubkey = authService.currentPublicKeyHex ?? 'anonymous';
 
+      // Get video dimensions if controller is initialized
+      int? videoWidth;
+      int? videoHeight;
+      if (_videoControllerId != null) {
+        final controller = ref.read(videoManagerProvider)
+            .getPlayerController(_videoControllerId!);
+        if (controller != null && controller.value.isInitialized) {
+          videoWidth = controller.value.size.width.toInt();
+          videoHeight = controller.value.size.height.toInt();
+        }
+      }
+
       // Start the upload with placeholder metadata (will update when user publishes)
       final upload = await uploadManager.startUpload(
         videoFile: widget.videoFile,
@@ -654,6 +705,9 @@ class _VideoMetadataScreenState extends ConsumerState<VideoMetadataScreen> {
         title: 'Untitled', // Placeholder title
         description: '',
         hashtags: ['openvine'],
+        videoWidth: videoWidth,
+        videoHeight: videoHeight,
+        videoDuration: widget.duration,
       );
 
       setState(() {
@@ -691,18 +745,95 @@ class _VideoMetadataScreenState extends ConsumerState<VideoMetadataScreen> {
       expirationTimestamp = expirationDate.millisecondsSinceEpoch ~/ 1000;
     }
 
-    // TODO: Update the upload metadata with the final title/description
-    // For now, the upload continues with the original metadata
+    setState(() {
+      _isPublishing = true;
+    });
 
-    // Just navigate back to the feed
-    if (mounted) {
-      Navigator.of(context).pop({
-        'uploadId': _currentUploadId,
-        'title': title,
-        'description': _descriptionController.text.trim(),
-        'hashtags': allHashtags,
-        'expirationTimestamp': expirationTimestamp,
-      });
+    try {
+      // Get the current upload
+      final uploadManager = ref.read(uploadManagerProvider);
+      final upload = uploadManager.getUpload(_currentUploadId!);
+      
+      if (upload == null) {
+        throw Exception('Upload not found');
+      }
+
+      // Wait for upload to be ready if still uploading
+      if (upload.status == UploadStatus.uploading || 
+          upload.status == UploadStatus.processing) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please wait for upload to complete'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+        setState(() {
+          _isPublishing = false;
+        });
+        return;
+      }
+
+      if (upload.status != UploadStatus.readyToPublish) {
+        throw Exception('Upload not ready for publishing: ${upload.status}');
+      }
+
+      // Get the video event publisher and publish
+      final videoEventPublisher = ref.read(videoEventPublisherProvider);
+      
+      Log.info('Publishing video event to Nostr...',
+          name: 'VideoMetadataScreen', category: LogCategory.ui);
+      
+      final success = await videoEventPublisher.publishVideoEvent(
+        upload: upload,
+        title: title,
+        description: _descriptionController.text.trim(),
+        hashtags: allHashtags,
+        expirationTimestamp: expirationTimestamp,
+      );
+
+      if (!success) {
+        throw Exception('Failed to publish video event');
+      }
+
+      Log.info('Video successfully published to Nostr!',
+          name: 'VideoMetadataScreen', category: LogCategory.ui);
+
+      // Navigate to profile screen to see the published video
+      if (mounted) {
+        // Show success message first
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Video published successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        
+        // Navigate to profile tab (index 4)
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(
+            builder: (context) => const MainNavigationScreen(initialTabIndex: 4),
+          ),
+          (route) => false,
+        );
+      }
+    } catch (e) {
+      Log.error('Failed to publish video: $e',
+          name: 'VideoMetadataScreen', category: LogCategory.ui);
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to publish: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isPublishing = false;
+        });
+      }
     }
   }
 }

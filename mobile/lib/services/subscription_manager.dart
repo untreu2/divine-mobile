@@ -21,7 +21,7 @@ class SubscriptionManager  {
       30; // Further increased for proper comment management
   static const int _maxEventsPerMinute =
       2000; // Increased to handle profile loads
-  static const Duration _subscriptionTimeout = Duration(minutes: 5);
+  static const Duration _subscriptionTimeout = Duration(minutes: 15); // Extended for persistent subscriptions
   static const Duration _retryDelay = Duration(seconds: 30);
 
   // Event tracking for rate limiting
@@ -220,7 +220,7 @@ class SubscriptionManager  {
         until: filter.until,
         limit: optimizedLimit,
         t: filter.t, // Preserve hashtag filters
-        h: filter.h, // Preserve group filters (required for vine.hol.is)
+        h: filter.h, // Preserve group filters
       );
 
       optimized.add(optimizedFilter);

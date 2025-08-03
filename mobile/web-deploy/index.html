@@ -55,6 +55,22 @@
   <link rel="preload" href="assets/AssetManifest.json" as="fetch" crossorigin>
   
   <style>
+    /* Reset browser defaults for full-screen app */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #000;
+    }
+    
     /* Ensure Material Icons load properly */
     .material-icons {
       font-family: 'Material Icons';

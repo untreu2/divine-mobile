@@ -7,7 +7,7 @@ import 'dart:io';
 import 'package:web_socket_channel/io.dart';
 
 void main() async {
-  Log.info('=== Testing Profile Fetch from vine.hol.is ===\n');
+  Log.info('=== Testing Profile Fetch from relay3.openvine.co ===\n');
 
   // The public key from the logs
   const publicKey =
@@ -25,7 +25,7 @@ void main() async {
     final httpClient = HttpClient();
     httpClient.badCertificateCallback = (cert, host, port) => true;
 
-    final wsUrl = Uri.parse('wss://vine.hol.is');
+    final wsUrl = Uri.parse('wss://relay3.openvine.co');
     Log.info('\n1. Connecting to $wsUrl...');
 
     final channel = IOWebSocketChannel.connect(

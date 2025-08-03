@@ -50,13 +50,13 @@ final videoVisibilityManagerProvider =
 // ignore: unused_element
 typedef VideoVisibilityManagerRef
     = AutoDisposeProviderRef<VideoVisibilityManager>;
-String _$analyticsServiceHash() => r'8741da5ba3705097fdc6fae5fa4397632500e55e';
+String _$analyticsServiceHash() => r'8ce8c6be2430cd9f271eb66d8e7fe6fcfbae0154';
 
 /// Analytics service with opt-out support
 ///
 /// Copied from [analyticsService].
 @ProviderFor(analyticsService)
-final analyticsServiceProvider = AutoDisposeProvider<AnalyticsService>.internal(
+final analyticsServiceProvider = Provider<AnalyticsService>.internal(
   analyticsService,
   name: r'analyticsServiceProvider',
   debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
@@ -68,7 +68,7 @@ final analyticsServiceProvider = AutoDisposeProvider<AnalyticsService>.internal(
 
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
-typedef AnalyticsServiceRef = AutoDisposeProviderRef<AnalyticsService>;
+typedef AnalyticsServiceRef = ProviderRef<AnalyticsService>;
 String _$ageVerificationServiceHash() =>
     r'879c0ad45143e63b7c904983b8d542cb212828bb';
 
@@ -171,6 +171,49 @@ final profileCacheServiceProvider =
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef ProfileCacheServiceRef = AutoDisposeProviderRef<ProfileCacheService>;
+String _$hashtagCacheServiceHash() =>
+    r'9cc0bce9cded786f95dc83e7bf6dbcbc2602e907';
+
+/// Hashtag cache service for persistent hashtag storage
+///
+/// Copied from [hashtagCacheService].
+@ProviderFor(hashtagCacheService)
+final hashtagCacheServiceProvider =
+    AutoDisposeProvider<HashtagCacheService>.internal(
+  hashtagCacheService,
+  name: r'hashtagCacheServiceProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$hashtagCacheServiceHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef HashtagCacheServiceRef = AutoDisposeProviderRef<HashtagCacheService>;
+String _$personalEventCacheServiceHash() =>
+    r'72d305468d4e52c2b92b093fa583cb8b1ba20a29';
+
+/// Personal event cache service for ALL user's own events
+///
+/// Copied from [personalEventCacheService].
+@ProviderFor(personalEventCacheService)
+final personalEventCacheServiceProvider =
+    AutoDisposeProvider<PersonalEventCacheService>.internal(
+  personalEventCacheService,
+  name: r'personalEventCacheServiceProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$personalEventCacheServiceHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef PersonalEventCacheServiceRef
+    = AutoDisposeProviderRef<PersonalEventCacheService>;
 String _$seenVideosServiceHash() => r'74099bd4d859b446a3fc0cf1a7f416756a104e43';
 
 /// Seen videos service for tracking viewed content
@@ -308,7 +351,7 @@ final subscriptionManagerProvider = Provider<SubscriptionManager>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef SubscriptionManagerRef = ProviderRef<SubscriptionManager>;
-String _$videoEventServiceHash() => r'4dfce4711868689e8fa63e4892af91b6d630aa47';
+String _$videoEventServiceHash() => r'48127330032aded0ee867d5e6259bb624c7949b1';
 
 /// Video event service depends on Nostr, SeenVideos, Blocklist, and SubscriptionManager services
 ///
@@ -327,9 +370,9 @@ final videoEventServiceProvider = Provider<VideoEventService>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef VideoEventServiceRef = ProviderRef<VideoEventService>;
-String _$hashtagServiceHash() => r'28a004403f153050de9a6e145e739595aa06a991';
+String _$hashtagServiceHash() => r'5cd38d3c2e8d78a6f7b74a72b650d79e28938fe4';
 
-/// Hashtag service depends on Video event service
+/// Hashtag service depends on Video event service and cache service
 ///
 /// Copied from [hashtagService].
 @ProviderFor(hashtagService)
@@ -366,7 +409,7 @@ final userProfileServiceProvider = Provider<UserProfileService>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef UserProfileServiceRef = ProviderRef<UserProfileService>;
-String _$socialServiceHash() => r'c6d03f3dcc398c79ace2245a12533587214f6630';
+String _$socialServiceHash() => r'213dee56c5edc2193f20d68b36573570f28148a1';
 
 /// Social service depends on Nostr service, Auth service, and SubscriptionManager
 ///
@@ -447,13 +490,13 @@ final directUploadServiceProvider =
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef DirectUploadServiceRef = AutoDisposeProviderRef<DirectUploadService>;
-String _$uploadManagerHash() => r'6386939fe055d353bb395a178311cc3aabaebfb0';
+String _$uploadManagerHash() => r'5480f44a292ef1b41bc5eef8d736d178905753e6';
 
 /// Upload manager depends on direct upload service
 ///
 /// Copied from [uploadManager].
 @ProviderFor(uploadManager)
-final uploadManagerProvider = AutoDisposeProvider<UploadManager>.internal(
+final uploadManagerProvider = Provider<UploadManager>.internal(
   uploadManager,
   name: r'uploadManagerProvider',
   debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
@@ -465,7 +508,7 @@ final uploadManagerProvider = AutoDisposeProvider<UploadManager>.internal(
 
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
-typedef UploadManagerRef = AutoDisposeProviderRef<UploadManager>;
+typedef UploadManagerRef = ProviderRef<UploadManager>;
 String _$apiServiceHash() => r'a114c5e161b816881b395a10c90d043ef94c8de7';
 
 /// API service depends on auth service
@@ -485,14 +528,13 @@ final apiServiceProvider = AutoDisposeProvider<ApiService>.internal(
 // ignore: unused_element
 typedef ApiServiceRef = AutoDisposeProviderRef<ApiService>;
 String _$videoEventPublisherHash() =>
-    r'ee0fcd771252073b04167eb6760c8320b0e7df62';
+    r'9c1930c392faaa6e5f5b18e340cfae39764e049e';
 
 /// Video event publisher depends on multiple services
 ///
 /// Copied from [videoEventPublisher].
 @ProviderFor(videoEventPublisher)
-final videoEventPublisherProvider =
-    AutoDisposeProvider<VideoEventPublisher>.internal(
+final videoEventPublisherProvider = Provider<VideoEventPublisher>.internal(
   videoEventPublisher,
   name: r'videoEventPublisherProvider',
   debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
@@ -504,7 +546,7 @@ final videoEventPublisherProvider =
 
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
-typedef VideoEventPublisherRef = AutoDisposeProviderRef<VideoEventPublisher>;
+typedef VideoEventPublisherRef = ProviderRef<VideoEventPublisher>;
 String _$curationServiceHash() => r'f7fefab5b82aa0fbacd66b8c940f99bd679d09d5';
 
 /// Curation Service - manages NIP-51 video curation sets

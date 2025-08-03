@@ -39,14 +39,15 @@ void main() {
 
       // Set up mocks
       mockNostrService = MockINostrService();
-      mockSubscriptionManager = MockSubscriptionManager(mockNostrService);
+      mockSubscriptionManager = MockSubscriptionManager();
       mockEventStream = StreamController<Event>.broadcast();
 
       // Mock basic properties
       when(mockNostrService.isInitialized).thenReturn(true);
-      when(mockNostrService.connectedRelays).thenReturn(['wss://vine.hol.is']);
+      when(mockNostrService.connectedRelays).thenReturn(['wss://relay3.openvine.co']);
       when(mockNostrService.hasKeys).thenReturn(true);
       when(mockNostrService.publicKey).thenReturn('test_pubkey');
+      when(mockNostrService.connectedRelayCount).thenReturn(1);
 
       // Mock the critical subscribeToEvents method
       when(mockNostrService.subscribeToEvents(filters: anyNamed('filters')))
@@ -75,14 +76,15 @@ void main() {
       Log.info('🧪 Testing VideoEventService event processing with mock');
 
       // Verify initial state
-      expect(videoEventService.eventCount, 0);
-      expect(videoEventService.hasEvents, false);
+      expect(videoEventService.getEventCount(SubscriptionType.discovery), 0);
+      expect(videoEventService.hasEvents(SubscriptionType.discovery), false);
 
-      // Create a test kind 22 video event
+      // Create a test kind 32222 video event (correct kind for video)
       final testEvent = Event(
-        'test_pubkey_1234567890abcdef1234567890abcdef1234567890abcdef12345678',
-        22, // Kind 22 for video
+        '1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+        32222, // Kind 32222 for addressable video events
         [
+          ['d', 'test-video-id'], // Required 'd' tag for addressable events
           ['url', 'https://example.com/test-video.mp4'],
           ['m', 'video/mp4'],
           ['title', 'Test Video'],
@@ -94,7 +96,10 @@ void main() {
       // Subscribe to video feed - this should call the mock
       Log.info('📡 Subscribing to video feed...');
       final subscriptionFuture =
-          videoEventService.subscribeToVideoFeed(limit: 10);
+          videoEventService.subscribeToVideoFeed(
+            subscriptionType: SubscriptionType.discovery,
+            limit: 10,
+          );
 
       // Verify that subscribeToEvents was called on the mock
       await subscriptionFuture;
@@ -103,7 +108,7 @@ void main() {
       Log.info('✅ Confirmed VideoEventService called subscribeToEvents');
 
       // Verify subscription state
-      expect(videoEventService.isSubscribed, true);
+      expect(videoEventService.isSubscribed(SubscriptionType.discovery), true);
       expect(videoEventService.isLoading, false);
       expect(videoEventService.error, isNull);
 
@@ -116,31 +121,31 @@ void main() {
 
       // Check if the event was processed
       Log.info('📊 Results after simulated event:');
-      Log.info('  - Events received: ${videoEventService.eventCount}');
-      Log.info('  - Has events: ${videoEventService.hasEvents}');
+      Log.info('  - Events received: ${videoEventService.getEventCount(SubscriptionType.discovery)}');
+      Log.info('  - Has events: ${videoEventService.hasEvents(SubscriptionType.discovery)}');
 
-      if (videoEventService.hasEvents) {
+      if (videoEventService.hasEvents(SubscriptionType.discovery)) {
         Log.info(
-            '  - First event ID: ${videoEventService.videoEvents.first.id.substring(0, 8)}...');
+            '  - First event ID: ${videoEventService.discoveryVideos.first.id.substring(0, 8)}...');
         Log.info(
-            '  - First event title: ${videoEventService.videoEvents.first.title}');
+            '  - First event title: ${videoEventService.discoveryVideos.first.title}');
       }
 
       // This is the critical test - did VideoEventService receive and process the event?
       expect(
-        videoEventService.hasEvents,
+        videoEventService.hasEvents(SubscriptionType.discovery),
         true,
         reason: 'VideoEventService should process events from the stream. '
             'If this fails, there is a bug in _handleNewVideoEvent or event processing logic.',
       );
 
       expect(
-        videoEventService.eventCount,
+        videoEventService.getEventCount(SubscriptionType.discovery),
         1,
         reason: 'Should have exactly one event',
       );
 
-      final processedEvent = videoEventService.videoEvents.first;
+      final processedEvent = videoEventService.discoveryVideos.first;
       expect(processedEvent.title, 'Test Video');
       expect(processedEvent.hasVideo, true);
 
@@ -151,7 +156,10 @@ void main() {
       Log.info('🧪 Testing VideoEventService error handling');
 
       // Subscribe to video feed
-      await videoEventService.subscribeToVideoFeed(limit: 5);
+      await videoEventService.subscribeToVideoFeed(
+        subscriptionType: SubscriptionType.discovery,
+        limit: 5,
+      );
 
       // Simulate a stream error
       mockEventStream.addError(Exception('Mock relay error'));
@@ -160,7 +168,7 @@ void main() {
       await Future.delayed(const Duration(milliseconds: 100));
 
       // Should handle error gracefully without crashing
-      expect(videoEventService.isSubscribed, true);
+      expect(videoEventService.isSubscribed(SubscriptionType.discovery), true);
       // Error handling may vary - the important thing is it doesn't crash
 
       Log.info('✅ Error handling test completed');
@@ -169,11 +177,14 @@ void main() {
     test('VideoEventService filters non-video events correctly', () async {
       Log.info('🧪 Testing VideoEventService event filtering');
 
-      await videoEventService.subscribeToVideoFeed(limit: 5);
+      await videoEventService.subscribeToVideoFeed(
+        subscriptionType: SubscriptionType.discovery,
+        limit: 5,
+      );
 
       // Send a non-video event (kind 1 is text note)
       final textEvent = Event(
-        'test_pubkey_1234567890abcdef1234567890abcdef1234567890abcdef12345678',
+        '1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
         1, // Kind 1 for text note
         [],
         'This is not a video event',
@@ -184,16 +195,17 @@ void main() {
 
       // Should not process non-video events
       expect(
-        videoEventService.eventCount,
+        videoEventService.getEventCount(SubscriptionType.discovery),
         0,
         reason: 'Should not process non-video events',
       );
 
       // Now send a real video event
       final videoEvent = Event(
-        'test_pubkey_1234567890abcdef1234567890abcdef1234567890abcdef12345678',
-        22, // Kind 22 for video
+        '1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+        32222, // Kind 32222 for addressable video events
         [
+          ['d', 'filtered-test-video-id'], // Required 'd' tag for addressable events
           ['url', 'https://example.com/filtered-test.mp4'],
           ['title', 'Filtered Test Video'],
         ],
@@ -205,7 +217,7 @@ void main() {
 
       // Should process the video event
       expect(
-        videoEventService.eventCount,
+        videoEventService.getEventCount(SubscriptionType.discovery),
         1,
         reason: 'Should process video events',
       );

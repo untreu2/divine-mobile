@@ -1,8 +1,6 @@
 // ABOUTME: Test data builder for creating authentication data instances
 // ABOUTME: Supports various auth scenarios including logged in, logged out, and error states
 
-import 'package:nostr_sdk/nostr_sdk.dart';
-import 'package:openvine/services/auth_service.dart';
 import 'package:openvine/services/nostr_key_manager.dart';
 import 'package:openvine/utils/nostr_encoding.dart';
 

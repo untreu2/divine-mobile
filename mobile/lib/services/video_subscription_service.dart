@@ -123,10 +123,10 @@ class VideoSubscriptionService {
   }) {
     final filters = <Filter>[];
 
-    // Video events filter (kind 22)
+    // Video events filter (kind 32222)
     filters.add(
       Filter(
-        kinds: [22],
+        kinds: [32222],
         authors: authors,
         t: hashtags,
         h: group != null ? [group] : null,

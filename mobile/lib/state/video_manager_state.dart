@@ -79,6 +79,9 @@ class VideoManagerState with _$VideoManagerState {
     /// Current video index for preloading context
     @Default(0) int currentIndex,
 
+    /// Current active tab index (for tab visibility coordination)
+    @Default(0) int currentTab,
+
     /// Configuration for the video manager
     VideoManagerConfig? config,
 
@@ -177,6 +180,14 @@ class VideoManagerState with _$VideoManagerState {
 
   /// Check if memory usage is critical
   bool get isMemoryCritical => memoryStats.estimatedMemoryMB > 500;
+
+  /// Check if a video should be paused for a given tab change
+  bool shouldPauseVideoForTab(String videoId, int tabIndex) {
+    // For now, pause videos from tabs that are not currently active
+    // In a real implementation, this would check video metadata to determine
+    // which tab the video belongs to and compare with the currently active tab
+    return tabIndex != currentTab;
+  }
 
   /// Get debug information map
   Map<String, dynamic> get debugInfo => {

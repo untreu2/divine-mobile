@@ -2,6 +2,7 @@
 // ABOUTME: Verifies AUTH challenge/response flow and video loading with authentication
 
 import 'package:flutter/services.dart';
+import 'package:openvine/services/subscription_manager.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nostr_sdk/event.dart';
 import 'package:nostr_sdk/filter.dart';
@@ -36,18 +37,18 @@ void main() {
       // It will be cleaned up when disposed
     });
 
-    test('should connect to vine.hol.is relay', () async {
+    test('should connect to relay3.openvine.co relay', () async {
       // Initialize with the vine relay
-      await nostrService.initialize(customRelays: ['wss://vine.hol.is']);
+      await nostrService.initialize(customRelays: ['wss://relay3.openvine.co']);
 
       expect(nostrService.isInitialized, true);
-      expect(nostrService.connectedRelays, contains('wss://vine.hol.is'));
+      expect(nostrService.connectedRelays, contains('wss://relay3.openvine.co'));
       expect(nostrService.connectedRelayCount, greaterThan(0));
     });
 
     test('should handle AUTH challenge from relay', () async {
       // Initialize connection
-      await nostrService.initialize(customRelays: ['wss://vine.hol.is']);
+      await nostrService.initialize(customRelays: ['wss://relay3.openvine.co']);
 
       // Create a test subscription to trigger AUTH if needed
       final filters = [
@@ -78,10 +79,10 @@ void main() {
     });
 
     test('should load video events after authentication', () async {
-      await nostrService.initialize(customRelays: ['wss://vine.hol.is']);
+      await nostrService.initialize(customRelays: ['wss://relay3.openvine.co']);
 
       // Subscribe to video feed
-      await videoService.subscribeToVideoFeed(limit: 10);
+      await videoService.subscribeToVideoFeed(subscriptionType: SubscriptionType.discovery, limit: 10);
 
       // Wait for events to load
       await Future.delayed(const Duration(seconds: 3));
@@ -103,7 +104,7 @@ void main() {
     test('should receive AUTH challenge message from relay', () async {
       // We need to modify the nostr service to expose raw messages
       // For now, let's just test the connection
-      await nostrService.initialize(customRelays: ['wss://vine.hol.is']);
+      await nostrService.initialize(customRelays: ['wss://relay3.openvine.co']);
 
       // Try to send a REQ to trigger AUTH
       final filters = [
@@ -129,7 +130,7 @@ void main() {
     });
 
     test('relay connection status and auth state', () async {
-      await nostrService.initialize(customRelays: ['wss://vine.hol.is']);
+      await nostrService.initialize(customRelays: ['wss://relay3.openvine.co']);
 
       // Access the relay pool through the nostr client
       // This is a diagnostic test to understand relay state

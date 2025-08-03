@@ -1,4 +1,4 @@
-COMPLETE KIND 0 EVENTS FROM vine.hol.is
+COMPLETE KIND 0 EVENTS FROM OPENVINE RELAY
 Total events: 84
 Generated: 2025-06-29 22:54:32.474533
 ========================================================================================================================

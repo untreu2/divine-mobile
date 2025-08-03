@@ -1,6 +1,7 @@
 // ABOUTME: Tests for direct upload service including profile picture uploads
 // ABOUTME: Verifies image upload functionality, progress tracking, and error handling
 
+import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -99,15 +100,21 @@ void main() {
 
     test('uploadProfilePicture tracks progress', () async {
       final progressValues = <double>[];
+      final completer = Completer<http.StreamedResponse>();
 
-      // Mock response with delay to test progress
+      // Mock response with proper async pattern using Completer
       when(mockHttpClient.send(any)).thenAnswer((_) async {
-        await Future.delayed(const Duration(milliseconds: 100));
+        // Simulate progress tracking by returning a response that allows progress monitoring
+        final controller = StreamController<List<int>>();
+        
+        // Add progress callback that gets called during upload
+        Timer(Duration.zero, () {
+          controller.add('{"status":"success","url":"https://cdn.example.com/image.jpg"}'.codeUnits);
+          controller.close();
+        });
+        
         return http.StreamedResponse(
-          Stream.value(
-            '{"status":"success","url":"https://cdn.example.com/image.jpg"}'
-                .codeUnits,
-          ),
+          controller.stream,
           200,
         );
       });

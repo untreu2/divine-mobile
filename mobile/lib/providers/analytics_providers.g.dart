@@ -40,7 +40,7 @@ final sharedPreferencesProvider =
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef SharedPreferencesRef = AutoDisposeFutureProviderRef<SharedPreferences>;
-String _$analyticsHash() => r'88cbe6ada100c4be67cbfc3d54d8caba94f5be19';
+String _$analyticsHash() => r'ca5e8890a7d0831c814e29f45d64a54760fab80d';
 
 /// See also [Analytics].
 @ProviderFor(Analytics)

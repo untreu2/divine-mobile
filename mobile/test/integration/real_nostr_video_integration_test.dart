@@ -31,18 +31,18 @@ void main() {
       await RealIntegrationTestHelper.cleanup();
     });
 
-    testWidgets('can fetch real video events from vine.hol.is relay', (tester) async {
-      // This test uses REAL network connections to vine.hol.is
+    testWidgets('can fetch real video events from relay3.openvine.co relay', (tester) async {
+      // This test uses REAL network connections to relay3.openvine.co
       // No mocking of NostrService, network, or relay connections
       
       // Subscribe to video feed
-      await videoEventService.subscribeToVideoFeed(limit: 5);
+      await videoEventService.subscribeToVideoFeed(subscriptionType: SubscriptionType.discovery, limit: 5);
       
       // Wait for events to load
       await tester.binding.delayed(const Duration(seconds: 2));
       
       // Get video events from cache
-      final videoEvents = videoEventService.videoEvents;
+      final videoEvents = videoEventService.discoveryVideos;
       
       // Should get real video events from the relay
       expect(videoEvents, isNotNull);
@@ -59,16 +59,16 @@ void main() {
 
     testWidgets('can subscribe to real video events', (tester) async {
       // Test real subscription to live relay
-      int initialCount = videoEventService.videoEvents.length;
+      int initialCount = videoEventService.discoveryVideos.length;
       
       // Subscribe to video feed
-      await videoEventService.subscribeToVideoFeed(limit: 10);
+      await videoEventService.subscribeToVideoFeed(subscriptionType: SubscriptionType.discovery, limit: 10);
       
       // Wait a bit for any events
       await tester.binding.delayed(const Duration(seconds: 3));
       
       // Check if we got any new events
-      int finalCount = videoEventService.videoEvents.length;
+      int finalCount = videoEventService.discoveryVideos.length;
       
       // May not receive events immediately, but subscription should work
       expect(finalCount, greaterThanOrEqualTo(initialCount));

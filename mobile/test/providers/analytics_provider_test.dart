@@ -121,7 +121,7 @@ void main() {
 
       verify(
         () => mockClient.post(
-          Uri.parse('https://analytics.openvine.co/analytics/view'),
+          Uri.parse('https://api.openvine.co/analytics/view'),
           headers: {
             'Content-Type': 'application/json',
             'User-Agent': 'OpenVine-Mobile/1.0',

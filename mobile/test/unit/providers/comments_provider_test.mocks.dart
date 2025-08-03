@@ -100,10 +100,19 @@ class MockSocialService extends _i1.Mock implements _i5.SocialService {
       ) as bool);
 
   @override
-  bool hasReposted(String? eventId) => (super.noSuchMethod(
+  bool hasReposted(
+    String? eventId, {
+    String? pubkey,
+    String? dTag,
+  }) =>
+      (super.noSuchMethod(
         Invocation.method(
           #hasReposted,
           [eventId],
+          {
+            #pubkey: pubkey,
+            #dTag: dTag,
+          },
         ),
         returnValue: false,
       ) as bool);
@@ -783,58 +792,6 @@ class MockINostrService extends _i1.Mock implements _i4.INostrService {
             {
               #metadata: metadata,
               #content: content,
-              #hashtags: hashtags,
-            },
-          ),
-        )),
-      ) as _i6.Future<_i4.NostrBroadcastResult>);
-
-  @override
-  _i6.Future<_i4.NostrBroadcastResult> publishVideoEvent({
-    required String? videoUrl,
-    required String? content,
-    String? title,
-    String? thumbnailUrl,
-    int? duration,
-    String? dimensions,
-    String? mimeType,
-    String? sha256,
-    int? fileSize,
-    List<String>? hashtags = const [],
-  }) =>
-      (super.noSuchMethod(
-        Invocation.method(
-          #publishVideoEvent,
-          [],
-          {
-            #videoUrl: videoUrl,
-            #content: content,
-            #title: title,
-            #thumbnailUrl: thumbnailUrl,
-            #duration: duration,
-            #dimensions: dimensions,
-            #mimeType: mimeType,
-            #sha256: sha256,
-            #fileSize: fileSize,
-            #hashtags: hashtags,
-          },
-        ),
-        returnValue: _i6.Future<_i4.NostrBroadcastResult>.value(
-            _FakeNostrBroadcastResult_2(
-          this,
-          Invocation.method(
-            #publishVideoEvent,
-            [],
-            {
-              #videoUrl: videoUrl,
-              #content: content,
-              #title: title,
-              #thumbnailUrl: thumbnailUrl,
-              #duration: duration,
-              #dimensions: dimensions,
-              #mimeType: mimeType,
-              #sha256: sha256,
-              #fileSize: fileSize,
               #hashtags: hashtags,
             },
           ),

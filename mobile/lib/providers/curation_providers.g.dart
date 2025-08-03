@@ -60,7 +60,7 @@ final curationProvider =
 );
 
 typedef _$Curation = AutoDisposeNotifier<CurationState>;
-String _$analyticsTrendingHash() => r'7c055bf97bbabe8c8468c0b33ccfef5f77f48d00';
+String _$analyticsTrendingHash() => r'b7bb95a62cbc822807e116dfa4993eff23d71141';
 
 /// Provider for analytics-based trending videos
 ///

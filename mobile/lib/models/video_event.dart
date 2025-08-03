@@ -1,12 +1,12 @@
-// ABOUTME: NIP-71 Video Event model for handling kind 22 short video events
-// ABOUTME: Parses and structures video content data from Nostr relays
+// ABOUTME: Video Event model for handling kind 32222 addressable short video events
+// ABOUTME: Parses and structures video content data from Nostr relays (NIP-32222)
 
 import 'dart:developer' as developer;
 
 import 'package:nostr_sdk/event.dart';
 import 'package:openvine/services/thumbnail_api_service.dart';
 
-/// Represents a NIP-71 video event (kind 22 for short videos)
+/// Represents an addressable video event (kind 32222 NIP-32222)
 class VideoEvent {
   // approved, flagged, etc.
 
@@ -43,12 +43,12 @@ class VideoEvent {
 
   /// Create VideoEvent from Nostr event
   factory VideoEvent.fromNostrEvent(Event event) {
-    if (event.kind != 22) {
-      throw ArgumentError('Event must be kind 22 (short video)');
+    if (event.kind != 32222) {
+      throw ArgumentError('Event must be kind 32222 (addressable short video)');
     }
 
     developer.log(
-        '🔍 DEBUG: Parsing Kind 22 event ${event.id.substring(0, 8)}...',
+        '🔍 DEBUG: Parsing Kind ${event.kind} event ${event.id.substring(0, 8)}...',
         name: 'VideoEvent');
     developer.log('🔍 DEBUG: Event has ${event.tags.length} tags',
         name: 'VideoEvent');
@@ -150,6 +150,12 @@ class VideoEvent {
               case 'thumb':
                 // Thumbnail URL
                 thumbnailUrl ??= value;
+              case 'image':
+                // NIP-92 uses 'image' for thumbnail in imeta
+                thumbnailUrl ??= value;
+              case 'blurhash':
+                // Blurhash for progressive loading
+                blurhash ??= value;
               case 'duration':
                 duration ??= double.tryParse(value)?.round();
             }
@@ -301,12 +307,20 @@ class VideoEvent {
         '🔍 DEBUG: hasVideo = ${videoUrl != null && videoUrl!.isNotEmpty}',
         name: 'VideoEvent');
 
+    // Validate that events must have a 'd' tag
+    if (vineId == null || vineId.isEmpty) {
+      throw ArgumentError('Kind 32222 events must have a "d" tag identifier');
+    }
+
     // Generate fallback thumbnail URL if none provided
     final String? finalThumbnailUrl = thumbnailUrl ?? _generateFallbackThumbnailUrl(videoUrl, event.id);
     
     if (finalThumbnailUrl != thumbnailUrl) {
       developer.log('🔧 FALLBACK: Generated thumbnail URL: $finalThumbnailUrl', name: 'VideoEvent');
     }
+    
+    developer.log('🖼️ FINAL: thumbnailUrl = $finalThumbnailUrl', name: 'VideoEvent');
+    developer.log('🖼️ FINAL: blurhash = $blurhash', name: 'VideoEvent');
 
     return VideoEvent(
       id: event.id,
@@ -354,7 +368,7 @@ class VideoEvent {
   final String? publishedAt;
   final Map<String, String> rawTags;
 
-  // Vine-specific fields from KIND22 spec
+  // Vine-specific fields from NIP-32222 spec
   final String? vineId; // 'd' tag - original vine ID for replaceable events
   final String? group; // 'h' tag - group/community identification
   final String? altText; // 'alt' tag - accessibility text
@@ -375,18 +389,18 @@ class VideoEvent {
   final int? originalLoops; // Original loop count from classic Vine
   final int? originalLikes; // Original like count from classic Vine
 
-  /// Parse imeta tag which contains key-value pairs as separate elements
+  /// Parse imeta tag which contains key-value pairs in "key value" format
   static void _parseImetaTag(
       List<String> tag, void Function(String key, String value) onKeyValue) {
     // Skip the first element which is "imeta"
+    // Each element after the first is in format "key value" and needs to be split
     for (var i = 1; i < tag.length; i++) {
-      final item = tag[i];
-
-      // Split on first space to separate key from value
-      final spaceIndex = item.indexOf(' ');
-      if (spaceIndex > 0) {
-        final key = item.substring(0, spaceIndex);
-        final value = item.substring(spaceIndex + 1);
+      final element = tag[i];
+      final spaceIndex = element.indexOf(' ');
+      
+      if (spaceIndex > 0 && spaceIndex < element.length - 1) {
+        final key = element.substring(0, spaceIndex);
+        final value = element.substring(spaceIndex + 1);
         onKeyValue(key, value);
       }
     }

@@ -10,11 +10,11 @@ import 'package:openvine/utils/unified_logger.dart';
 /// REFACTORED: Removed ChangeNotifier - now uses pure state management via Riverpod
 class ProfileCacheService  {
   static const String _boxName = 'user_profiles';
-  static const int _maxCacheSize = 1000; // Maximum number of profiles to cache
+  // Removed cache size limits - Kind 0 events are small, cache everything
   static const Duration _cacheExpiry =
-      Duration(days: 7); // Cache profiles for 7 days
+      Duration(days: 365); // Cache profiles for 1 year - they rarely change
   static const Duration _refreshInterval =
-      Duration(hours: 24); // Check for updates after 24 hours
+      Duration(days: 7); // Check for updates after 7 days
 
   Box<UserProfile>? _profileBox;
   Box<DateTime>? _fetchTimestamps; // Track when each profile was last fetched
@@ -109,10 +109,7 @@ class ProfileCacheService  {
     }
 
     try {
-      // Check if we need to make space
-      if (_profileBox!.length >= _maxCacheSize) {
-        await _cleanupOldestProfiles();
-      }
+      // No cache size limits - Kind 0 events are small, cache everything
 
       await _profileBox!.put(profile.pubkey, profile);
 
@@ -251,30 +248,6 @@ class ProfileCacheService  {
     }
   }
 
-  /// Clean up oldest profiles to make space
-  Future<void> _cleanupOldestProfiles() async {
-    if (!_isInitialized || _profileBox == null) return;
-
-    try {
-      final profiles = _profileBox!.toMap().entries.toList();
-
-      // Sort by creation date (oldest first)
-      profiles.sort((a, b) => a.value.createdAt.compareTo(b.value.createdAt));
-
-      // Remove oldest 10% of profiles
-      final toRemove = (profiles.length * 0.1).ceil();
-
-      for (var i = 0; i < toRemove && i < profiles.length; i++) {
-        await _profileBox!.delete(profiles[i].key);
-      }
-
-      Log.debug('📱️ Removed $toRemove oldest profiles to make space',
-          name: 'ProfileCacheService', category: LogCategory.storage);
-    } catch (e) {
-      Log.error('Error cleaning up oldest profiles: $e',
-          name: 'ProfileCacheService', category: LogCategory.storage);
-    }
-  }
 
   void dispose() {
     _profileBox?.close();

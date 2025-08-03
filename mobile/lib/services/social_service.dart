@@ -2,11 +2,15 @@
 // ABOUTME: Handles NIP-25 reactions, NIP-02 contact lists, and other social Nostr events
 
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:nostr_sdk/event.dart';
 import 'package:nostr_sdk/filter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:openvine/services/auth_service.dart';
+import 'package:openvine/services/immediate_completion_helper.dart';
 import 'package:openvine/services/nostr_service_interface.dart';
+import 'package:openvine/services/personal_event_cache_service.dart';
 import 'package:openvine/services/subscription_manager.dart';
 import 'package:openvine/utils/unified_logger.dart';
 
@@ -80,13 +84,16 @@ class FollowSet {
 /// REFACTORED: Removed ChangeNotifier - now uses pure state management via Riverpod
 class SocialService  {
   SocialService(this._nostrService, this._authService,
-      {required SubscriptionManager subscriptionManager})
-      : _subscriptionManager = subscriptionManager {
+      {required SubscriptionManager subscriptionManager, 
+      PersonalEventCacheService? personalEventCache})
+      : _subscriptionManager = subscriptionManager,
+        _personalEventCache = personalEventCache {
     _initialize();
   }
   final INostrService _nostrService;
   final AuthService _authService;
   final SubscriptionManager _subscriptionManager;
+  final PersonalEventCacheService? _personalEventCache;
 
   // Cache for UI state - liked events by current user
   final Set<String> _likedEventIds = <String>{};
@@ -131,6 +138,12 @@ class SocialService  {
     try {
       // Initialize current user's social data if authenticated
       if (_authService.isAuthenticated) {
+        // Load cached following list first for immediate UI display
+        await _loadFollowingListFromCache();
+        
+        // Load cached personal events for instant access
+        await _loadCachedPersonalEvents();
+        
         await _loadUserLikedEvents();
         await _loadUserRepostedEvents();
         await fetchCurrentUserFollowList();
@@ -144,6 +157,70 @@ class SocialService  {
     }
   }
 
+  /// Load cached personal events for instant access on startup
+  Future<void> _loadCachedPersonalEvents() async {
+    if (_personalEventCache?.isInitialized != true) {
+      Log.debug('PersonalEventCache not initialized, skipping cached event loading',
+          name: 'SocialService', category: LogCategory.system);
+      return;
+    }
+
+    try {
+      // Load cached likes (Kind 7 events) to populate _likedEventIds
+      final cachedLikes = _personalEventCache!.getEventsByKind(7);
+      for (final likeEvent in cachedLikes) {
+        final eTags = likeEvent.tags.where((tag) => tag.isNotEmpty && tag[0] == 'e');
+        for (final eTag in eTags) {
+          if (eTag.length > 1) {
+            final likedEventId = eTag[1];
+            _likedEventIds.add(likedEventId);
+            _likeEventIdToReactionId[likedEventId] = likeEvent.id;
+          }
+        }
+      }
+
+      // Load cached reposts (Kind 6 events) to populate _repostedEventIds  
+      final cachedReposts = _personalEventCache!.getEventsByKind(6);
+      for (final repostEvent in cachedReposts) {
+        _processRepostEvent(repostEvent);
+      }
+
+      // Load cached contact lists (Kind 3 events) to populate following data
+      final cachedContactLists = _personalEventCache!.getEventsByKind(3);
+      if (cachedContactLists.isNotEmpty) {
+        // Use the most recent contact list event
+        final latestContactList = cachedContactLists.first; // Already sorted by creation time
+        final pTags = latestContactList.tags.where((tag) => tag.isNotEmpty && tag[0] == 'p');
+        final pubkeys = pTags.map((tag) => tag.length > 1 ? tag[1] : '').where((pubkey) => pubkey.isNotEmpty).cast<String>().toList();
+        
+        if (pubkeys.isNotEmpty) {
+          _followingPubkeys = pubkeys;
+          _currentUserContactListEvent = latestContactList;
+          
+          // Save to SharedPreferences cache as well
+          await _saveFollowingListToCache();
+        }
+      }
+
+      final stats = _personalEventCache!.getCacheStats();
+      Log.info('📋 Loaded cached personal events on startup:',
+          name: 'SocialService', category: LogCategory.system);
+      Log.info('  - Total events: ${stats['total_events']}',
+          name: 'SocialService', category: LogCategory.system);
+      Log.info('  - Likes loaded: ${cachedLikes.length}',
+          name: 'SocialService', category: LogCategory.system);
+      Log.info('  - Reposts loaded: ${cachedReposts.length}',
+          name: 'SocialService', category: LogCategory.system);
+      Log.info('  - Contact lists loaded: ${cachedContactLists.length}',
+          name: 'SocialService', category: LogCategory.system);
+      Log.info('  - Following count: ${_followingPubkeys.length}',
+          name: 'SocialService', category: LogCategory.system);
+    } catch (e) {
+      Log.error('Failed to load cached personal events: $e',
+          name: 'SocialService', category: LogCategory.system);
+    }
+  }
+
   /// Get current user's liked event IDs
   Set<String> get likedEventIds => Set.from(_likedEventIds);
 
@@ -151,7 +228,17 @@ class SocialService  {
   bool isLiked(String eventId) => _likedEventIds.contains(eventId);
 
   /// Check if current user has reposted an event
-  bool hasReposted(String eventId) => _repostedEventIds.contains(eventId);
+  /// Checks using the addressable ID format for Kind 32222 events
+  bool hasReposted(String eventId, {String? pubkey, String? dTag}) {
+    // For addressable events, check using addressable ID format
+    if (pubkey != null && dTag != null) {
+      final addressableId = '32222:$pubkey:$dTag';
+      return _repostedEventIds.contains(addressableId);
+    }
+    
+    // Fallback to event ID for backward compatibility
+    return _repostedEventIds.contains(eventId);
+  }
 
   /// Get cached like count for an event
   int? getCachedLikeCount(String eventId) => _likeCounts[eventId];
@@ -276,6 +363,9 @@ class SocialService  {
         throw Exception('Failed to create like event');
       }
 
+      // Cache the event immediately after creation
+      _personalEventCache?.cacheUserEvent(event);
+
       // Broadcast the like event
       final result = await _nostrService.broadcastEvent(event);
 
@@ -309,6 +399,9 @@ class SocialService  {
       if (event == null) {
         throw Exception('Failed to create deletion event');
       }
+
+      // Cache the deletion event immediately after creation
+      _personalEventCache?.cacheUserEvent(event);
 
       // Broadcast the deletion event
       final result = await _nostrService.broadcastEvent(event);
@@ -490,21 +583,7 @@ class SocialService  {
           ),
         ],
         onEvent: (event) {
-          // Extract the reposted event ID from 'e' tags
-          for (final tag in event.tags) {
-            if (tag.isNotEmpty && tag[0] == 'e' && tag.length > 1) {
-              final repostedEventId = tag[1];
-              _repostedEventIds.add(repostedEventId);
-              // Store the repost event ID for future deletion
-              _repostEventIdToRepostId[repostedEventId] = event.id;
-              Log.debug(
-                  '📱 Cached user repost: ${repostedEventId.substring(0, 8)}... (repost: ${event.id.substring(0, 8)}...)',
-                  name: 'SocialService',
-                  category: LogCategory.system);
-              break;
-            }
-          }
-
+          _processRepostEvent(event);
         },
         onError: (error) => Log.error('Error loading user reposts: $error',
             name: 'SocialService', category: LogCategory.system),
@@ -571,19 +650,19 @@ class SocialService  {
 
               eventSubscription.listen(
                 likedEvents.add,
+                onError: (error) {
+                  Log.error('Error fetching liked event details: $error',
+                      name: 'SocialService', category: LogCategory.system);
+                  if (!completer.isCompleted) {
+                    completer.complete(likedEvents);
+                  }
+                },
                 onDone: () {
                   if (!completer.isCompleted) {
                     completer.complete(likedEvents);
                   }
                 },
               );
-
-              // Timeout for event fetching
-              Timer(const Duration(seconds: 5), () {
-                if (!completer.isCompleted) {
-                  completer.complete(likedEvents);
-                }
-              });
             } catch (e) {
               Log.error('Error fetching liked event details: $e',
                   name: 'SocialService', category: LogCategory.system);
@@ -598,13 +677,6 @@ class SocialService  {
           }
         },
       );
-
-      // Timeout for reaction fetching
-      Timer(const Duration(seconds: 5), () {
-        if (!completer.isCompleted) {
-          completer.complete([]);
-        }
-      });
 
       final result = await completer.future;
       Log.info('Fetched ${result.length} liked events',
@@ -632,8 +704,8 @@ class SocialService  {
           name: 'SocialService',
           category: LogCategory.system);
 
-      // Subscribe to current user's Kind 3 events (contact lists)
-      final subscription = _nostrService.subscribeToEvents(
+      // ✅ Use immediate completion for contact list query
+      final eventStream = _nostrService.subscribeToEvents(
         filters: [
           Filter(
             authors: [currentUserPubkey],
@@ -643,38 +715,26 @@ class SocialService  {
         ],
       );
 
-      final completer = Completer<void>();
-
-      // Process user's contact list events
-      subscription.listen(
-        (event) {
-          _processContactListEvent(event);
-          if (!completer.isCompleted) {
-            completer.complete();
-          }
-        },
-        onError: (error) {
-          Log.error('Error loading follow list: $error',
-              name: 'SocialService', category: LogCategory.system);
-          if (!completer.isCompleted) {
-            completer.complete();
-          }
-        },
-        onDone: () {
-          if (!completer.isCompleted) {
-            completer.complete();
-          }
-        },
+      final contactListEvent = await ContactListCompletionHelper.queryContactList(
+        eventStream: eventStream,
+        pubkey: currentUserPubkey,
+        fallbackTimeoutSeconds: 10,
       );
 
-      // Timeout after 5 seconds
-      Timer(const Duration(seconds: 5), () {
-        if (!completer.isCompleted) {
-          completer.complete();
-        }
-      });
-
-      await completer.future;
+      if (contactListEvent != null) {
+        Log.debug(
+          '✅ Contact list received immediately for ${currentUserPubkey.substring(0, 8)}',
+          name: 'SocialService',
+          category: LogCategory.system,
+        );
+        _processContactListEvent(contactListEvent);
+      } else {
+        Log.debug(
+          '⏰ No contact list found for ${currentUserPubkey.substring(0, 8)}',
+          name: 'SocialService',
+          category: LogCategory.system,
+        );
+      }
     } catch (e) {
       Log.error('Error fetching follow list: $e',
           name: 'SocialService', category: LogCategory.system);
@@ -699,6 +759,9 @@ class SocialService  {
       _followingPubkeys = followedPubkeys;
       Log.info('Updated follow list: ${_followingPubkeys.length} following',
           name: 'SocialService', category: LogCategory.system);
+      
+      // Persist following list to local storage for aggressive caching
+      _saveFollowingListToCache();
 
 
     }
@@ -723,13 +786,14 @@ class SocialService  {
     Log.debug('📱 Following user: ${pubkeyToFollow.substring(0, 8)}...',
         name: 'SocialService', category: LogCategory.system);
 
-    try {
-      // Add to current follow list
-      final updatedFollowList = List<String>.from(_followingPubkeys)
-        ..add(pubkeyToFollow);
+    // Optimistically update local state for immediate UI feedback
+    final previousFollowList = List<String>.from(_followingPubkeys);
+    _followingPubkeys = List<String>.from(_followingPubkeys)
+      ..add(pubkeyToFollow);
 
+    try {
       // Create new Kind 3 event with updated follow list
-      final tags = updatedFollowList.map((pubkey) => ['p', pubkey]).toList();
+      final tags = _followingPubkeys.map((pubkey) => ['p', pubkey]).toList();
 
       // Preserve existing content from previous contact list event if available
       final content = _currentUserContactListEvent?.content ?? '';
@@ -741,19 +805,25 @@ class SocialService  {
       );
 
       if (event == null) {
+        // Revert on failure
+        _followingPubkeys = previousFollowList;
         throw Exception('Failed to create contact list event');
       }
+
+      // Cache the contact list event immediately after creation
+      _personalEventCache?.cacheUserEvent(event);
 
       // Broadcast the updated contact list
       final result = await _nostrService.broadcastEvent(event);
 
       if (!result.isSuccessful) {
+        // Revert on failure
+        _followingPubkeys = previousFollowList;
         final errorMessages = result.errors.values.join(', ');
         throw Exception('Failed to broadcast contact list: $errorMessages');
       }
 
-      // Update local state immediately for UI responsiveness
-      _followingPubkeys = updatedFollowList;
+      // Update the event reference
       _currentUserContactListEvent = event;
 
       Log.info(
@@ -785,13 +855,14 @@ class SocialService  {
     Log.debug('📱 Unfollowing user: ${pubkeyToUnfollow.substring(0, 8)}...',
         name: 'SocialService', category: LogCategory.system);
 
-    try {
-      // Remove from current follow list
-      final updatedFollowList = List<String>.from(_followingPubkeys)
-        ..remove(pubkeyToUnfollow);
+    // Optimistically update local state for immediate UI feedback
+    final previousFollowList = List<String>.from(_followingPubkeys);
+    _followingPubkeys = List<String>.from(_followingPubkeys)
+      ..remove(pubkeyToUnfollow);
 
+    try {
       // Create new Kind 3 event with updated follow list
-      final tags = updatedFollowList.map((pubkey) => ['p', pubkey]).toList();
+      final tags = _followingPubkeys.map((pubkey) => ['p', pubkey]).toList();
 
       // Preserve existing content from previous contact list event if available
       final content = _currentUserContactListEvent?.content ?? '';
@@ -803,19 +874,25 @@ class SocialService  {
       );
 
       if (event == null) {
+        // Revert on failure
+        _followingPubkeys = previousFollowList;
         throw Exception('Failed to create contact list event');
       }
+
+      // Cache the contact list event immediately after creation
+      _personalEventCache?.cacheUserEvent(event);
 
       // Broadcast the updated contact list
       final result = await _nostrService.broadcastEvent(event);
 
       if (!result.isSuccessful) {
+        // Revert on failure
+        _followingPubkeys = previousFollowList;
         final errorMessages = result.errors.values.join(', ');
         throw Exception('Failed to broadcast contact list: $errorMessages');
       }
 
-      // Update local state immediately for UI responsiveness
-      _followingPubkeys = updatedFollowList;
+      // Update the event reference
       _currentUserContactListEvent = event;
 
       Log.info(
@@ -863,23 +940,12 @@ class SocialService  {
   /// Fetch follower stats from the network
   Future<Map<String, int>> _fetchFollowerStats(String pubkey) async {
     try {
-      final completer = Completer<Map<String, int>>();
+      // ✅ Use immediate completion for both queries
       var followingCount = 0;
       var followersCount = 0;
-      var followingFetched = false;
-      var followersFetched = false;
 
-      void checkComplete() {
-        if (followingFetched && followersFetched && !completer.isCompleted) {
-          completer.complete({
-            'followers': followersCount,
-            'following': followingCount,
-          });
-        }
-      }
-
-      // 1. Get following count: Find user's latest Kind 3 event and count p tags
-      final followingSubscription = _nostrService.subscribeToEvents(
+      // 1. ✅ Get following count with immediate completion
+      final followingEventStream = _nostrService.subscribeToEvents(
         filters: [
           Filter(
             authors: [pubkey],
@@ -888,27 +954,26 @@ class SocialService  {
           ),
         ],
       );
-
-      followingSubscription.listen(
-        (event) {
-          // Count p tags in the contact list
-          followingCount =
-              event.tags.where((tag) => tag.isNotEmpty && tag[0] == 'p').length;
-        },
-        onDone: () {
-          followingFetched = true;
-          checkComplete();
-        },
-        onError: (error) {
-          Log.error('Error fetching following count: $error',
-              name: 'SocialService', category: LogCategory.system);
-          followingFetched = true;
-          checkComplete();
-        },
+      
+      final followingEvent = await ContactListCompletionHelper.queryContactList(
+        eventStream: followingEventStream,
+        pubkey: pubkey,
+        fallbackTimeoutSeconds: 8,
       );
 
-      // 2. Get followers count: Find all Kind 3 events that include this pubkey in p tags
-      final followersSubscription = _nostrService.subscribeToEvents(
+      if (followingEvent != null) {
+        followingCount = followingEvent.tags
+            .where((tag) => tag.isNotEmpty && tag[0] == 'p')
+            .length;
+        Log.debug(
+          '✅ Following count received immediately: $followingCount for ${pubkey.substring(0, 8)}',
+          name: 'SocialService',
+          category: LogCategory.system,
+        );
+      }
+
+      // 2. ✅ Get followers count with immediate completion
+      final followersEventStream = _nostrService.subscribeToEvents(
         filters: [
           Filter(
             kinds: [3],
@@ -917,36 +982,50 @@ class SocialService  {
         ],
       );
 
+      // Use exhaustive mode to collect all followers
+      final config = CompletionConfig(
+        mode: CompletionMode.exhaustive,
+        fallbackTimeoutSeconds: 8,
+        serviceName: 'FollowersQuery',
+        logCategory: LogCategory.system,
+      );
+
       final followerPubkeys = <String>{};
-      followersSubscription.listen(
-        (event) {
+      final followersCompleter = Completer<int>();
+
+      ImmediateCompletionHelper.createImmediateSubscription(
+        eventStream: followersEventStream,
+        config: config,
+        onEvent: (event) {
           // Each unique author who has this pubkey in their contact list is a follower
           followerPubkeys.add(event.pubkey);
         },
-        onDone: () {
+        onComplete: (result) {
           followersCount = followerPubkeys.length;
-          followersFetched = true;
-          checkComplete();
+          Log.debug(
+            '✅ Followers query completed: $followersCount followers for ${pubkey.substring(0, 8)}',
+            name: 'SocialService',
+            category: LogCategory.system,
+          );
+          if (!followersCompleter.isCompleted) {
+            followersCompleter.complete(followersCount);
+          }
         },
         onError: (error) {
           Log.error('Error fetching followers count: $error',
               name: 'SocialService', category: LogCategory.system);
-          followersFetched = true;
-          checkComplete();
+          if (!followersCompleter.isCompleted) {
+            followersCompleter.complete(followerPubkeys.length);
+          }
         },
       );
 
-      // Set a timeout to avoid hanging indefinitely
-      Timer(const Duration(seconds: 10), () {
-        if (!completer.isCompleted) {
-          completer.complete({
-            'followers': followersCount,
-            'following': followingCount,
-          });
-        }
-      });
-
-      return await completer.future;
+      await followersCompleter.future;
+      
+      return {
+        'followers': followersCount,
+        'following': followingCount,
+      };
     } catch (e) {
       Log.error('Error fetching follower stats: $e',
           name: 'SocialService', category: LogCategory.system);
@@ -1175,6 +1254,9 @@ class SocialService  {
       );
 
       if (event != null) {
+        // Cache the follow set event immediately after creation
+        _personalEventCache?.cacheUserEvent(event);
+        
         final result = await _nostrService.broadcastEvent(event);
         if (result.successCount > 0) {
           // Update local set with Nostr event ID
@@ -1203,12 +1285,12 @@ class SocialService  {
       final completer = Completer<int>();
       var videoCount = 0;
 
-      // Subscribe to user's video events (Kind 22 - NIP-71)
+      // Subscribe to user's video events (Kind 32222)
       final subscription = _nostrService.subscribeToEvents(
         filters: [
           Filter(
             authors: [pubkey],
-            kinds: [22], // NIP-71 short video events
+            kinds: [32222], // NIP-32222 addressable short video events
           ),
         ],
       );
@@ -1230,13 +1312,6 @@ class SocialService  {
           }
         },
       );
-
-      // Set a timeout to avoid hanging indefinitely
-      Timer(const Duration(seconds: 8), () {
-        if (!completer.isCompleted) {
-          completer.complete(videoCount);
-        }
-      });
 
       final result = await completer.future;
       Log.debug('📱 Video count fetched: $result',
@@ -1263,7 +1338,7 @@ class SocialService  {
         filters: [
           Filter(
             authors: [pubkey],
-            kinds: [22], // NIP-71 short video events
+            kinds: [32222], // NIP-32222 addressable short video events
           ),
         ],
       );
@@ -1285,13 +1360,6 @@ class SocialService  {
           }
         },
       );
-
-      // Timeout for video fetching
-      Timer(const Duration(seconds: 8), () {
-        if (!videoCompleter.isCompleted) {
-          videoCompleter.complete(userVideos);
-        }
-      });
 
       final videoIds = await videoCompleter.future;
 
@@ -1337,13 +1405,6 @@ class SocialService  {
           }
         },
       );
-
-      // Timeout for likes fetching
-      Timer(const Duration(seconds: 10), () {
-        if (!likesCompleter.isCompleted) {
-          likesCompleter.complete(totalLikes);
-        }
-      });
 
       final result = await likesCompleter.future;
       Log.debug('❤️ Total likes fetched: $result',
@@ -1501,7 +1562,7 @@ class SocialService  {
       var commentCount = 0;
 
       // Create a dedicated comment count subscription with higher priority and shorter timeout
-      final subscriptionId = await _subscriptionManager.createSubscription(
+      await _subscriptionManager.createSubscription(
         name: 'comment_count_${rootEventId.substring(0, 8)}',
         filters: [
           Filter(
@@ -1528,14 +1589,6 @@ class SocialService  {
         timeout: const Duration(seconds: 5), // Short timeout for count
         priority: 5, // Higher priority for counts
       );
-
-      // Set a backup timeout
-      Timer(const Duration(seconds: 6), () {
-        if (!completer.isCompleted) {
-          _subscriptionManager.cancelSubscription(subscriptionId);
-          completer.complete(commentCount);
-        }
-      });
 
       final result = await completer.future;
       Log.debug('📱 Comment count fetched: $result',
@@ -1573,18 +1626,37 @@ class SocialService  {
 
     try {
       // Create NIP-18 repost event (Kind 6)
+      // For addressable events, we need to extract the 'd' tag value
+      String? dTagValue;
+      for (final tag in eventToRepost.tags) {
+        if (tag.isNotEmpty && tag[0] == 'd' && tag.length > 1) {
+          dTagValue = tag[1];
+          break;
+        }
+      }
+      
+      if (dTagValue == null) {
+        throw Exception('Cannot repost: Video event missing required d tag');
+      }
+      
+      // Use 'a' tag for addressable event reference
+      final repostTags = <List<String>>[
+        ['a', '32222:${eventToRepost.pubkey}:$dTagValue'],
+        ['p', eventToRepost.pubkey], // Reference to original author
+      ];
+      
       final event = await _authService.createAndSignEvent(
         kind: 6, // Repost event
         content: '', // Content is typically empty for reposts
-        tags: [
-          ['e', eventToRepost.id], // Reference to reposted event
-          ['p', eventToRepost.pubkey], // Reference to original author
-        ],
+        tags: repostTags,
       );
 
       if (event == null) {
         throw Exception('Failed to create repost event');
       }
+
+      // Cache the repost event immediately after creation
+      _personalEventCache?.cacheUserEvent(event);
 
       // Broadcast the repost event
       final result = await _nostrService.broadcastEvent(event);
@@ -1594,9 +1666,10 @@ class SocialService  {
         throw Exception('Failed to broadcast repost: $errorMessages');
       }
 
-      // Track the repost locally
-      _repostedEventIds.add(eventToRepost.id);
-      _repostEventIdToRepostId[eventToRepost.id] = event.id;
+      // Track the repost locally using the addressable ID format
+      final addressableId = '32222:${eventToRepost.pubkey}:$dTagValue';
+      _repostedEventIds.add(addressableId);
+      _repostEventIdToRepostId[addressableId] = event.id;
 
       Log.info('Event reposted successfully: ${event.id.substring(0, 8)}...',
           name: 'SocialService', category: LogCategory.system);
@@ -1632,7 +1705,7 @@ class SocialService  {
           ['k', '3'], // Request deletion of Kind 3 (contact list) events
           ['k', '6'], // Request deletion of Kind 6 (repost) events
           ['k', '7'], // Request deletion of Kind 7 (reaction) events
-          ['k', '22'], // Request deletion of Kind 22 (video) events
+          ['k', '32222'], // Request deletion of Kind 32222 (addressable video) events
         ],
       );
 
@@ -1656,6 +1729,44 @@ class SocialService  {
       Log.error('Error publishing deletion request: $e',
           name: 'SocialService', category: LogCategory.system);
       rethrow;
+    }
+  }
+
+  /// Save following list to local storage for aggressive caching
+  Future<void> _saveFollowingListToCache() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final currentUserPubkey = _authService.currentPublicKeyHex;
+      if (currentUserPubkey != null) {
+        final key = 'following_list_$currentUserPubkey';
+        await prefs.setString(key, jsonEncode(_followingPubkeys));
+        Log.debug('💾 Saved following list to cache: ${_followingPubkeys.length} users',
+            name: 'SocialService', category: LogCategory.system);
+      }
+    } catch (e) {
+      Log.error('Failed to save following list to cache: $e',
+          name: 'SocialService', category: LogCategory.system);
+    }
+  }
+
+  /// Load following list from local storage
+  Future<void> _loadFollowingListFromCache() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final currentUserPubkey = _authService.currentPublicKeyHex;
+      if (currentUserPubkey != null) {
+        final key = 'following_list_$currentUserPubkey';
+        final cached = prefs.getString(key);
+        if (cached != null) {
+          final List<dynamic> decoded = jsonDecode(cached);
+          _followingPubkeys = decoded.cast<String>();
+          Log.info('📋 Loaded cached following list: ${_followingPubkeys.length} users',
+              name: 'SocialService', category: LogCategory.system);
+        }
+      }
+    } catch (e) {
+      Log.error('Failed to load following list from cache: $e',
+          name: 'SocialService', category: LogCategory.system);
     }
   }
 
@@ -1686,5 +1797,27 @@ class SocialService  {
     }
 
     
+  }
+
+  /// Process a repost event and extract the reposted event ID
+  /// Handles 'a' tags for addressable events
+  void _processRepostEvent(Event repostEvent) {
+    // Check for 'a' tags (addressable event references)
+    for (final tag in repostEvent.tags) {
+      if (tag.isNotEmpty && tag[0] == 'a' && tag.length > 1) {
+        // Parse the 'a' tag format: "kind:pubkey:d-tag-value"
+        final parts = tag[1].split(':');
+        if (parts.length >= 3 && parts[0] == '32222') {
+          final addressableId = tag[1];
+          _repostedEventIds.add(addressableId);
+          _repostEventIdToRepostId[addressableId] = repostEvent.id;
+          Log.debug(
+              '📱 Cached user repost of addressable event: $addressableId (repost: ${repostEvent.id.substring(0, 8)}...)',
+              name: 'SocialService',
+              category: LogCategory.system);
+          return;
+        }
+      }
+    }
   }
 }

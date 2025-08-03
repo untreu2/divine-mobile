@@ -1,10 +1,9 @@
 // ABOUTME: Riverpod provider for managing user-specific video fetching and grid display
-// ABOUTME: Fetches Kind 34550 video events by author with pagination and caching
+// ABOUTME: Fetches video events by author with pagination and caching
 
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:nostr_sdk/event.dart';
 import 'package:nostr_sdk/filter.dart';
 import 'package:openvine/models/video_event.dart';
 import 'package:openvine/providers/app_providers.dart';
@@ -138,46 +137,27 @@ Future<List<VideoEvent>> profileVideos(Ref ref, String pubkey) async {
       name: 'ProfileVideosProvider', category: LogCategory.ui);
 
   try {
-    // First check if we have videos in the VideoEventService cache
+    // First check VideoEventService cache for any videos by this author
     final cachedVideos = videoEventService.getVideosByAuthor(pubkey);
-    final allVideos = videoEventService.videoEvents;
-    
-    Log.info('📱 VideoEventService has ${allVideos.length} total videos in cache',
-        name: 'ProfileVideosProvider', category: LogCategory.ui);
-    
-    if (allVideos.isNotEmpty) {
-      Log.info('📱 Sample video authors from cache: ${allVideos.take(3).map((v) => v.pubkey.substring(0, 16)).join(", ")}',
-          name: 'ProfileVideosProvider', category: LogCategory.ui);
-    }
-    
     if (cachedVideos.isNotEmpty) {
-      Log.info(
-          '📱 Found ${cachedVideos.length} cached videos for ${pubkey.substring(0, 8)}',
-          name: 'ProfileVideosProvider',
-          category: LogCategory.ui);
-      
-      final sortedVideos = List<VideoEvent>.from(cachedVideos)
-        ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
-      
-      _cacheProfileVideos(pubkey, sortedVideos, true);
-      return sortedVideos;
-    } else {
-      Log.info('📱 No cached videos found for ${pubkey.substring(0, 8)} in VideoEventService',
+      Log.info('📱 Found ${cachedVideos.length} cached videos for ${pubkey.substring(0, 8)} in VideoEventService',
           name: 'ProfileVideosProvider', category: LogCategory.ui);
     }
 
-    // If no cached videos, fetch from network
+    // Fetch complete profile videos from network to augment cache
     final filter = Filter(
       authors: [pubkey],
-      kinds: [22], // NIP-71 short videos (corrected from 34550)
+      kinds: [32222], // NIP-32222 addressable short videos
       limit: _profileVideosPageSize,
     );
     
-    Log.info('📱 Querying for videos: authors=[${pubkey.substring(0, 16)}], kinds=[22], limit=$_profileVideosPageSize',
+    Log.info('📱 Querying for videos: authors=[${pubkey.substring(0, 16)}], kinds=[32222], limit=$_profileVideosPageSize',
         name: 'ProfileVideosProvider', category: LogCategory.ui);
 
     final completer = Completer<List<VideoEvent>>();
-    final events = <Event>[];
+    // Start with cached videos to show immediately
+    final videos = <VideoEvent>[...cachedVideos];
+    final seenIds = <String>{...cachedVideos.map((v) => v.id)};
 
     final subscription = nostrService.subscribeToEvents(
       filters: [filter],
@@ -185,24 +165,34 @@ Future<List<VideoEvent>> profileVideos(Ref ref, String pubkey) async {
 
     subscription.listen(
       (event) {
-        events.add(event);
+        // Process events immediately as they arrive
+        try {
+          final videoEvent = VideoEvent.fromNostrEvent(event);
+          // Only add if we haven't seen this video before
+          if (!seenIds.contains(videoEvent.id)) {
+            videos.add(videoEvent);
+            seenIds.add(videoEvent.id);
+            
+            Log.debug('📱 Received new video event ${videoEvent.id.substring(0, 8)} for ${pubkey.substring(0, 8)}',
+                name: 'ProfileVideosProvider', category: LogCategory.ui);
+          } else {
+            Log.debug('📱 Skipping duplicate video event ${videoEvent.id.substring(0, 8)}',
+                name: 'ProfileVideosProvider', category: LogCategory.ui);
+          }
+        } catch (e) {
+          Log.warning('Failed to parse video event: $e',
+              name: 'ProfileVideosProvider', category: LogCategory.ui);
+        }
       },
       onError: (error) {
         Log.error('Error fetching profile videos: $error',
             name: 'ProfileVideosProvider', category: LogCategory.ui);
         if (!completer.isCompleted) {
-          completer.complete([]);
+          completer.complete(videos);
         }
       },
       onDone: () {
-        Log.info('📱 Query completed: received ${events.length} events for ${pubkey.substring(0, 8)}',
-            name: 'ProfileVideosProvider', category: LogCategory.ui);
-        
-        final videos = events
-            .map((event) => VideoEvent.fromNostrEvent(event))
-            .toList();
-        
-        Log.info('📱 Successfully parsed ${videos.length} videos for ${pubkey.substring(0, 8)}',
+        Log.info('📱 Query completed: received ${videos.length} events for ${pubkey.substring(0, 8)}',
             name: 'ProfileVideosProvider', category: LogCategory.ui);
         
         if (!completer.isCompleted) {
@@ -211,28 +201,27 @@ Future<List<VideoEvent>> profileVideos(Ref ref, String pubkey) async {
       },
     );
 
-    // Timeout for fetching
+    // Timeout for fetching - complete with whatever we have so far
     Timer(const Duration(seconds: 10), () {
       if (!completer.isCompleted) {
-        final videos = events
-            .map((event) => VideoEvent.fromNostrEvent(event))
-            .toList();
+        Log.info('📱 Timeout reached: completing with ${videos.length} videos for ${pubkey.substring(0, 8)}',
+            name: 'ProfileVideosProvider', category: LogCategory.ui);
         completer.complete(videos);
       }
     });
 
-    final videos = await completer.future;
+    final finalVideos = await completer.future;
 
     // Sort by creation time (newest first)
-    videos.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    finalVideos.sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
     // Cache the results
-    _cacheProfileVideos(pubkey, videos, videos.length >= _profileVideosPageSize);
+    _cacheProfileVideos(pubkey, finalVideos, finalVideos.length >= _profileVideosPageSize);
 
-    Log.info('📱 Loaded ${videos.length} videos for ${pubkey.substring(0, 8)}',
+    Log.info('📱 Loaded ${finalVideos.length} videos for ${pubkey.substring(0, 8)}',
         name: 'ProfileVideosProvider', category: LogCategory.ui);
 
-    return videos;
+    return finalVideos;
   } catch (e) {
     Log.error('Error loading profile videos: $e',
         name: 'ProfileVideosProvider', category: LogCategory.ui);
@@ -251,7 +240,7 @@ class ProfileVideosNotifier extends _$ProfileVideosNotifier {
     return ProfileVideosState.initial;
   }
 
-  /// Load videos for a specific user
+  /// Load videos for a specific user with real-time streaming
   Future<void> loadVideosForUser(String pubkey) async {
     if (_currentPubkey == pubkey && state.hasVideos && !state.hasError) {
       // Already loaded for this user
@@ -295,13 +284,8 @@ class ProfileVideosNotifier extends _$ProfileVideosNotifier {
     });
 
     try {
-      final videos = await ref.read(profileVideosProvider(pubkey).future);
-      state = state.copyWith(
-        videos: videos,
-        isLoading: false,
-        hasMore: videos.length >= _profileVideosPageSize,
-        lastTimestamp: videos.isNotEmpty ? videos.last.createdAt : null,
-      );
+      // Use streaming approach for real-time video updates
+      await _loadVideosStreaming(pubkey);
       _loadingCompleter!.complete();
     } catch (e) {
       state = state.copyWith(
@@ -314,7 +298,141 @@ class ProfileVideosNotifier extends _$ProfileVideosNotifier {
     }
   }
 
-  /// Load more videos (pagination)
+  /// Stream videos with real-time UI updates as they arrive
+  Future<void> _loadVideosStreaming(String pubkey) async {
+    final nostrService = ref.read(nostrServiceProvider);
+    final videoEventService = ref.read(videoEventServiceProvider);
+    
+    // First, get any cached videos for immediate display
+    final cachedVideos = videoEventService.getVideosByAuthor(pubkey);
+    if (cachedVideos.isNotEmpty) {
+      Log.info('📱 Found ${cachedVideos.length} cached videos for ${pubkey.substring(0, 8)} in VideoEventService',
+          name: 'ProfileVideosProvider', category: LogCategory.ui);
+      
+      // Sort and update UI immediately with cached videos
+      final sortedCached = List<VideoEvent>.from(cachedVideos);
+      sortedCached.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      
+      state = state.copyWith(
+        videos: sortedCached,
+        lastTimestamp: sortedCached.isNotEmpty ? sortedCached.last.createdAt : null,
+      );
+    }
+    
+    final filter = Filter(
+      authors: [pubkey],
+      kinds: [32222], // NIP-32222 addressable short videos
+      limit: _profileVideosPageSize,
+    );
+    
+    Log.info('📱 Starting streaming query for videos: authors=[${pubkey.substring(0, 16)}], kinds=[32222], limit=$_profileVideosPageSize',
+        name: 'ProfileVideosProvider', category: LogCategory.ui);
+
+    final completer = Completer<void>();
+    // Start with cached videos
+    final receivedVideos = <VideoEvent>[...cachedVideos];
+    final seenIds = <String>{...cachedVideos.map((v) => v.id)};
+
+    final subscription = nostrService.subscribeToEvents(
+      filters: [filter],
+    );
+
+    subscription.listen(
+      (event) {
+        // Process events immediately and update UI progressively
+        try {
+          final videoEvent = VideoEvent.fromNostrEvent(event);
+          // Only add if we haven't seen this video before
+          if (!seenIds.contains(videoEvent.id)) {
+            receivedVideos.add(videoEvent);
+            seenIds.add(videoEvent.id);
+            
+            Log.debug('📱 Streaming: received new video event ${videoEvent.id.substring(0, 8)} for ${pubkey.substring(0, 8)}',
+                name: 'ProfileVideosProvider', category: LogCategory.ui);
+            
+            // Update UI state immediately with new video
+            _updateUIWithStreamingVideo(videoEvent, receivedVideos);
+          } else {
+            Log.debug('📱 Streaming: skipping duplicate video event ${videoEvent.id.substring(0, 8)}',
+                name: 'ProfileVideosProvider', category: LogCategory.ui);
+          }
+        } catch (e) {
+          Log.warning('Failed to parse streaming video event: $e',
+              name: 'ProfileVideosProvider', category: LogCategory.ui);
+        }
+      },
+      onError: (error) {
+        Log.error('Error streaming profile videos: $error',
+            name: 'ProfileVideosProvider', category: LogCategory.ui);
+        if (!completer.isCompleted) {
+          _finalizeStreamingLoad(pubkey, receivedVideos);
+          completer.complete();
+        }
+      },
+      onDone: () {
+        Log.info('📱 Streaming query completed: received ${receivedVideos.length} events for ${pubkey.substring(0, 8)}',
+            name: 'ProfileVideosProvider', category: LogCategory.ui);
+        
+        if (!completer.isCompleted) {
+          _finalizeStreamingLoad(pubkey, receivedVideos);
+          completer.complete();
+        }
+      },
+    );
+
+    // Timeout for streaming - finalize with whatever we have
+    Timer(const Duration(seconds: 10), () {
+      if (!completer.isCompleted) {
+        Log.info('📱 Streaming timeout reached: finalizing with ${receivedVideos.length} videos for ${pubkey.substring(0, 8)}',
+            name: 'ProfileVideosProvider', category: LogCategory.ui);
+        _finalizeStreamingLoad(pubkey, receivedVideos);
+        completer.complete();
+      }
+    });
+
+    await completer.future;
+  }
+
+  /// Update UI state immediately when each video arrives during streaming
+  void _updateUIWithStreamingVideo(VideoEvent newVideo, List<VideoEvent> allReceived) {
+    // Add the new video to current state, maintaining sort order
+    final currentVideos = List<VideoEvent>.from(state.videos);
+    currentVideos.add(newVideo);
+    
+    // Sort by creation time (newest first)
+    currentVideos.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    
+    // Update state with progressive loading
+    state = state.copyWith(
+      videos: currentVideos,
+      lastTimestamp: currentVideos.isNotEmpty ? currentVideos.last.createdAt : null,
+    );
+    
+    Log.debug('📱 Streaming UI update: now showing ${currentVideos.length} videos',
+        name: 'ProfileVideosProvider', category: LogCategory.ui);
+  }
+
+  /// Finalize the streaming load and update cache
+  void _finalizeStreamingLoad(String pubkey, List<VideoEvent> allVideos) {
+    // Final sort
+    allVideos.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    
+    // Update final state
+    state = state.copyWith(
+      videos: allVideos,
+      isLoading: false,
+      hasMore: allVideos.length >= _profileVideosPageSize,
+      lastTimestamp: allVideos.isNotEmpty ? allVideos.last.createdAt : null,
+    );
+    
+    // Cache the results
+    _cacheProfileVideos(pubkey, allVideos, allVideos.length >= _profileVideosPageSize);
+    
+    Log.info('📱 Streaming finalized: loaded ${allVideos.length} videos for ${pubkey.substring(0, 8)}',
+        name: 'ProfileVideosProvider', category: LogCategory.ui);
+  }
+
+  /// Load more videos (pagination) with streaming updates
   Future<void> loadMoreVideos() async {
     if (_currentPubkey == null || 
         state.isLoadingMore || 
@@ -329,75 +447,7 @@ class ProfileVideosNotifier extends _$ProfileVideosNotifier {
     });
 
     try {
-      final nostrService = ref.read(nostrServiceProvider);
-      
-      final filter = Filter(
-        authors: [_currentPubkey!],
-        kinds: [22], // Corrected from 34550
-        until: state.lastTimestamp! - 1, // Load older videos
-        limit: _profileVideosPageSize,
-      );
-
-      final completer = Completer<List<VideoEvent>>();
-      final events = <Event>[];
-
-      final subscription = nostrService.subscribeToEvents(
-        filters: [filter],
-      );
-
-      subscription.listen(
-        (event) {
-          events.add(event);
-        },
-        onError: (error) {
-          Log.error('Error loading more videos: $error',
-              name: 'ProfileVideosProvider', category: LogCategory.ui);
-          if (!completer.isCompleted) {
-            completer.complete([]);
-          }
-        },
-        onDone: () {
-          final videos = events
-              .map((event) => VideoEvent.fromNostrEvent(event))
-              .toList();
-          
-          if (!completer.isCompleted) {
-            completer.complete(videos);
-          }
-        },
-      );
-
-      // Timeout for fetching
-      Timer(const Duration(seconds: 10), () {
-        if (!completer.isCompleted) {
-          final videos = events
-              .map((event) => VideoEvent.fromNostrEvent(event))
-              .toList();
-          completer.complete(videos);
-        }
-      });
-
-      final newVideos = await completer.future;
-
-      // Sort new videos
-      newVideos.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-
-      // Combine with existing videos
-      final allVideos = <VideoEvent>[...state.videos, ...newVideos];
-      final hasMore = newVideos.length >= _profileVideosPageSize;
-
-      // Update cache
-      _cacheProfileVideos(_currentPubkey!, allVideos, hasMore);
-
-      state = state.copyWith(
-        videos: allVideos,
-        isLoadingMore: false,
-        hasMore: hasMore,
-        lastTimestamp: allVideos.isNotEmpty ? allVideos.last.createdAt : null,
-      );
-
-      Log.info('📱 Loaded ${newVideos.length} more videos (total: ${allVideos.length})',
-          name: 'ProfileVideosProvider', category: LogCategory.ui);
+      await _loadMoreVideosStreaming();
     } catch (e) {
       state = state.copyWith(
         isLoadingMore: false,
@@ -406,6 +456,112 @@ class ProfileVideosNotifier extends _$ProfileVideosNotifier {
       Log.error('Error loading more videos: $e',
           name: 'ProfileVideosProvider', category: LogCategory.ui);
     }
+  }
+
+  /// Stream additional videos with real-time UI updates as they arrive
+  Future<void> _loadMoreVideosStreaming() async {
+    final nostrService = ref.read(nostrServiceProvider);
+    
+    final filter = Filter(
+      authors: [_currentPubkey!],
+      kinds: [32222], // NIP-32222 addressable video events
+      until: state.lastTimestamp! - 1, // Load older videos
+      limit: _profileVideosPageSize,
+    );
+
+    Log.info('📱 Starting streaming load more query for ${_currentPubkey!.substring(0, 8)}: until=${state.lastTimestamp! - 1}, limit=$_profileVideosPageSize',
+        name: 'ProfileVideosProvider', category: LogCategory.ui);
+
+    final completer = Completer<void>();
+    final newVideos = <VideoEvent>[];
+
+    final subscription = nostrService.subscribeToEvents(
+      filters: [filter],
+    );
+
+    subscription.listen(
+      (event) {
+        // Process events immediately and update UI progressively
+        try {
+          final videoEvent = VideoEvent.fromNostrEvent(event);
+          newVideos.add(videoEvent);
+          
+          Log.debug('📱 Load more streaming: received video event ${videoEvent.id.substring(0, 8)} for ${_currentPubkey!.substring(0, 8)}',
+              name: 'ProfileVideosProvider', category: LogCategory.ui);
+          
+          // Update UI state immediately with new video
+          _updateUIWithAdditionalVideo(videoEvent);
+        } catch (e) {
+          Log.warning('Failed to parse additional streaming video event: $e',
+              name: 'ProfileVideosProvider', category: LogCategory.ui);
+        }
+      },
+      onError: (error) {
+        Log.error('Error streaming additional videos: $error',
+            name: 'ProfileVideosProvider', category: LogCategory.ui);
+        if (!completer.isCompleted) {
+          _finalizeLoadMoreStreaming(newVideos);
+          completer.complete();
+        }
+      },
+      onDone: () {
+        Log.info('📱 Load more streaming completed: received ${newVideos.length} additional events for ${_currentPubkey!.substring(0, 8)}',
+            name: 'ProfileVideosProvider', category: LogCategory.ui);
+        
+        if (!completer.isCompleted) {
+          _finalizeLoadMoreStreaming(newVideos);
+          completer.complete();
+        }
+      },
+    );
+
+    // Timeout for streaming - finalize with whatever we have
+    Timer(const Duration(seconds: 10), () {
+      if (!completer.isCompleted) {
+        Log.info('📱 Load more streaming timeout: finalizing with ${newVideos.length} additional videos for ${_currentPubkey!.substring(0, 8)}',
+            name: 'ProfileVideosProvider', category: LogCategory.ui);
+        _finalizeLoadMoreStreaming(newVideos);
+        completer.complete();
+      }
+    });
+
+    await completer.future;
+  }
+
+  /// Update UI state immediately when each additional video arrives during load more streaming
+  void _updateUIWithAdditionalVideo(VideoEvent newVideo) {
+    // Add the new video to current state
+    final currentVideos = List<VideoEvent>.from(state.videos);
+    currentVideos.add(newVideo);
+    
+    // Sort by creation time (newest first)
+    currentVideos.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    
+    // Update state with progressive loading
+    state = state.copyWith(
+      videos: currentVideos,
+      lastTimestamp: currentVideos.isNotEmpty ? currentVideos.last.createdAt : null,
+    );
+    
+    Log.debug('📱 Load more streaming UI update: now showing ${currentVideos.length} videos',
+        name: 'ProfileVideosProvider', category: LogCategory.ui);
+  }
+
+  /// Finalize the load more streaming and update cache
+  void _finalizeLoadMoreStreaming(List<VideoEvent> newVideos) {
+    final hasMore = newVideos.length >= _profileVideosPageSize;
+    
+    // Update final state
+    state = state.copyWith(
+      isLoadingMore: false,
+      hasMore: hasMore,
+    );
+    
+    // Update cache with current videos
+    _cacheProfileVideos(_currentPubkey!, state.videos, hasMore);
+    
+    Log.info('📱 Load more streaming finalized: added ${newVideos.length} videos (total: ${state.videos.length})',
+        name: 'ProfileVideosProvider', category: LogCategory.ui);
   }
 
   /// Refresh videos by clearing cache and reloading

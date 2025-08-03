@@ -184,6 +184,9 @@ class UploadManager  {
     String? title,
     String? description,
     List<String>? hashtags,
+    int? videoWidth,
+    int? videoHeight,
+    Duration? videoDuration,
   }) async {
     Log.debug('Starting new upload: ${videoFile.path}',
         name: 'UploadManager', category: LogCategory.video);
@@ -196,6 +199,9 @@ class UploadManager  {
       title: title,
       description: description,
       hashtags: hashtags,
+      videoWidth: videoWidth,
+      videoHeight: videoHeight,
+      videoDuration: videoDuration,
     );
 
     // Save to local storage
@@ -835,8 +841,12 @@ class UploadManager  {
   }
 
   /// Create successful upload with metadata
-  PendingUpload _createSuccessfulUpload(PendingUpload upload, dynamic result) =>
-      upload.copyWith(
+  PendingUpload _createSuccessfulUpload(PendingUpload upload, dynamic result) {
+    final thumbnailUrl = result.thumbnailUrl as String?;
+    Log.info('📸 Storing thumbnail URL in PendingUpload: $thumbnailUrl',
+        name: 'UploadManager', category: LogCategory.system);
+    
+    return upload.copyWith(
         status:
             UploadStatus.readyToPublish, // Direct upload is immediately ready
         cloudinaryPublicId:
@@ -844,10 +854,11 @@ class UploadManager  {
         videoId: result.videoId
             as String?, // Store videoId for new publishing system
         cdnUrl: result.cdnUrl as String?, // Store CDN URL directly
-        thumbnailPath: result.thumbnailUrl as String?, // Store thumbnail URL
+        thumbnailPath: thumbnailUrl, // Store thumbnail URL
         uploadProgress: 1,
         completedAt: DateTime.now(),
       );
+  }
 
   /// Create success metrics with calculated values
   UploadMetrics _createSuccessMetrics(

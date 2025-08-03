@@ -1,5 +1,5 @@
 // ABOUTME: Service for handling video-related network operations extracted from VideoEventService
-// ABOUTME: Manages subscriptions, event streams, and queries for NIP-71 kind 22 video events
+// ABOUTME: Manages subscriptions, event streams, and queries for NIP-32222 kind 32222 video events
 
 import 'dart:async';
 
@@ -76,9 +76,9 @@ class VideoNetworkService {
     // Build filters
     final filters = <Filter>[];
 
-    // Video events filter (kind 22)
+    // Video events filter (kind 32222)
     final videoFilter = Filter(
-      kinds: [22],
+      kinds: [32222],
       authors: authors,
       t: hashtags,
       h: group != null ? [group] : null,
@@ -153,30 +153,53 @@ class VideoNetworkService {
         ids: [vineId],
       );
 
-      // Since queryEvents is not available in the interface,
-      // we'll use a temporary subscription to fetch the event
+      // Create a completer that resolves immediately when video is found
       final completer = Completer<VideoEvent?>();
       StreamSubscription<Event>? subscription;
-      Timer? timeoutTimer;
 
-      timeoutTimer = Timer(const Duration(seconds: 10), () {
+      // Set up timeout for cases where video truly doesn't exist
+      Timer timeoutTimer = Timer(const Duration(seconds: 5), () {
         subscription?.cancel();
         if (!completer.isCompleted) {
+          Log.debug('Video query timeout for ID: $vineId',
+              name: 'VideoNetworkService', category: LogCategory.video);
           completer.complete(null);
         }
       });
 
       subscription = _nostrService.subscribeToEvents(
         filters: [filter],
-      ).listen((event) {
-        if (event.id == vineId && event.kind == 22) {
-          timeoutTimer?.cancel();
-          subscription?.cancel();
-          if (!completer.isCompleted) {
-            completer.complete(VideoEvent.fromNostrEvent(event));
+      ).listen(
+        (event) {
+          // Process matching video immediately when received
+          if (event.id == vineId && event.kind == 32222) {
+            timeoutTimer.cancel();
+            if (!completer.isCompleted) {
+              completer.complete(VideoEvent.fromNostrEvent(event));
+            }
+            // Keep subscription open for potential updates to video metadata
+            // Don't cancel here - let the caller manage subscription lifecycle
           }
-        }
-      });
+        },
+        onError: (error) {
+          Log.error('Error querying video by ID: $error',
+              name: 'VideoNetworkService', category: LogCategory.video);
+          timeoutTimer.cancel();
+          subscription?.cancel(); 
+          if (!completer.isCompleted) {
+            completer.complete(null);
+          }
+        },
+        onDone: () {
+          timeoutTimer.cancel();
+          // Only complete with null if we haven't found the video yet
+          if (!completer.isCompleted) {
+            Log.debug('Video query stream closed without finding video: $vineId',
+                name: 'VideoNetworkService', category: LogCategory.video);
+            completer.complete(null);
+          }
+        },
+      );
 
       return completer.future;
     } catch (e) {
@@ -199,7 +222,7 @@ class VideoNetworkService {
 
   void _handleVideoEvent(Event event) {
     try {
-      if (event.kind == 22) {
+      if (event.kind == 32222) {
         final videoEvent = VideoEvent.fromNostrEvent(event);
         _videoEventController.add(videoEvent);
       } else if (event.kind == 6) {

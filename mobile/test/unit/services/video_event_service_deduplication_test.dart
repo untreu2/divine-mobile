@@ -95,7 +95,7 @@ void main() {
       testEvent.id = 'test-video-id-1';
 
       // Subscribe to video feed
-      await videoEventService.subscribeToVideoFeed();
+      await videoEventService.subscribeToVideoFeed(subscriptionType: SubscriptionType.discovery);
 
       // Add a small delay to ensure subscription is set up
       await Future.delayed(const Duration(milliseconds: 10));
@@ -111,8 +111,8 @@ void main() {
       await Future.delayed(const Duration(milliseconds: 10));
 
       // Verify only one event was added
-      expect(videoEventService.videoEvents.length, equals(1));
-      expect(videoEventService.videoEvents.first.id, equals('test-video-id-1'));
+      expect(videoEventService.discoveryVideos.length, equals(1));
+      expect(videoEventService.discoveryVideos.first.id, equals('test-video-id-1'));
     });
 
     test('should add different events with unique IDs', () async {
@@ -133,7 +133,7 @@ void main() {
       });
 
       // Subscribe to video feed
-      await videoEventService.subscribeToVideoFeed();
+      await videoEventService.subscribeToVideoFeed(subscriptionType: SubscriptionType.discovery);
       await Future.delayed(const Duration(milliseconds: 10));
 
       // Send all unique events
@@ -143,12 +143,12 @@ void main() {
       }
 
       // Verify all unique events were added
-      expect(videoEventService.videoEvents.length, equals(3));
+      expect(videoEventService.discoveryVideos.length, equals(3));
 
       // Verify they're in reverse chronological order (newest first)
-      expect(videoEventService.videoEvents[0].id, equals('test-video-id-2'));
-      expect(videoEventService.videoEvents[1].id, equals('test-video-id-1'));
-      expect(videoEventService.videoEvents[2].id, equals('test-video-id-0'));
+      expect(videoEventService.discoveryVideos[0].id, equals('test-video-id-2'));
+      expect(videoEventService.discoveryVideos[1].id, equals('test-video-id-1'));
+      expect(videoEventService.discoveryVideos[2].id, equals('test-video-id-0'));
     });
 
     test('should handle mix of duplicates and unique events', () async {
@@ -178,7 +178,7 @@ void main() {
       event2.id = 'test-video-id-2';
 
       // Subscribe to video feed
-      await videoEventService.subscribeToVideoFeed();
+      await videoEventService.subscribeToVideoFeed(subscriptionType: SubscriptionType.discovery);
       await Future.delayed(const Duration(milliseconds: 10));
 
       // Send events in mixed order with duplicates
@@ -198,11 +198,11 @@ void main() {
       await Future.delayed(const Duration(milliseconds: 10));
 
       // Verify only unique events were added
-      expect(videoEventService.videoEvents.length, equals(2));
+      expect(videoEventService.discoveryVideos.length, equals(2));
 
       // Verify order (newest first)
-      expect(videoEventService.videoEvents[0].id, equals('test-video-id-2'));
-      expect(videoEventService.videoEvents[1].id, equals('test-video-id-1'));
+      expect(videoEventService.discoveryVideos[0].id, equals('test-video-id-2'));
+      expect(videoEventService.discoveryVideos[1].id, equals('test-video-id-1'));
     });
 
     test('should maintain deduplication across multiple subscriptions',
@@ -221,13 +221,13 @@ void main() {
       testEvent.id = 'persistent-video-id';
 
       // First subscription
-      await videoEventService.subscribeToVideoFeed();
+      await videoEventService.subscribeToVideoFeed(subscriptionType: SubscriptionType.discovery);
       await Future.delayed(const Duration(milliseconds: 10));
 
       eventStreamController.add(testEvent);
       await Future.delayed(const Duration(milliseconds: 10));
 
-      expect(videoEventService.videoEvents.length, equals(1));
+      expect(videoEventService.discoveryVideos.length, equals(1));
 
       // Unsubscribe and re-subscribe
       await videoEventService.unsubscribeFromVideoFeed();
@@ -239,7 +239,7 @@ void main() {
               filters: any(named: 'filters')))
           .thenAnswer((_) => newEventStreamController.stream);
 
-      await videoEventService.subscribeToVideoFeed(replace: false);
+      await videoEventService.subscribeToVideoFeed(subscriptionType: SubscriptionType.discovery, replace: false);
       await Future.delayed(const Duration(milliseconds: 10));
 
       // Try to add the same event again
@@ -247,7 +247,7 @@ void main() {
       await Future.delayed(const Duration(milliseconds: 10));
 
       // Should still have only one event
-      expect(videoEventService.videoEvents.length, equals(1));
+      expect(videoEventService.discoveryVideos.length, equals(1));
 
       newEventStreamController.close();
     });
@@ -267,7 +267,7 @@ void main() {
       testEvent.id = 'rapid-test-video';
 
       // Subscribe to video feed
-      await videoEventService.subscribeToVideoFeed();
+      await videoEventService.subscribeToVideoFeed(subscriptionType: SubscriptionType.discovery);
       await Future.delayed(const Duration(milliseconds: 10));
 
       // Send the same event rapidly without delays
@@ -279,9 +279,9 @@ void main() {
       await Future.delayed(const Duration(milliseconds: 50));
 
       // Should still have only one event despite rapid duplicates
-      expect(videoEventService.videoEvents.length, equals(1));
+      expect(videoEventService.discoveryVideos.length, equals(1));
       expect(
-          videoEventService.videoEvents.first.id, equals('rapid-test-video'));
+          videoEventService.discoveryVideos.first.id, equals('rapid-test-video'));
     });
 
     test('should handle events with invalid kind gracefully', () async {
@@ -308,7 +308,7 @@ void main() {
       invalidEvent.id = 'invalid-kind';
 
       // Subscribe to video feed
-      await videoEventService.subscribeToVideoFeed();
+      await videoEventService.subscribeToVideoFeed(subscriptionType: SubscriptionType.discovery);
       await Future.delayed(const Duration(milliseconds: 10));
 
       // Send both events
@@ -317,8 +317,8 @@ void main() {
       await Future.delayed(const Duration(milliseconds: 20));
 
       // Should only have the valid video event
-      expect(videoEventService.videoEvents.length, equals(1));
-      expect(videoEventService.videoEvents.first.id, equals('valid-video'));
+      expect(videoEventService.discoveryVideos.length, equals(1));
+      expect(videoEventService.discoveryVideos.first.id, equals('valid-video'));
     });
   });
 
@@ -381,7 +381,7 @@ void main() {
       repost2.id = 'repost-2';
 
       // Subscribe with reposts enabled
-      await videoEventService.subscribeToVideoFeed(includeReposts: true);
+      await videoEventService.subscribeToVideoFeed(subscriptionType: SubscriptionType.discovery, includeReposts: true);
       await Future.delayed(const Duration(milliseconds: 10));
 
       // Send both reposts
@@ -394,7 +394,7 @@ void main() {
       // Currently reposts are filtered out in _handleNewVideoEvent even when includeReposts is true
       // This is a known limitation - the includeReposts flag is only used for filters, not processing
       // TODO: Fix VideoEventService to properly handle includeReposts flag
-      expect(videoEventService.videoEvents.length, equals(0));
+      expect(videoEventService.discoveryVideos.length, equals(0));
     });
   });
 }

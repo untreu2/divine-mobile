@@ -89,14 +89,14 @@ void main() {
           // Override service dependencies
           videoEventsNostrServiceProvider.overrideWithValue(mockNostrService1),
           videoEventsSubscriptionManagerProvider
-              .overrideWithValue(MockSubscriptionManager(TestNostrService())),
+              .overrideWithValue(MockSubscriptionManager()),
           curationServiceProvider.overrideWithValue(mockCurationService),
           nostrServiceProvider.overrideWithValue(mockNostrService2),
           subscriptionManagerProvider
-              .overrideWithValue(MockSubscriptionManager(TestNostrService())),
+              .overrideWithValue(MockSubscriptionManager()),
           social.nostrServiceProvider.overrideWithValue(mockNostrService3),
           social.subscriptionManagerProvider
-              .overrideWithValue(MockSubscriptionManager(TestNostrService())),
+              .overrideWithValue(MockSubscriptionManager()),
         ],
       );
     }

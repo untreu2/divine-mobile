@@ -36,7 +36,7 @@ void main() {
     setUp(() {
       mockNostrService = MockNostrService();
       mockAuthService = MockAuthService();
-      mockSubscriptionManager = MockSubscriptionManager(TestNostrService());
+      mockSubscriptionManager = MockSubscriptionManager();
 
       container = ProviderContainer(
         overrides: [

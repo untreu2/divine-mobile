@@ -101,8 +101,6 @@ void main() {
       test('should have initial search state properties', () {
         // Initial state should be empty/false
         expect(videoEventService.searchResults, isEmpty);
-        expect(videoEventService.isSearching, isFalse);
-        expect(videoEventService.searchQuery, isNull);
       });
 
       test('should clear search results and reset state', () {
@@ -111,8 +109,6 @@ void main() {
         
         // Verify state is cleared
         expect(videoEventService.searchResults, isEmpty);
-        expect(videoEventService.isSearching, isFalse);
-        expect(videoEventService.searchQuery, isNull);
       });
     });
 

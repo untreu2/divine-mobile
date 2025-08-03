@@ -88,7 +88,7 @@ final videoEventCountProvider = AutoDisposeProvider<int>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef VideoEventCountRef = AutoDisposeProviderRef<int>;
-String _$videoEventsHash() => r'3873a599c890e4d2d0a024247dcb55b5c621443b';
+String _$videoEventsHash() => r'006f2011db07a7b4367f7232584a4e7e195d9a22';
 
 /// Stream provider for video events from Nostr
 ///

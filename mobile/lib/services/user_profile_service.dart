@@ -100,11 +100,11 @@ class UserProfileService  {
   /// Mark a pubkey as having no profile to avoid future requests
   void markProfileAsMissing(String pubkey) {
     _knownMissingProfiles.add(pubkey);
-    // Retry after 1 hour for missing profiles
+    // Retry after 10 minutes for missing profiles (reduced from 1 hour)
     _missingProfileRetryAfter[pubkey] =
-        DateTime.now().add(const Duration(hours: 1));
+        DateTime.now().add(const Duration(minutes: 10));
     Log.debug(
-      'Marked profile as missing: ${pubkey.substring(0, 8)}... (retry after 1 hour)',
+      'Marked profile as missing: ${pubkey.substring(0, 8)}... (retry after 10 minutes)',
       name: 'UserProfileService',
       category: LogCategory.system,
     );
@@ -250,8 +250,7 @@ class UserProfileService  {
         onEvent: _handleProfileEvent,
         onError: (error) => _handleProfileError(pubkey, error),
         onComplete: () => _handleProfileComplete(pubkey),
-        timeout: const Duration(seconds: 10),
-        priority: 2, // High priority for profile fetches (user-facing)
+        priority: 1, // Highest priority for individual profile fetches (user-facing)
       );
 
       _activeSubscriptionIds[pubkey] = subscriptionId;
@@ -357,6 +356,85 @@ class UserProfileService  {
     }
   }
 
+  /// Aggressively pre-fetch profiles for immediate display (no debouncing)
+  Future<void> prefetchProfilesImmediately(List<String> pubkeys) async {
+    if (pubkeys.isEmpty) return;
+
+    // Filter out already cached profiles and pending requests
+    final pubkeysToFetch = pubkeys
+        .where((pubkey) =>
+            !_profileCache.containsKey(pubkey) &&
+            !_pendingRequests.contains(pubkey) &&
+            !shouldSkipProfileFetch(pubkey))
+        .toList();
+
+    if (pubkeysToFetch.isEmpty) return;
+
+    Log.debug('⚡ Immediate pre-fetch for ${pubkeysToFetch.length} profiles',
+        name: 'UserProfileService', category: LogCategory.system);
+
+    // Add to pending requests
+    _pendingRequests.addAll(pubkeysToFetch);
+
+    try {
+      // Create filter for kind 0 events from these users
+      final filter = Filter(
+        kinds: [0],
+        authors: pubkeysToFetch,
+        limit: math.min(pubkeysToFetch.length, 100), // Smaller batches for immediate fetch
+      );
+
+      // Track which profiles we're fetching in this batch
+      final thisBatchPubkeys = Set<String>.from(pubkeysToFetch);
+
+      // Subscribe to profile events using SubscriptionManager with highest priority
+      await _subscriptionManager.createSubscription(
+        name: 'profile_prefetch_${DateTime.now().millisecondsSinceEpoch}',
+        filters: [filter],
+        onEvent: _handleProfileEvent,
+        onError: (error) => Log.error('Prefetch profile error: $error',
+            name: 'UserProfileService', category: LogCategory.system),
+        onComplete: () => _completePrefetch(thisBatchPubkeys),
+        priority: 0, // Highest priority for immediate prefetch
+      );
+
+      Log.debug('⚡ Sent immediate prefetch request for ${pubkeysToFetch.length} profiles',
+          name: 'UserProfileService', category: LogCategory.system);
+    } catch (e) {
+      Log.error('Failed to prefetch profiles: $e',
+          name: 'UserProfileService', category: LogCategory.system);
+      _pendingRequests.removeAll(pubkeysToFetch);
+    }
+  }
+
+  /// Complete the prefetch and clean up
+  void _completePrefetch(Set<String> batchPubkeys) {
+    // Mark unfetched profiles as missing
+    final unfetchedPubkeys = batchPubkeys
+        .where((pubkey) => !_profileCache.containsKey(pubkey))
+        .toSet();
+    final fetchedCount = batchPubkeys.length - unfetchedPubkeys.length;
+
+    if (unfetchedPubkeys.isNotEmpty) {
+      Log.debug(
+        '⚡ Prefetch completed - fetched $fetchedCount/${batchPubkeys.length}, ${unfetchedPubkeys.length} missing',
+        name: 'UserProfileService',
+        category: LogCategory.system,
+      );
+
+      // Mark unfetched profiles as missing
+      for (final pubkey in unfetchedPubkeys) {
+        markProfileAsMissing(pubkey);
+      }
+    } else {
+      Log.debug('⚡ Prefetch completed - all ${batchPubkeys.length} profiles fetched',
+          name: 'UserProfileService', category: LogCategory.system);
+    }
+
+    // Clean up pending requests for this batch
+    _pendingRequests.removeAll(batchPubkeys);
+  }
+
   /// Batch fetch profiles for multiple users
   Future<void> fetchMultipleProfiles(List<String> pubkeys,
       {bool forceRefresh = false}) async {
@@ -407,9 +485,9 @@ class UserProfileService  {
       return;
     }
 
-    // Debounce: wait a short time to collect more profiles before fetching
+    // Debounce: reduced delay for faster profile loading 
     _batchDebounceTimer =
-        Timer(const Duration(milliseconds: 100), _executeBatchFetch);
+        Timer(const Duration(milliseconds: 50), _executeBatchFetch);
   }
 
   /// Execute the actual batch fetch
@@ -433,7 +511,7 @@ class UserProfileService  {
         kinds: [0],
         authors: batchPubkeys,
         limit: math.min(
-            batchPubkeys.length, 500), // Use vine.hol.is recommended limit
+            batchPubkeys.length, 500), // Nostr protocol recommended limit
       );
 
       // Track which profiles we're fetching in this batch
@@ -447,8 +525,7 @@ class UserProfileService  {
         onError: (error) => Log.error('Batch profile fetch error: $error',
             name: 'UserProfileService', category: LogCategory.system),
         onComplete: () => _completeBatchFetch(thisBatchPubkeys),
-        timeout: const Duration(seconds: 5),
-        priority: 2, // High priority for profile fetches
+        priority: 1, // High priority for profile fetches
       );
 
       // Store subscription ID for cleanup
@@ -504,7 +581,7 @@ class UserProfileService  {
           '📦 Starting next batch for ${_pendingBatchPubkeys.length} pending profiles...',
           name: 'UserProfileService',
           category: LogCategory.system);
-      Timer(const Duration(milliseconds: 100), _executeBatchFetch);
+      Timer(const Duration(milliseconds: 50), _executeBatchFetch);
     }
   }
 
@@ -517,10 +594,10 @@ class UserProfileService  {
     if (profile?.name?.isNotEmpty == true) {
       return profile!.name!;
     }
-    // Immediate fallback to shortened pubkey (don't wait for profile fetch)
+    // Immediate fallback to user-friendly shortened pubkey
     return pubkey.length > 16
-        ? '${pubkey.substring(0, 8)}...${pubkey.substring(pubkey.length - 8)}'
-        : pubkey;
+        ? 'User ${pubkey.substring(0, 6)}...'
+        : 'User $pubkey';
   }
 
   /// Get avatar URL for a user

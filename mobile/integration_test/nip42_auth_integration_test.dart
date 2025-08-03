@@ -33,7 +33,7 @@ void main() {
       
       // Test 1: Connect to relay
       Log.debug('\n1. Testing relay connection...');
-      await nostrService.initialize(customRelays: ['wss://vine.hol.is']);
+      await nostrService.initialize(customRelays: ['wss://relay3.openvine.co']);
       Log.debug('Connected to relays: ${nostrService.connectedRelays}');
       Log.debug('Public key: ${nostrService.publicKey}');
       

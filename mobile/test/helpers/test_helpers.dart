@@ -10,6 +10,7 @@ import 'package:openvine/models/video_event.dart';
 import 'package:openvine/utils/unified_logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'service_init_helper.dart';
 
 /// Test helper utilities for video system testing
 class TestHelpers {
@@ -422,6 +423,10 @@ class TimeoutException implements Exception {
 Future<void> setupTestEnvironment() async {
   // Initialize Flutter binding for secure storage tests
   TestWidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize platform channel mocks
+  ServiceInitHelper.initializeTestEnvironment();
+  
   // Initialize any test environment configuration
   Log.debug('Setting up ProofMode test environment', category: LogCategory.system);
 }

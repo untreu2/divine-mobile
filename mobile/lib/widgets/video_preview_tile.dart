@@ -1,9 +1,11 @@
 // ABOUTME: Lightweight video preview tile for explore screen with auto-play functionality
-// ABOUTME: Optimized for grid/list display with automatic playback when visible
+// ABOUTME: Uses VideoManager providers for secure controller creation and memory management
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openvine/models/video_event.dart';
-import 'package:openvine/services/global_video_registry.dart';
+import 'package:openvine/providers/video_manager_providers.dart';
+import 'package:openvine/services/video_manager_interface.dart';
 import 'package:openvine/theme/vine_theme.dart';
 import 'package:openvine/utils/unified_logger.dart';
 import 'package:openvine/widgets/video_thumbnail_widget.dart';
@@ -11,7 +13,7 @@ import 'package:video_player/video_player.dart';
 
 /// Lightweight video preview widget for explore screens
 /// Automatically plays when visible, pauses when scrolled away
-class VideoPreviewTile extends StatefulWidget {
+class VideoPreviewTile extends ConsumerStatefulWidget {
   const VideoPreviewTile({
     required this.video,
     required this.isActive,
@@ -25,12 +27,12 @@ class VideoPreviewTile extends StatefulWidget {
   final VoidCallback? onTap;
 
   @override
-  State<VideoPreviewTile> createState() => _VideoPreviewTileState();
+  ConsumerState<VideoPreviewTile> createState() => _VideoPreviewTileState();
 }
 
-class _VideoPreviewTileState extends State<VideoPreviewTile>
+class _VideoPreviewTileState extends ConsumerState<VideoPreviewTile>
     with AutomaticKeepAliveClientMixin {
-  VideoPlayerController? _controller;
+  String? _videoControllerId;
   bool _isInitializing = false;
   bool _hasError = false;
 
@@ -66,11 +68,11 @@ class _VideoPreviewTileState extends State<VideoPreviewTile>
   @override
   void dispose() {
     _disposeVideo();
-    
+    super.dispose();
   }
 
   Future<void> _initializeVideo() async {
-    if (_isInitializing || _controller != null || !widget.video.hasVideo) {
+    if (_isInitializing || _videoControllerId != null || !widget.video.hasVideo) {
       return;
     }
 
@@ -89,21 +91,22 @@ class _VideoPreviewTileState extends State<VideoPreviewTile>
       Log.debug('   Thumbnail URL: ${widget.video.effectiveThumbnailUrl}',
           name: 'VideoPreviewTile', category: LogCategory.ui);
 
-      final controller = VideoPlayerController.networkUrl(
-        Uri.parse(widget.video.videoUrl!),
+      // Use VideoManager to create controller securely
+      final videoManager = ref.read(videoManagerProvider.notifier);
+      final controllerId = 'preview_${widget.video.id}';
+      
+      final controller = await videoManager.createNetworkController(
+        controllerId,
+        widget.video.videoUrl!,
+        priority: PreloadPriority.current,
       );
 
-      _controller = controller;
-
-      await controller.initialize();
-
-      if (mounted && widget.isActive) {
-        // Register with global registry
-        GlobalVideoRegistry().registerController(controller);
-
+      if (controller != null && mounted && widget.isActive) {
+        _videoControllerId = controllerId;
+        
         // Pause all other videos before playing this one
-        GlobalVideoRegistry().pauseAllExcept(controller);
-
+        videoManager.pauseAllVideos();
+        
         await controller.setLooping(true);
         await controller.setVolume(0); // Mute for preview
         await controller.play();
@@ -114,6 +117,11 @@ class _VideoPreviewTileState extends State<VideoPreviewTile>
 
         Log.info('Preview playing for ${widget.video.id.substring(0, 8)}',
             name: 'VideoPreviewTile', category: LogCategory.ui);
+      } else {
+        setState(() {
+          _hasError = true;
+          _isInitializing = false;
+        });
       }
     } catch (e) {
       Log.error(
@@ -134,16 +142,21 @@ class _VideoPreviewTileState extends State<VideoPreviewTile>
   void _disposeVideo() {
     Log.debug('📱️ Disposing preview for ${widget.video.id.substring(0, 8)}...',
         name: 'VideoPreviewTile', category: LogCategory.ui);
-    if (_controller != null) {
-      GlobalVideoRegistry().unregisterController(_controller!);
-      _controller!.dispose();
-      _controller = null;
+    if (_videoControllerId != null) {
+      // VideoManager will handle cleanup and GlobalVideoRegistry coordination
+      ref.read(videoManagerProvider.notifier).disposeVideo(_videoControllerId!);
+      _videoControllerId = null;
     }
   }
 
   @override
   Widget build(BuildContext context) {
     super.build(context);
+
+    // Watch for the controller via VideoManager provider
+    final controller = _videoControllerId != null 
+        ? ref.watch(videoPlayerControllerProvider(_videoControllerId!))
+        : null;
 
     return GestureDetector(
       onTap: widget.onTap,
@@ -159,13 +172,13 @@ class _VideoPreviewTileState extends State<VideoPreviewTile>
             fit: StackFit.expand,
             children: [
               // Video or thumbnail
-              if (_controller != null && _controller!.value.isInitialized)
+              if (controller != null && controller.value.isInitialized)
                 FittedBox(
                   fit: BoxFit.cover,
                   child: SizedBox(
-                    width: _controller!.value.size.width,
-                    height: _controller!.value.size.height,
-                    child: VideoPlayer(_controller!),
+                    width: controller.value.size.width,
+                    height: controller.value.size.height,
+                    child: VideoPlayer(controller),
                   ),
                 )
               else
@@ -189,8 +202,8 @@ class _VideoPreviewTileState extends State<VideoPreviewTile>
 
               // Play button overlay (only show when not playing)
               if (!widget.isActive ||
-                  _controller == null ||
-                  !_controller!.value.isInitialized)
+                  controller == null ||
+                  !controller.value.isInitialized)
                 const Center(
                   child: Icon(
                     Icons.play_circle_filled,

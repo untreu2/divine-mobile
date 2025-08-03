@@ -34,7 +34,7 @@ class _DebugVideoTestScreenState extends ConsumerState<DebugVideoTestScreen> {
   @override
   Widget build(BuildContext context) {
     final videoEventService = ref.watch(videoEventServiceProvider);
-    final videos = videoEventService.videoEvents;
+    final videos = videoEventService.discoveryVideos;
     final testVideo = videos.isNotEmpty ? videos.first : null;
 
     return Scaffold(

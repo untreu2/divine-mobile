@@ -33,10 +33,8 @@ class VideoExploreTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    debugPrint('🔍 VideoExploreTile build for ${video.id.substring(0, 8)}, borderRadius: $borderRadius');
     return GestureDetector(
         onTap: () {
-          debugPrint('🎯 VideoExploreTile tapped for video ${video.id.substring(0, 8)}...');
           onTap?.call();
         },
         child: Container(
@@ -51,7 +49,11 @@ class VideoExploreTile extends ConsumerWidget {
               // Use LayoutBuilder to get actual dimensions and pass to thumbnail
               LayoutBuilder(
                 builder: (context, constraints) {
-                  debugPrint('📐 VideoExploreTile constraints: ${constraints.maxWidth} x ${constraints.maxHeight}');
+                  Log.debug(
+                    '🎬 VideoExploreTile - Video ${video.id.substring(0, 8)} - thumbnail: ${video.thumbnailUrl}, blurhash: ${video.blurhash}',
+                    name: 'VideoExploreTile',
+                    category: LogCategory.ui,
+                  );
                   return VideoThumbnailWidget(
                     video: video,
                     width: constraints.maxWidth,

@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - **Analytics-Driven Trending**: Implemented trending content based on real analytics data
-  - Added `AnalyticsTrending` provider that fetches data from analytics.openvine.co API
+  - Added `AnalyticsTrending` provider that fetches data from api.openvine.co/analytics API
   - Trending section now shows videos sorted by actual view counts instead of chronological order
   - Added pull-to-refresh functionality to trending tab for real-time analytics updates
   - Removed fallback behavior to ensure trending only shows analytics-driven content
@@ -34,7 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - **Explore Screen Architecture**: Completely restructured explore content strategy
-  - Trending tab now exclusively uses analytics.openvine.co data (no fallback to random content)
+  - Trending tab now exclusively uses api.openvine.co/analytics data (no fallback to random content)
   - "Popular Now" renamed to "New Vines" to better reflect chronological content purpose
   - Content flow designed: New Vines → generates views → feeds analytics → drives Trending
 - **Provider System**: Updated Riverpod providers for new content architecture

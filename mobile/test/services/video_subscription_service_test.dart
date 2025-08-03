@@ -56,7 +56,7 @@ void main() {
 
     setUp(() {
       mockNostrService = MockNostrService();
-      mockSubscriptionManager = MockSubscriptionManager(TestNostrService());
+      mockSubscriptionManager = MockSubscriptionManager();
 
       subscriptionService = VideoSubscriptionService(
         nostrService: mockNostrService,

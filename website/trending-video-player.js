@@ -1,8 +1,8 @@
 // ABOUTME: Video player that loads trending videos from OpenVine analytics API
 // ABOUTME: Fetches and plays popular vine videos with view tracking
 
-const TRENDING_API = 'https://analytics.openvine.co/analytics/trending/vines';
-const VIEW_TRACKING_API = 'https://analytics.openvine.co/analytics/view';
+const TRENDING_API = 'https://api.openvine.co/analytics/trending/vines';
+const VIEW_TRACKING_API = 'https://api.openvine.co/analytics/view';
 
 // Fallback videos while analytics service is being set up
 const FALLBACK_VIDEOS = [

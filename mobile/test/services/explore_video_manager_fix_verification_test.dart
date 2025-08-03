@@ -5,11 +5,11 @@ import 'package:openvine/models/curation_set.dart';
 import 'package:openvine/models/video_event.dart';
 import 'package:openvine/services/curation_service.dart';
 import 'package:openvine/services/explore_video_manager.dart';
-import 'package:openvine/services/video_manager_interface.dart';
+import 'package:openvine/providers/video_manager_providers.dart';
 
 @GenerateMocks([
   CurationService,
-  IVideoManager,
+  VideoManager,
 ])
 import 'explore_video_manager_fix_verification_test.mocks.dart';
 
@@ -19,7 +19,7 @@ void main() {
         'correctly passes through videos from CurationService without VideoManager filtering',
         () async {
       final mockCurationService = MockCurationService();
-      final mockVideoManager = MockIVideoManager();
+      final mockVideoManager = MockVideoManager();
 
       // Create test videos that would come from CurationService after relay fetch
       final trendingVideos = [
@@ -86,7 +86,7 @@ void main() {
 
     test('empty case works correctly', () async {
       final mockCurationService = MockCurationService();
-      final mockVideoManager = MockIVideoManager();
+      final mockVideoManager = MockVideoManager();
 
       // Setup mocks - no videos
       when(mockCurationService.isLoading).thenReturn(false);

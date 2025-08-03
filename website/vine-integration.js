@@ -2,8 +2,8 @@
 // ABOUTME: Handles video playback, Nostr integration, and UI interactions
 
 // Constants
-const ANALYTICS_API = 'https://analytics.openvine.co/analytics';
-const VIEW_TRACKING_API = 'https://analytics.openvine.co/analytics/view';
+const ANALYTICS_API = 'https://api.openvine.co/analytics';
+const VIEW_TRACKING_API = 'https://api.openvine.co/analytics/view';
 const NOSTR_RELAYS = [
     'wss://relay.damus.io',
     'wss://nos.lol',

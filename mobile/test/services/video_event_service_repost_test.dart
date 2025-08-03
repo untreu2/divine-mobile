@@ -26,7 +26,7 @@ void main() {
 
     setUp(() {
       mockNostrService = MockINostrService();
-      mockSubscriptionManager = MockSubscriptionManager(TestNostrService());
+      mockSubscriptionManager = MockSubscriptionManager();
       eventStreamController = StreamController<Event>.broadcast();
 
       // Setup default mock behaviors
@@ -53,7 +53,7 @@ void main() {
 
     test('should include Kind 6 events in subscription filter', () async {
       // Subscribe to video feed
-      await videoEventService.subscribeToVideoFeed();
+      await videoEventService.subscribeToVideoFeed(subscriptionType: SubscriptionType.discovery);
 
       // Verify that the filter includes both Kind 22 and Kind 6
       verify(
@@ -102,7 +102,7 @@ void main() {
       repostEvent.id = 'repost789';
 
       // Subscribe and add events
-      await videoEventService.subscribeToVideoFeed();
+      await videoEventService.subscribeToVideoFeed(subscriptionType: SubscriptionType.discovery);
 
       // First add the original video
       eventStreamController.add(originalEvent);
@@ -117,10 +117,10 @@ void main() {
       await Future.delayed(const Duration(milliseconds: 100));
 
       // Verify we have 2 events (original + repost)
-      expect(videoEventService.videoEvents.length, 2);
+      expect(videoEventService.discoveryVideos.length, 2);
 
       // Find the repost event
-      final repostVideoEvent = videoEventService.videoEvents
+      final repostVideoEvent = videoEventService.discoveryVideos
           .firstWhere((e) => e.isRepost && e.reposterId == 'repost789');
 
       // Verify repost metadata
@@ -153,7 +153,7 @@ void main() {
       repostEvent.id = 'repost789';
 
       // Subscribe and add repost event
-      await videoEventService.subscribeToVideoFeed();
+      await videoEventService.subscribeToVideoFeed(subscriptionType: SubscriptionType.discovery);
       eventStreamController.add(repostEvent);
 
       // Allow processing
@@ -192,14 +192,14 @@ void main() {
       invalidRepostEvent.id = 'repost789';
 
       // Subscribe and add event
-      await videoEventService.subscribeToVideoFeed();
+      await videoEventService.subscribeToVideoFeed(subscriptionType: SubscriptionType.discovery);
       eventStreamController.add(invalidRepostEvent);
 
       // Allow processing
       await Future.delayed(const Duration(milliseconds: 100));
 
       // Verify no events were added
-      expect(videoEventService.videoEvents.length, 0);
+      expect(videoEventService.discoveryVideos.length, 0);
     });
 
     test('should handle Kind 6 repost when original is not a video', () async {
@@ -241,7 +241,7 @@ void main() {
       ).thenAnswer((_) => fetchStreamController.stream);
 
       // Subscribe and add repost
-      await videoEventService.subscribeToVideoFeed();
+      await videoEventService.subscribeToVideoFeed(subscriptionType: SubscriptionType.discovery);
       eventStreamController.add(repostEvent);
 
       // Allow initial processing
@@ -254,7 +254,7 @@ void main() {
       await Future.delayed(const Duration(milliseconds: 100));
 
       // Verify no events were added since original is not a video
-      expect(videoEventService.videoEvents.length, 0);
+      expect(videoEventService.discoveryVideos.length, 0);
 
       fetchStreamController.close();
     });
@@ -290,7 +290,7 @@ void main() {
       repostEvent.id = 'repost789';
 
       // Subscribe with hashtag filter
-      await videoEventService.subscribeToVideoFeed(hashtags: ['bitcoin']);
+      await videoEventService.subscribeToVideoFeed(subscriptionType: SubscriptionType.discovery, hashtags: ['bitcoin']);
 
       // Add original and repost
       eventStreamController.add(originalEvent);
@@ -299,11 +299,11 @@ void main() {
       await Future.delayed(const Duration(milliseconds: 50));
 
       // Verify no events were added (doesn't match hashtag filter)
-      expect(videoEventService.videoEvents.length, 0);
+      expect(videoEventService.discoveryVideos.length, 0);
 
       // Now subscribe with matching hashtag
       await videoEventService.unsubscribeFromVideoFeed();
-      await videoEventService.subscribeToVideoFeed(hashtags: ['nostr']);
+      await videoEventService.subscribeToVideoFeed(subscriptionType: SubscriptionType.discovery, hashtags: ['nostr']);
 
       // Add events again
       eventStreamController.add(originalEvent);
@@ -312,7 +312,7 @@ void main() {
       await Future.delayed(const Duration(milliseconds: 50));
 
       // Verify both events were added
-      expect(videoEventService.videoEvents.length, 2);
+      expect(videoEventService.discoveryVideos.length, 2);
     });
   });
 }

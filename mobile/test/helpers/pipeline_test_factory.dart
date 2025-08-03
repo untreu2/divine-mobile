@@ -96,8 +96,6 @@ class PipelineTestFactory {
     final videoEventPublisher = VideoEventPublisher(
       uploadManager: uploadManager,
       nostrService: mockNostrService,
-      fetchReadyEvents: apiService.getReadyEvents,
-      cleanupRemoteEvent: apiService.cleanupRemoteEvent,
     );
 
     return PipelineTestStack(
@@ -371,13 +369,7 @@ class PipelineTestFactory {
           ['size', '1024000'],
         ],
         metadata: metadata ?? {'width': 1920, 'height': 1080},
-        processedAt: DateTime.now(),
-        originalUploadId: uploadId ?? 'test-upload-id',
-        mimeType: 'video/mp4',
-        fileSize: 1024000,
-        width: 1920,
-        height: 1080,
-        duration: 6.5,
+        createdAt: DateTime.now(),
       );
 
   /// Clean up test resources
@@ -474,8 +466,8 @@ class PipelineTestStack {
       await uploadManager.markUploadReadyToPublish(upload.id, config.videoId);
       result.markedReady = true;
 
-      // Step 3: Trigger background publishing
-      await videoEventPublisher.forceCheck();
+      // Step 3: Background publishing (VideoEventPublisher doesn't have forceCheck anymore)
+      // await videoEventPublisher.forceCheck();
       result.publishingTriggered = true;
 
       // Wait for processing

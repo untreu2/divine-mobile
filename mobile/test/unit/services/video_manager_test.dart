@@ -1,6 +1,8 @@
 // ABOUTME: Unit tests for VideoManager interface covering TDD requirements and behavior
 // ABOUTME: Comprehensive test suite for video lifecycle, memory management, and error handling
 
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:openvine/models/video_event.dart';
@@ -158,9 +160,9 @@ class TestVideoManager implements IVideoManager {
 
   @override
   void pauseVideo(String videoId) {
-    final controller = _controllers[videoId];
-    // In test, we don't actually pause since it's a mock
-    // Just log for verification
+    // In test, we don't actually pause since controllers are mocks
+    // Just verify the controller exists
+    _controllers[videoId];
   }
 
   @override
@@ -171,9 +173,9 @@ class TestVideoManager implements IVideoManager {
 
   @override
   void resumeVideo(String videoId) {
-    final controller = _controllers[videoId];
-    // In test, we don't actually resume since it's a mock
-    // Just log for verification
+    // In test, we don't actually resume since controllers are mocks
+    // Just verify the controller exists
+    _controllers[videoId];
   }
 
   @override
@@ -218,6 +220,42 @@ class TestVideoManager implements IVideoManager {
   @override
   int get primaryVideoCount =>
       _videos.length; // For tests, all videos are primary
+
+  @override
+  Future<VideoPlayerController?> createNetworkController(
+    String videoId,
+    String videoUrl, {
+    PreloadPriority priority = PreloadPriority.nearby,
+  }) async {
+    // Simple mock implementation for tests
+    final controller = MockVideoPlayerController();
+    _controllers[videoId] = controller;
+    return controller;
+  }
+
+  @override
+  Future<VideoPlayerController?> createFileController(
+    String videoId,
+    File videoFile, {
+    PreloadPriority priority = PreloadPriority.nearby,
+  }) async {
+    // Simple mock implementation for tests
+    final controller = MockVideoPlayerController();
+    _controllers[videoId] = controller;
+    return controller;
+  }
+
+  @override
+  Future<VideoPlayerController?> createThumbnailController(
+    String videoId,
+    String videoUrl, {
+    double seekTimeSeconds = 2.5,
+  }) async {
+    // Simple mock implementation for tests
+    final controller = MockVideoPlayerController();
+    _controllers[videoId] = controller;
+    return controller;
+  }
 }
 
 void main() {

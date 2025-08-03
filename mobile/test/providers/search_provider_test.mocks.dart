@@ -4,6 +4,7 @@
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'dart:async' as _i6;
+import 'dart:ui' as _i8;
 
 import 'package:mockito/mockito.dart' as _i1;
 import 'package:mockito/src/dummies.dart' as _i4;
@@ -31,6 +32,62 @@ import 'package:openvine/services/video_event_service.dart' as _i2;
 /// See the documentation for Mockito's code generation for more information.
 class MockVideoEventService extends _i1.Mock implements _i2.VideoEventService {
   @override
+  List<_i3.VideoEvent> get homeFeedVideos => (super.noSuchMethod(
+        Invocation.getter(#homeFeedVideos),
+        returnValue: <_i3.VideoEvent>[],
+        returnValueForMissingStub: <_i3.VideoEvent>[],
+      ) as List<_i3.VideoEvent>);
+
+  @override
+  List<_i3.VideoEvent> get discoveryVideos => (super.noSuchMethod(
+        Invocation.getter(#discoveryVideos),
+        returnValue: <_i3.VideoEvent>[],
+        returnValueForMissingStub: <_i3.VideoEvent>[],
+      ) as List<_i3.VideoEvent>);
+
+  @override
+  List<_i3.VideoEvent> get profileVideos => (super.noSuchMethod(
+        Invocation.getter(#profileVideos),
+        returnValue: <_i3.VideoEvent>[],
+        returnValueForMissingStub: <_i3.VideoEvent>[],
+      ) as List<_i3.VideoEvent>);
+
+  @override
+  List<_i3.VideoEvent> get editorialVideos => (super.noSuchMethod(
+        Invocation.getter(#editorialVideos),
+        returnValue: <_i3.VideoEvent>[],
+        returnValueForMissingStub: <_i3.VideoEvent>[],
+      ) as List<_i3.VideoEvent>);
+
+  @override
+  List<_i3.VideoEvent> get popularNowVideos => (super.noSuchMethod(
+        Invocation.getter(#popularNowVideos),
+        returnValue: <_i3.VideoEvent>[],
+        returnValueForMissingStub: <_i3.VideoEvent>[],
+      ) as List<_i3.VideoEvent>);
+
+  @override
+  List<_i3.VideoEvent> get trendingVideos => (super.noSuchMethod(
+        Invocation.getter(#trendingVideos),
+        returnValue: <_i3.VideoEvent>[],
+        returnValueForMissingStub: <_i3.VideoEvent>[],
+      ) as List<_i3.VideoEvent>);
+
+  @override
+  List<_i3.VideoEvent> get hashtagVideos => (super.noSuchMethod(
+        Invocation.getter(#hashtagVideos),
+        returnValue: <_i3.VideoEvent>[],
+        returnValueForMissingStub: <_i3.VideoEvent>[],
+      ) as List<_i3.VideoEvent>);
+
+  @override
+  List<_i3.VideoEvent> get searchResults => (super.noSuchMethod(
+        Invocation.getter(#searchResults),
+        returnValue: <_i3.VideoEvent>[],
+        returnValueForMissingStub: <_i3.VideoEvent>[],
+      ) as List<_i3.VideoEvent>);
+
+  @override
   List<_i3.VideoEvent> get videoEvents => (super.noSuchMethod(
         Invocation.getter(#videoEvents),
         returnValue: <_i3.VideoEvent>[],
@@ -38,32 +95,11 @@ class MockVideoEventService extends _i1.Mock implements _i2.VideoEventService {
       ) as List<_i3.VideoEvent>);
 
   @override
-  bool get isSubscribed => (super.noSuchMethod(
-        Invocation.getter(#isSubscribed),
-        returnValue: false,
-        returnValueForMissingStub: false,
-      ) as bool);
-
-  @override
   bool get isLoading => (super.noSuchMethod(
         Invocation.getter(#isLoading),
         returnValue: false,
         returnValueForMissingStub: false,
       ) as bool);
-
-  @override
-  bool get hasEvents => (super.noSuchMethod(
-        Invocation.getter(#hasEvents),
-        returnValue: false,
-        returnValueForMissingStub: false,
-      ) as bool);
-
-  @override
-  int get eventCount => (super.noSuchMethod(
-        Invocation.getter(#eventCount),
-        returnValue: 0,
-        returnValueForMissingStub: 0,
-      ) as int);
 
   @override
   String get classicVinesPubkey => (super.noSuchMethod(
@@ -79,15 +115,8 @@ class MockVideoEventService extends _i1.Mock implements _i2.VideoEventService {
       ) as String);
 
   @override
-  List<_i3.VideoEvent> get searchResults => (super.noSuchMethod(
-        Invocation.getter(#searchResults),
-        returnValue: <_i3.VideoEvent>[],
-        returnValueForMissingStub: <_i3.VideoEvent>[],
-      ) as List<_i3.VideoEvent>);
-
-  @override
-  bool get isSearching => (super.noSuchMethod(
-        Invocation.getter(#isSearching),
+  bool get hasListeners => (super.noSuchMethod(
+        Invocation.getter(#hasListeners),
         returnValue: false,
         returnValueForMissingStub: false,
       ) as bool);
@@ -103,6 +132,47 @@ class MockVideoEventService extends _i1.Mock implements _i2.VideoEventService {
       );
 
   @override
+  List<_i3.VideoEvent> getVideos(_i2.SubscriptionType? type) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #getVideos,
+          [type],
+        ),
+        returnValue: <_i3.VideoEvent>[],
+        returnValueForMissingStub: <_i3.VideoEvent>[],
+      ) as List<_i3.VideoEvent>);
+
+  @override
+  bool hasEvents(_i2.SubscriptionType? type) => (super.noSuchMethod(
+        Invocation.method(
+          #hasEvents,
+          [type],
+        ),
+        returnValue: false,
+        returnValueForMissingStub: false,
+      ) as bool);
+
+  @override
+  int getEventCount(_i2.SubscriptionType? type) => (super.noSuchMethod(
+        Invocation.method(
+          #getEventCount,
+          [type],
+        ),
+        returnValue: 0,
+        returnValueForMissingStub: 0,
+      ) as int);
+
+  @override
+  bool isSubscribed(_i2.SubscriptionType? type) => (super.noSuchMethod(
+        Invocation.method(
+          #isSubscribed,
+          [type],
+        ),
+        returnValue: false,
+        returnValueForMissingStub: false,
+      ) as bool);
+
+  @override
   List<_i3.VideoEvent> getVideosByAuthor(String? pubkey) => (super.noSuchMethod(
         Invocation.method(
           #getVideosByAuthor,
@@ -114,6 +184,7 @@ class MockVideoEventService extends _i1.Mock implements _i2.VideoEventService {
 
   @override
   _i6.Future<void> subscribeToVideoFeed({
+    required _i2.SubscriptionType? subscriptionType,
     List<String>? authors,
     List<String>? hashtags,
     String? group,
@@ -128,6 +199,7 @@ class MockVideoEventService extends _i1.Mock implements _i2.VideoEventService {
           #subscribeToVideoFeed,
           [],
           {
+            #subscriptionType: subscriptionType,
             #authors: authors,
             #hashtags: hashtags,
             #group: group,
@@ -166,6 +238,33 @@ class MockVideoEventService extends _i1.Mock implements _i2.VideoEventService {
         Invocation.method(
           #subscribeToHashtagVideos,
           [hashtags],
+          {#limit: limit},
+        ),
+        returnValue: _i6.Future<void>.value(),
+        returnValueForMissingStub: _i6.Future<void>.value(),
+      ) as _i6.Future<void>);
+
+  @override
+  _i6.Future<void> subscribeToHomeFeed(
+    List<String>? followingPubkeys, {
+    int? limit = 100,
+  }) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #subscribeToHomeFeed,
+          [followingPubkeys],
+          {#limit: limit},
+        ),
+        returnValue: _i6.Future<void>.value(),
+        returnValueForMissingStub: _i6.Future<void>.value(),
+      ) as _i6.Future<void>);
+
+  @override
+  _i6.Future<void> subscribeToDiscovery({int? limit = 100}) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #subscribeToDiscovery,
+          [],
           {#limit: limit},
         ),
         returnValue: _i6.Future<void>.value(),
@@ -228,10 +327,14 @@ class MockVideoEventService extends _i1.Mock implements _i2.VideoEventService {
       ) as _i6.Future<void>);
 
   @override
-  _i6.Future<void> loadMoreEvents({int? limit = 200}) => (super.noSuchMethod(
+  _i6.Future<void> loadMoreEvents(
+    _i2.SubscriptionType? subscriptionType, {
+    int? limit = 200,
+  }) =>
+      (super.noSuchMethod(
         Invocation.method(
           #loadMoreEvents,
-          [],
+          [subscriptionType],
           {#limit: limit},
         ),
         returnValue: _i6.Future<void>.value(),
@@ -239,12 +342,18 @@ class MockVideoEventService extends _i1.Mock implements _i2.VideoEventService {
       ) as _i6.Future<void>);
 
   @override
-  _i6.Future<void> loadMoreContentUnlimited({int? limit = 300}) =>
+  _i6.Future<void> loadMoreContentUnlimited({
+    _i2.SubscriptionType? subscriptionType = _i2.SubscriptionType.discovery,
+    int? limit = 300,
+  }) =>
       (super.noSuchMethod(
         Invocation.method(
           #loadMoreContentUnlimited,
           [],
-          {#limit: limit},
+          {
+            #subscriptionType: subscriptionType,
+            #limit: limit,
+          },
         ),
         returnValue: _i6.Future<void>.value(),
         returnValueForMissingStub: _i6.Future<void>.value(),
@@ -543,4 +652,61 @@ class MockVideoEventService extends _i1.Mock implements _i2.VideoEventService {
         returnValue: _i6.Future<void>.value(),
         returnValueForMissingStub: _i6.Future<void>.value(),
       ) as _i6.Future<void>);
+
+  @override
+  Map<_i2.SubscriptionType, _i2.PaginationState>
+      getPaginationStatesForTesting() => (super.noSuchMethod(
+            Invocation.method(
+              #getPaginationStatesForTesting,
+              [],
+            ),
+            returnValue: <_i2.SubscriptionType, _i2.PaginationState>{},
+            returnValueForMissingStub: <_i2.SubscriptionType,
+                _i2.PaginationState>{},
+          ) as Map<_i2.SubscriptionType, _i2.PaginationState>);
+
+  @override
+  void addVideoEventForTesting(
+    _i3.VideoEvent? event,
+    _i2.SubscriptionType? type, {
+    required bool? isHistorical,
+  }) =>
+      super.noSuchMethod(
+        Invocation.method(
+          #addVideoEventForTesting,
+          [
+            event,
+            type,
+          ],
+          {#isHistorical: isHistorical},
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  void addListener(_i8.VoidCallback? listener) => super.noSuchMethod(
+        Invocation.method(
+          #addListener,
+          [listener],
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  void removeListener(_i8.VoidCallback? listener) => super.noSuchMethod(
+        Invocation.method(
+          #removeListener,
+          [listener],
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  void notifyListeners() => super.noSuchMethod(
+        Invocation.method(
+          #notifyListeners,
+          [],
+        ),
+        returnValueForMissingStub: null,
+      );
 }

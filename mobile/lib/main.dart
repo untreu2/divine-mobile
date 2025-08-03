@@ -7,9 +7,11 @@ import 'package:window_manager/window_manager.dart';
 import 'package:openvine/models/video_event.dart';
 import 'package:openvine/providers/app_providers.dart';
 import 'package:openvine/providers/social_providers.dart' as social_providers;
+import 'package:openvine/providers/tab_visibility_provider.dart';
 import 'package:openvine/screens/activity_screen.dart';
 import 'package:openvine/screens/explore_screen.dart';
 import 'package:openvine/screens/profile_screen.dart';
+import 'package:openvine/screens/search_screen.dart';
 import 'package:openvine/screens/universal_camera_screen.dart';
 import 'package:openvine/screens/video_feed_screen.dart';
 import 'package:openvine/screens/web_auth_screen.dart';
@@ -17,6 +19,7 @@ import 'package:openvine/services/auth_service.dart';
 import 'package:openvine/services/background_activity_manager.dart';
 import 'package:openvine/services/global_video_registry.dart';
 import 'package:openvine/services/logging_config_service.dart';
+import 'package:openvine/services/video_stop_navigator_observer.dart';
 import 'package:openvine/theme/vine_theme.dart';
 import 'package:openvine/utils/unified_logger.dart';
 import 'package:openvine/widgets/age_verification_dialog.dart';
@@ -122,6 +125,7 @@ class OpenVineApp extends StatelessWidget {
             debugShowCheckedModeBanner: false,
             theme: VineTheme.theme,
             home: const ResponsiveWrapper(child: AppInitializer()),
+            navigatorObservers: [VideoStopNavigatorObserver()],
           ),
         ),
       );
@@ -200,17 +204,29 @@ class _AppInitializerState extends ConsumerState<AppInitializer> {
       setState(() => _initializationStatus = 'Loading curated content...');
       await ref.read(curationServiceProvider).subscribeToCurationSets();
 
+
       if (!mounted) return;
       setState(() {
         _isInitialized = true;
         _initializationStatus = 'Ready!';
       });
 
+      // Initialize social provider synchronously to ensure it's ready for feed
+      if (!mounted) return;
+      setState(() => _initializationStatus = 'Loading social connections...');
+      try {
+        await ref.read(social_providers.socialNotifierProvider.notifier).initialize();
+        Log.info('Social provider initialized successfully',
+            name: 'Main', category: LogCategory.system);
+      } catch (e) {
+        Log.warning('Social provider initialization failed: $e',
+            name: 'Main', category: LogCategory.system);
+        // Continue anyway - social features will work with empty following list
+      }
+
       Log.info('All services initialized successfully',
           name: 'Main', category: LogCategory.system);
-
-      // Initialize social provider in background (non-blocking)
-      _initializeSocialProviderInBackground();
+      
     } catch (e, stackTrace) {
       Log.error('Service initialization failed: $e',
           name: 'Main', category: LogCategory.system);
@@ -226,21 +242,6 @@ class _AppInitializerState extends ConsumerState<AppInitializer> {
     }
   }
 
-  /// Initialize social provider in background without blocking UI
-  void _initializeSocialProviderInBackground() {
-    // Run in background without awaiting
-    Future.microtask(() async {
-      try {
-        await ref.read(social_providers.socialNotifierProvider.notifier).initialize();
-        Log.info('Background social provider initialization completed',
-            name: 'Main', category: LogCategory.system);
-      } catch (e) {
-        Log.error('Background social provider initialization failed: $e',
-            name: 'Main', category: LogCategory.system);
-        // Continue anyway - social features can be initialized later
-      }
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -401,26 +402,38 @@ class MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
     if (widget.initialTabIndex != null) {
       _currentIndex = widget.initialTabIndex!;
     } else {
-      // Check if user is following anyone to determine default tab
-      final socialData = ref.read(social_providers.socialNotifierProvider);
-      if (socialData.followingPubkeys.isEmpty) {
-        // User isn't following anyone - default to explore tab (index 2)
-        _currentIndex = 2;
-        Log.info(
-          'MainNavigation: User not following anyone, defaulting to explore tab',
-          name: 'MainNavigation',
-          category: LogCategory.ui,
-        );
-      } else {
-        // User has follows - default to feed tab (index 0)
-        _currentIndex = 0;
-        Log.info(
-          'MainNavigation: User following ${socialData.followingPubkeys.length} people, defaulting to feed tab',
-          name: 'MainNavigation',
-          category: LogCategory.ui,
-        );
-      }
+      // Default to feed tab - social data will load and update the feed
+      _currentIndex = 0;
+      Log.info(
+        'MainNavigation: Defaulting to feed tab',
+        name: 'MainNavigation',
+        category: LogCategory.ui,
+      );
+      
+      // After social data loads, check if we should switch to explore
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Future.delayed(const Duration(milliseconds: 500), () {
+          final socialData = ref.read(social_providers.socialNotifierProvider);
+          if (socialData.isInitialized && socialData.followingPubkeys.isEmpty && mounted) {
+            // User isn't following anyone - switch to explore tab
+            setState(() {
+              _currentIndex = 2;
+            });
+            Log.info(
+              'MainNavigation: User not following anyone, switching to explore tab',
+              name: 'MainNavigation',
+              category: LogCategory.ui,
+            );
+          }
+        });
+      });
     }
+
+    // Initialize tab visibility provider with initial tab
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(tabVisibilityProvider.notifier).setActiveTab(_currentIndex);
+    });
+
     // Create screens once - IndexedStack will preserve their state
     // ProfileScreen is created lazily to avoid unnecessary profile stats loading during startup
     _screens = [
@@ -432,6 +445,11 @@ class MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
       ExploreScreen(key: _exploreScreenKey),
       Container(), // Placeholder for ProfileScreen - will be replaced when needed
     ];
+    
+    Log.info('📱 MainNavigation: Created screens array with ${_screens.length} screens',
+        name: 'MainNavigation', category: LogCategory.ui);
+    Log.info('📱 MainNavigation: Screen at index 0 is ${_screens[0].runtimeType}',
+        name: 'MainNavigation', category: LogCategory.ui);
 
     // If initial hashtag is provided, navigate to explore tab after build
     if (widget.initialHashtag != null) {
@@ -442,6 +460,21 @@ class MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
   }
 
   void _onTabTapped(int index) {
+    // Update tab visibility provider FIRST to trigger reactive video pausing
+    ref.read(tabVisibilityProvider.notifier).setActiveTab(index);
+    
+    // Let tab visibility provider handle video pausing reactively
+    // No need for manual pause calls - VideoFeedItem handles this via _getTabActiveStatus()
+    
+    // Notify screens of visibility changes
+    if (_currentIndex == 2 && index != 2) {
+      // Leaving explore screen
+      _exploreScreenKey.currentState?.onScreenHidden();
+    } else if (_currentIndex != 2 && index == 2) {
+      // Entering explore screen
+      _exploreScreenKey.currentState?.onScreenVisible();
+    }
+
     // When tapping the profile tab directly, always show current user's profile
     if (index == 3) {
       // Reset to current user's profile when tapping the tab
@@ -497,70 +530,17 @@ class MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
       return;
     }
 
-    // Pause videos when leaving any tab that has video playback
-    if (_currentIndex != index) {
-      // Pause ALL videos globally when switching tabs
-      GlobalVideoRegistry().pauseAllControllers();
-      Log.info('⏸️ Paused all videos globally when switching tabs',
-          name: 'Main', category: LogCategory.system);
+    // Tab visibility provider will handle pausing via reactive VideoFeedItem updates
+    // No manual pause calls needed
 
-      if (_currentIndex == 0) {
-        // Leaving feed screen
-        _pauseFeedVideos();
-      } else if (_currentIndex == 2) {
-        // Leaving explore screen
-        _pauseExploreVideos();
-      }
-    }
-
-    // Resume videos when returning to a tab with video playback
-    if (_currentIndex != index) {
-      if (index == 0) {
-        // Returning to feed screen - just resume, state is preserved by IndexedStack
-        _resumeFeedVideos();
-      }
-      // Note: Explore screen handles its own resume logic
-    }
+    // Tab visibility provider will handle resuming via reactive VideoFeedItem updates
+    // No manual resume calls needed
 
     setState(() {
       _currentIndex = index;
     });
   }
 
-  void _pauseFeedVideos() {
-    try {
-      VideoFeedScreen.pauseVideos(_feedScreenKey);
-      Log.debug('Paused feed videos when navigating away',
-          name: 'Main', category: LogCategory.system);
-    } catch (e) {
-      Log.error('Error pausing feed videos: $e',
-          name: 'Main', category: LogCategory.system);
-    }
-  }
-
-  void _resumeFeedVideos() {
-    try {
-      VideoFeedScreen.resumeVideos(_feedScreenKey);
-      Log.debug('▶️ Resumed feed videos when returning to feed',
-          name: 'Main', category: LogCategory.system);
-    } catch (e) {
-      Log.error('Error resuming feed videos: $e',
-          name: 'Main', category: LogCategory.system);
-    }
-  }
-
-  void _pauseExploreVideos() {
-    try {
-      // Access the explore video manager from Riverpod
-      final exploreVideoManager = ref.read(exploreVideoManagerProvider);
-      exploreVideoManager.pauseAllVideos();
-      Log.debug('Paused explore videos when navigating away',
-          name: 'Main', category: LogCategory.system);
-    } catch (e) {
-      Log.error('Error pausing explore videos: $e',
-          name: 'Main', category: LogCategory.system);
-    }
-  }
 
   void _scrollToTopAndRefresh() {
     try {
@@ -594,14 +574,7 @@ class MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
   /// Navigate to a user's profile
   /// Called from other screens to view a specific user's profile
   void navigateToProfile(String? profilePubkey) {
-    // Pause videos when navigating away from current tab
-    if (_currentIndex == 0) {
-      _pauseFeedVideos();
-    } else if (_currentIndex == 2) {
-      _pauseExploreVideos();
-    }
-    
-    // Also pause all videos globally to ensure nothing keeps playing
+    // IMMEDIATELY pause ALL videos on profile navigation
     GlobalVideoRegistry().pauseAllControllers();
     Log.info('⏸️ Paused all videos when navigating to profile',
         name: 'Main', category: LogCategory.system);
@@ -618,17 +591,40 @@ class MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
   /// Navigate to search functionality within explore
   /// Called from other screens to open search functionality
   void navigateToSearch() {
-    _onTabTapped(2); // Switch to explore tab (index 2)
-    // TODO: Implement search functionality once available in ExploreScreen
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const SearchScreen()),
+    );
+  }
+
+  /// Play a specific video in the explore tab with context videos
+  /// Called from search results to play a video within its result set
+  void playSpecificVideo(List<VideoEvent> videos, int startIndex) {
+    // IMMEDIATELY pause ALL videos before playing specific video
+    GlobalVideoRegistry().pauseAllControllers();
+    Log.info('⏸️ Paused all videos before playing specific video',
+        name: 'Main', category: LogCategory.system);
+    
+    // Switch to explore tab first
+    _onTabTapped(2);
+    
+    // After switching tabs, play the specific video with its context
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _exploreScreenKey.currentState?.playSpecificVideo(videos, startIndex);
+    });
   }
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-        body: IndexedStack(
-          index: _currentIndex,
-          children: _screens,
-        ),
-        bottomNavigationBar: BottomNavigationBar(
+  Widget build(BuildContext context) {
+    Log.info('📱 MainNavigation: build() - currentIndex=$_currentIndex',
+        name: 'MainNavigation', category: LogCategory.ui);
+    
+    return Scaffold(
+      body: IndexedStack(
+        index: _currentIndex,
+        children: _screens,
+      ),
+      bottomNavigationBar: BottomNavigationBar(
           currentIndex: _currentIndex,
           onTap: _onTabTapped,
           backgroundColor: VineTheme.vineGreen,
@@ -660,12 +656,9 @@ class MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
             // Capture context before async operations
             final scaffoldContext = context;
             
-            // Pause videos from any tab before opening camera
-            if (_currentIndex == 0) {
-              _pauseFeedVideos();
-            } else if (_currentIndex == 2) {
-              _pauseExploreVideos();
-            }
+            // IMMEDIATELY pause ALL videos before opening camera
+            GlobalVideoRegistry().pauseAllControllers();
+            Log.info('⏸️ Paused all videos before camera', name: 'Main', category: LogCategory.system);
 
             // Check age verification before opening camera
             final ageVerificationService = ref.read(ageVerificationServiceProvider);
@@ -734,6 +727,7 @@ class MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
         ),
         floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       );
+  }
 }
 
 /// ResponsiveWrapper adapts app size based on available screen space

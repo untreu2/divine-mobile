@@ -8,15 +8,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:openvine/models/video_event.dart';
 import 'package:openvine/models/video_state.dart';
-import 'package:openvine/providers/video_feed_provider.dart';
+import 'package:openvine/providers/home_feed_provider.dart';
 import 'package:openvine/providers/video_manager_providers.dart';
-import 'package:openvine/providers/feed_mode_providers.dart';
 import 'package:openvine/providers/user_profile_providers.dart';
 import 'package:openvine/providers/social_providers.dart' as social;
 import 'package:openvine/main.dart';
 import 'package:openvine/theme/vine_theme.dart';
 import 'package:openvine/utils/unified_logger.dart';
-import 'package:openvine/widgets/feed_transition_indicator.dart';
 import 'package:openvine/widgets/video_feed_item.dart';
 import 'package:openvine/state/video_feed_state.dart';
 
@@ -103,13 +101,13 @@ class _VideoFeedScreenState extends ConsumerState<VideoFeedScreen>
   @override
   void initState() {
     super.initState();
+    Log.info('🎬 VideoFeedScreen: initState called',
+        name: 'VideoFeedScreen', category: LogCategory.ui);
+    
     _pageController = PageController();
     WidgetsBinding.instance.addObserver(this);
 
-    // Set initial feed mode based on context
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _setInitialFeedMode();
-    });
+    // Feed mode removed - each screen manages its own content
   }
 
   @override
@@ -141,43 +139,6 @@ class _VideoFeedScreenState extends ConsumerState<VideoFeedScreen>
     }
   }
 
-  void _setInitialFeedMode() {
-    // Set feed mode based on widget context
-    final feedModeNotifier = ref.read(feedModeNotifierProvider.notifier);
-    
-    switch (widget.context) {
-      case FeedContext.general:
-        feedModeNotifier.showFollowing();
-        break;
-      case FeedContext.hashtag:
-        if (widget.contextValue != null) {
-          feedModeNotifier.setHashtagMode(widget.contextValue!);
-        }
-        break;
-      case FeedContext.editorsPicks:
-        feedModeNotifier.showCurated();
-        break;
-      case FeedContext.trending:
-        feedModeNotifier.showDiscovery();
-        break;
-      case FeedContext.userProfile:
-        if (widget.contextValue != null) {
-          feedModeNotifier.setProfileMode(widget.contextValue!);
-        }
-        break;
-      case FeedContext.search:
-        if (widget.contextValue != null) {
-          feedModeNotifier.setSearchMode(widget.contextValue!);
-        }
-        break;
-    }
-
-    // Set starting video position if provided
-    _setInitialPosition();
-
-    Log.info('Feed mode initialized for context: ${widget.context}',
-        name: 'VideoFeedScreen', category: LogCategory.ui);
-  }
 
   void _onPageChanged(int index) {
     // Store the previous index before updating
@@ -187,37 +148,29 @@ class _VideoFeedScreenState extends ConsumerState<VideoFeedScreen>
       _currentIndex = index;
     });
 
-    // Get current videos from feed state
-    final feedState = ref.read(videoFeedProvider).valueOrNull;
+    // Get current videos from home feed state
+    final feedState = ref.read(homeFeedProvider).valueOrNull;
     if (feedState == null) return;
 
     final videos = feedState.videos;
     if (videos.isEmpty) return;
 
-    // Don't try to preload or play the transition indicator
-    if (_shouldShowTransitionAtIndex(index, feedState)) {
-      // Pause any playing videos when showing transition
-      _pauseAllVideos();
-      return;
-    }
-
-    // Adjust index for video operations
-    final videoIndex = _adjustVideoIndex(index, feedState);
-    if (videoIndex < 0 || videoIndex >= videos.length) {
+    // Simple bounds check
+    if (index < 0 || index >= videos.length) {
       return;
     }
 
     // Check if we're near the end and should load more videos
-    _checkForPagination(videoIndex, videos.length);
+    _checkForPagination(index, videos.length);
 
     // Trigger preloading around new position
-    ref.read(videoManagerProvider.notifier).preloadAroundIndex(videoIndex);
+    ref.read(videoManagerProvider.notifier).preloadAroundIndex(index);
 
     // Batch fetch profiles for videos around current position
-    _batchFetchProfilesAroundIndex(videoIndex, videos);
+    _batchFetchProfilesAroundIndex(index, videos);
 
     // Update video playback states with both old and new indices
-    _updateVideoPlayback(videoIndex, videos, previousIndex);
+    _updateVideoPlayback(index, videos, previousIndex);
   }
 
   void _updateVideoPlayback(int videoIndex, List<VideoEvent> videos, int previousPageIndex) {
@@ -265,7 +218,7 @@ class _VideoFeedScreenState extends ConsumerState<VideoFeedScreen>
     _resumeCurrentVideo();
 
     // Also trigger preloading around current position to reload videos that were stopped
-    final feedState = ref.read(videoFeedProvider).valueOrNull;
+    final feedState = ref.read(homeFeedProvider).valueOrNull;
     if (feedState != null && feedState.videos.isNotEmpty) {
       ref.read(videoManagerProvider.notifier).preloadAroundIndex(_currentIndex);
       Log.debug(
@@ -277,33 +230,8 @@ class _VideoFeedScreenState extends ConsumerState<VideoFeedScreen>
 
   // Context filtering is now handled by Riverpod feed mode providers
 
-  /// Set initial video position if starting video is provided
-  void _setInitialPosition() {
-    if (widget.startingVideo == null) return;
-
-    // Get videos from Riverpod feed state
-    final feedState = ref.read(videoFeedProvider).valueOrNull;
-    if (feedState == null) return;
-
-    final videos = feedState.videos;
-    final startIndex =
-        videos.indexWhere((video) => video.id == widget.startingVideo!.id);
-
-    if (startIndex >= 0) {
-      _currentIndex = startIndex;
-      // Update page controller to start at the correct position
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (_pageController.hasClients) {
-          _pageController.jumpToPage(startIndex);
-        }
-      });
-      Log.debug('Starting feed at video ${startIndex + 1}/${videos.length}',
-          name: 'VideoFeedScreen', category: LogCategory.ui);
-    }
-  }
-
   void _resumeCurrentVideo() {
-    final feedState = ref.read(videoFeedProvider).valueOrNull;
+    final feedState = ref.read(homeFeedProvider).valueOrNull;
     if (feedState == null) return;
 
     final videos = feedState.videos;
@@ -326,7 +254,7 @@ class _VideoFeedScreenState extends ConsumerState<VideoFeedScreen>
 
   /// Get the currently displayed video
   VideoEvent? getCurrentVideo() {
-    final feedState = ref.read(videoFeedProvider).valueOrNull;
+    final feedState = ref.read(homeFeedProvider).valueOrNull;
     if (feedState == null) return null;
 
     final videos = feedState.videos;
@@ -357,6 +285,9 @@ class _VideoFeedScreenState extends ConsumerState<VideoFeedScreen>
   @override
   Widget build(BuildContext context) {
     super.build(context); // Required for AutomaticKeepAliveClientMixin
+    Log.info('🎬 VideoFeedScreen: build() called',
+        name: 'VideoFeedScreen', category: LogCategory.ui);
+    
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
@@ -381,15 +312,29 @@ class _VideoFeedScreenState extends ConsumerState<VideoFeedScreen>
   }
 
   Widget _buildBody() {
-    // Watch the video feed state
-    final videoFeedAsync = ref.watch(videoFeedProvider);
+    Log.info('🎬 VideoFeedScreen: _buildBody called',
+        name: 'VideoFeedScreen', category: LogCategory.ui);
+    
+    // Watch the home feed state
+    final videoFeedAsync = ref.watch(homeFeedProvider);
+    
+    Log.info('🎬 VideoFeedScreen: videoFeedAsync state = ${videoFeedAsync.runtimeType}',
+        name: 'VideoFeedScreen', category: LogCategory.ui);
     
     // Watch the video manager provider to ensure it gets instantiated and syncs videos
     ref.watch(videoManagerProvider);
 
     return videoFeedAsync.when(
-      loading: () => _buildLoadingState(),
-      error: (error, stackTrace) => _buildErrorState(error.toString()),
+      loading: () {
+        Log.info('🎬 VideoFeedScreen: Showing loading state',
+            name: 'VideoFeedScreen', category: LogCategory.ui);
+        return _buildLoadingState();
+      },
+      error: (error, stackTrace) {
+        Log.error('🎬 VideoFeedScreen: Error state - $error',
+            name: 'VideoFeedScreen', category: LogCategory.ui);
+        return _buildErrorState(error.toString());
+      },
       data: (feedState) {
         final videos = feedState.videos;
         
@@ -420,6 +365,12 @@ class _VideoFeedScreenState extends ConsumerState<VideoFeedScreen>
     // Check if user is following anyone to show appropriate message
     final socialData = ref.watch(social.socialNotifierProvider);
     final isFollowingAnyone = socialData.followingPubkeys.isNotEmpty;
+    
+    Log.info('🔍 VideoFeedScreen: Empty state - '
+        'isFollowingAnyone=$isFollowingAnyone, '
+        'socialInitialized=${socialData.isInitialized}, '
+        'followingCount=${socialData.followingPubkeys.length}',
+        name: 'VideoFeedScreen', category: LogCategory.ui);
 
     if (!isFollowingAnyone) {
       // Show educational message about OpenVine's non-algorithmic approach
@@ -545,14 +496,18 @@ class _VideoFeedScreenState extends ConsumerState<VideoFeedScreen>
             ),
             const SizedBox(height: 16),
             ElevatedButton(
-              onPressed: () => ref.invalidate(videoFeedProvider),
+              onPressed: () => ref.invalidate(homeFeedProvider),
               child: const Text('Retry'),
             ),
           ],
         ),
       );
 
-  Widget _buildVideoFeed(List<VideoEvent> videos, VideoFeedState feedState) => Semantics(
+  Widget _buildVideoFeed(List<VideoEvent> videos, VideoFeedState feedState) {
+    Log.info('🎬 VideoFeedScreen: Building home video feed with ${videos.length} videos from following',
+        name: 'VideoFeedScreen', category: LogCategory.ui);
+    
+    return Semantics(
         label: 'Video feed',
         child: Stack(
           children: [
@@ -586,19 +541,13 @@ class _VideoFeedScreenState extends ConsumerState<VideoFeedScreen>
                 controller: _pageController,
                 scrollDirection: Axis.vertical,
                 onPageChanged: _onPageChanged,
-                itemCount: _calculateItemCount(videos.length, feedState),
+                itemCount: videos.length,
                 pageSnapping: true,
                 itemBuilder: (context, index) {
-                  // Check if this is the transition indicator position
-                  if (_shouldShowTransitionAtIndex(index, feedState)) {
-                    return FeedTransitionIndicator(
-                      followingCount: feedState.primaryVideoCount,
-                      discoveryCount: videos.length - feedState.primaryVideoCount,
-                    );
-                  }
+                  // No transition indicators needed - simple discovery feed
 
-                  // Adjust index to account for transition indicator
-                  final videoIndex = _adjustVideoIndex(index, feedState);
+                  // Simple index - no adjustments needed
+                  final videoIndex = index;
 
                   // Bounds checking
                   if (videoIndex < 0 || videoIndex >= videos.length) {
@@ -654,55 +603,8 @@ class _VideoFeedScreenState extends ConsumerState<VideoFeedScreen>
           ],
         ),
       );
-
-  /// Calculate total item count including transition indicator if needed
-  int _calculateItemCount(int videoCount, VideoFeedState feedState) {
-    if (videoCount == 0) return videoCount;
-
-    // Check if we should show transition indicator
-    final primaryCount = feedState.primaryVideoCount;
-    final discoveryCount = videoCount - primaryCount;
-
-    // Only show transition if we have both primary and discovery videos
-    if (primaryCount > 0 && discoveryCount > 0) {
-      return videoCount + 1; // Add 1 for the transition indicator
-    }
-
-    return videoCount;
   }
 
-  /// Check if the current index should show the transition indicator
-  bool _shouldShowTransitionAtIndex(int index, VideoFeedState feedState) {
-    final primaryCount = feedState.primaryVideoCount;
-    final totalCount = feedState.videos.length;
-    final discoveryCount = totalCount - primaryCount;
-
-    // Only show transition if we have both types of videos
-    if (primaryCount == 0 || discoveryCount == 0) return false;
-
-    // Transition shows at the position after all primary videos
-    return index == primaryCount;
-  }
-
-  /// Adjust video index to account for transition indicator
-  int _adjustVideoIndex(int pageIndex, VideoFeedState feedState) {
-    final primaryCount = feedState.primaryVideoCount;
-    final totalCount = feedState.videos.length;
-    final discoveryCount = totalCount - primaryCount;
-
-    // If we don't have both types, no adjustment needed
-    if (primaryCount == 0 || discoveryCount == 0) return pageIndex;
-
-    // If index is before transition position, no adjustment
-    if (pageIndex < primaryCount) return pageIndex;
-
-    // If index is the transition position, this shouldn't be called
-    // but return safe value anyway
-    if (pageIndex == primaryCount) return -1;
-
-    // If index is after transition, subtract 1 to account for indicator
-    return pageIndex - 1;
-  }
 
   Widget _buildVideoItemWithErrorBoundary(VideoEvent video, bool isActive) {
     try {
@@ -710,6 +612,7 @@ class _VideoFeedScreenState extends ConsumerState<VideoFeedScreen>
         video: video,
         isActive: isActive,
         onVideoError: (error) => _handleVideoError(video.id, error),
+        tabContext: TabContext.feed,
       );
     } catch (e) {
       // Error boundary - prevent one bad video from crashing entire feed
@@ -801,8 +704,8 @@ class _VideoFeedScreenState extends ConsumerState<VideoFeedScreen>
         category: LogCategory.video,
       );
       
-      // Call the video feed provider's loadMore method
-      ref.read(videoFeedProvider.notifier).loadMore();
+      // Call the home feed provider's loadMore method
+      ref.read(homeFeedProvider.notifier).loadMore();
     }
   }
 
@@ -818,8 +721,8 @@ class _VideoFeedScreenState extends ConsumerState<VideoFeedScreen>
       Log.info('🔄 Pull-to-refresh triggered - refreshing feed',
           name: 'VideoFeedScreen', category: LogCategory.ui);
       
-      // Refresh the video feed using Riverpod
-      await ref.read(videoFeedProvider.notifier).refresh();
+      // Refresh the home feed using Riverpod
+      await ref.read(homeFeedProvider.notifier).refresh();
       
       Log.info('✅ Feed refresh completed',
           name: 'VideoFeedScreen', category: LogCategory.ui);
@@ -872,13 +775,13 @@ class _VideoFeedScreenState extends ConsumerState<VideoFeedScreen>
     if (pubkeysToFetch.isEmpty) return;
 
     Log.debug(
-      '🔄 Batch fetching ${pubkeysToFetch.length} profiles for videos around index $currentIndex',
+      '⚡ Immediate prefetch ${pubkeysToFetch.length} profiles for videos around index $currentIndex',
       name: 'VideoFeedScreen',
       category: LogCategory.ui,
     );
 
-    // Batch fetch profiles using Riverpod
-    userProfilesNotifier.fetchMultipleProfiles(pubkeysToFetch.toList());
+    // Aggressively prefetch profiles for immediate display
+    userProfilesNotifier.prefetchProfilesImmediately(pubkeysToFetch.toList());
   }
 
   // Note: Keyboard navigation methods removed to avoid unused warnings

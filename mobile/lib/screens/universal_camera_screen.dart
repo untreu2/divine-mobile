@@ -13,6 +13,7 @@ import 'package:openvine/services/upload_manager.dart';
 import 'package:openvine/theme/vine_theme.dart';
 import 'package:openvine/utils/unified_logger.dart';
 import 'package:openvine/widgets/vine_recording_controls.dart';
+import 'package:openvine/widgets/camera_controls_overlay.dart';
 
 class UniversalCameraScreen extends ConsumerStatefulWidget {
   const UniversalCameraScreen({super.key});
@@ -48,7 +49,10 @@ class _UniversalCameraScreenState extends ConsumerState<UniversalCameraScreen> {
           // Stop all background videos after widget tree is built
           final videoManager = ref.read(videoManagerProvider.notifier);
           videoManager.stopAllVideos();
-          Log.info('Stopped all background videos on camera screen init',
+          
+          // Clean up any metadata controllers from previous recording sessions
+          await videoManager.disposeVideosWithPrefix('metadata_');
+          Log.info('Cleaned up old metadata controllers and stopped all background videos',
               name: 'UniversalCameraScreen', category: LogCategory.ui);
 
           // Get services from providers
@@ -120,6 +124,9 @@ class _UniversalCameraScreenState extends ConsumerState<UniversalCameraScreen> {
         if (result != null && mounted) {
           // Get current user's pubkey
           final pubkey = _keyManager.publicKey ?? '';
+
+          // Ensure upload manager is available
+          _uploadManager ??= ref.read(uploadManagerProvider);
 
           // Start upload through upload manager
           await _uploadManager!.startUpload(
@@ -199,15 +206,30 @@ class _UniversalCameraScreenState extends ConsumerState<UniversalCameraScreen> {
             else
               _buildErrorView(),
 
-            // Recording UI overlay
+            // Camera controls overlay (zoom, flash, etc.)
             if (_errorMessage == null)
               Positioned.fill(
                 child: Consumer(
                   builder: (context, ref, child) {
                     final recordingNotifier = ref.watch(vineRecordingProvider.notifier);
-                    ref.watch(vineRecordingProvider); // Watch state to trigger rebuilds
-                    return VineRecordingUI(
+                    return CameraControlsOverlay(
+                      cameraInterface: recordingNotifier.controller.cameraInterface!,
+                      recordingState: recordingNotifier.controller.state,
+                    );
+                  },
+                ),
+              ),
+
+            // Recording UI overlay
+            if (_errorMessage == null)
+              Positioned.fill(
+                child: Consumer(
+                  builder: (context, ref, child) {
+                    final recordingState = ref.watch(vineRecordingProvider);
+                    final recordingNotifier = ref.watch(vineRecordingProvider.notifier);
+                    return VineRecordingUIWithProvider(
                       controller: recordingNotifier.controller,
+                      state: recordingState,
                       onRecordingComplete: _onRecordingComplete,
                       onCancel: _onCancel,
                     );
@@ -247,58 +269,141 @@ class _UniversalCameraScreenState extends ConsumerState<UniversalCameraScreen> {
         ),
       );
 
-  Widget _buildErrorView() => Center(
-        child: Container(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(
-                Icons.error_outline,
-                color: Colors.white,
-                size: 64,
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Camera Error',
-                style: Theme.of(context)
-                    .textTheme
-                    .displayLarge
-                    ?.copyWith(color: Colors.white),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                _errorMessage ?? 'Unknown error',
-                style: Theme.of(context)
-                    .textTheme
-                    .bodyMedium
-                    ?.copyWith(color: Colors.white70),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 24),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  ElevatedButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.grey[700],
-                      foregroundColor: Colors.white,
-                    ),
-                    child: const Text('Go Back'),
+  Widget _buildErrorView() {
+    // Parse error message to provide better guidance
+    String title = 'Camera Error';
+    String message = _errorMessage ?? 'Unknown error';
+    String actionText = 'Try Again';
+    IconData icon = Icons.error_outline;
+    List<Widget> additionalInfo = [];
+
+    // Check for specific error types and provide helpful guidance
+    if (_errorMessage?.contains('No camera found') == true || 
+        _errorMessage?.contains('NotFoundError') == true) {
+      title = 'No Camera Found';
+      icon = Icons.videocam_off;
+      message = 'Please connect a webcam to record videos.';
+      additionalInfo.add(
+        const Padding(
+          padding: EdgeInsets.only(top: 16),
+          child: Text(
+            'OpenVine needs a camera to record videos. Connect a webcam and try again.',
+            style: TextStyle(color: Colors.white60, fontSize: 14),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      );
+    } else if (_errorMessage?.contains('Camera access denied') == true ||
+               _errorMessage?.contains('NotAllowedError') == true ||
+               _errorMessage?.contains('PermissionDeniedError') == true) {
+      title = 'Camera Permission Needed';
+      icon = Icons.camera_alt;
+      message = 'OpenVine needs camera access to record videos.';
+      actionText = 'Grant Permission';
+      additionalInfo.addAll([
+        const Padding(
+          padding: EdgeInsets.only(top: 16),
+          child: Text(
+            'To record and share videos, OpenVine needs permission to use your camera.',
+            style: TextStyle(color: Colors.white60, fontSize: 14),
+            textAlign: TextAlign.center,
+          ),
+        ),
+        const Padding(
+          padding: EdgeInsets.only(top: 8),
+          child: Text(
+            'Click "Grant Permission" and allow camera access when prompted by your browser.',
+            style: TextStyle(color: Colors.white60, fontSize: 14),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      ]);
+    } else if (_errorMessage?.contains('Camera is already in use') == true ||
+               _errorMessage?.contains('NotReadableError') == true) {
+      title = 'Camera In Use';
+      icon = Icons.warning_amber;
+      message = 'Your camera is being used by another application.';
+      additionalInfo.add(
+        const Padding(
+          padding: EdgeInsets.only(top: 16),
+          child: Text(
+            'Close other apps using your camera (video calls, etc.) and try again.',
+            style: TextStyle(color: Colors.white60, fontSize: 14),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      );
+    } else if (_errorMessage?.contains('HTTPS') == true) {
+      title = 'Secure Connection Required';
+      icon = Icons.lock_outline;
+      message = 'Camera access requires a secure connection.';
+      additionalInfo.add(
+        const Padding(
+          padding: EdgeInsets.only(top: 16),
+          child: Text(
+            'Please access OpenVine using HTTPS for camera functionality.',
+            style: TextStyle(color: Colors.white60, fontSize: 14),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      );
+    }
+
+    return Center(
+      child: Container(
+        padding: const EdgeInsets.all(24),
+        constraints: const BoxConstraints(maxWidth: 400),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              color: Colors.white,
+              size: 64,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              title,
+              style: Theme.of(context)
+                  .textTheme
+                  .displayLarge
+                  ?.copyWith(color: Colors.white),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              message,
+              style: Theme.of(context)
+                  .textTheme
+                  .bodyMedium
+                  ?.copyWith(color: Colors.white70),
+              textAlign: TextAlign.center,
+            ),
+            ...additionalInfo,
+            const SizedBox(height: 24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ElevatedButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.grey[700],
+                    foregroundColor: Colors.white,
                   ),
-                  const SizedBox(width: 16),
-                  ElevatedButton(
-                    onPressed: _initializeServices,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: VineTheme.vineGreen,
-                    ),
-                    child: const Text('Try Again'),
+                  child: const Text('Go Back'),
+                ),
+                const SizedBox(width: 16),
+                ElevatedButton(
+                  onPressed: _initializeServices,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: VineTheme.vineGreen,
                   ),
+                  child: Text(actionText),
+                ),
                 ],
               ),
             ],
           ),
         ),
       );
+  }
 }

@@ -73,19 +73,6 @@ abstract class INostrService {
     List<String> hashtags = const [],
   });
 
-  // Add publishVideoEvent method to interface
-  Future<NostrBroadcastResult> publishVideoEvent({
-    required String videoUrl,
-    required String content,
-    String? title,
-    String? thumbnailUrl,
-    int? duration,
-    String? dimensions,
-    String? mimeType,
-    String? sha256,
-    int? fileSize,
-    List<String> hashtags = const [],
-  });
 
   // Relay management methods
   Future<bool> addRelay(String relayUrl);

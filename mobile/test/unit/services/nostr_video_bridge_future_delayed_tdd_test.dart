@@ -8,6 +8,7 @@ import 'package:openvine/services/nostr_video_bridge.dart';
 import 'package:openvine/services/subscription_manager.dart';
 
 import '../../helpers/test_helpers.dart';
+import '../../helpers/service_init_helper.dart';
 import '../../mocks/mock_video_manager.dart';
 
 // Mock classes for dependencies
@@ -30,7 +31,7 @@ void main() {
     setUp(() {
       mockVideoManager = MockVideoManager();
       mockNostrService = MockNostrService();
-      mockSubscriptionManager = MockSubscriptionManager(TestNostrService());
+      mockSubscriptionManager = MockSubscriptionManager();
 
       // Setup basic mock behaviors for NostrService
       when(() => mockNostrService.isInitialized).thenReturn(true);

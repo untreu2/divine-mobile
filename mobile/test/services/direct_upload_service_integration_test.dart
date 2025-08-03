@@ -18,6 +18,21 @@ import 'package:openvine/utils/nostr_encoding.dart';
 import 'package:openvine/utils/unified_logger.dart';
 import 'package:path/path.dart' as path;
 
+/// Simple data class for holding Nostr key pairs during testing
+class NostrKeyPair {
+  const NostrKeyPair({
+    required this.privateKeyHex,
+    required this.publicKeyHex,
+    required this.npub,
+    required this.nsec,
+  });
+
+  final String privateKeyHex;
+  final String publicKeyHex;
+  final String npub;
+  final String nsec;
+}
+
 void main() {
   group('DirectUploadService Integration', () {
     late Directory tempDir;
@@ -251,7 +266,7 @@ class TestAuthService extends AuthService {
 
   // Return the private key for signing
   @override
-  Future<String?> getPrivateKeyForSigning() async => keyPair.privateKeyHex;
+  Future<String?> getPrivateKeyForSigning({String? biometricPrompt}) async => keyPair.privateKeyHex;
 
   // Create and sign events for NIP-98 auth
   @override
@@ -259,6 +274,7 @@ class TestAuthService extends AuthService {
     required int kind,
     required String content,
     List<List<String>>? tags,
+    String? biometricPrompt,
   }) async {
     if (!isAuthenticated) {
       return null;

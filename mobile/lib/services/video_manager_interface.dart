@@ -2,6 +2,7 @@
 // ABOUTME: Single source of truth for video state, preloading, and memory management
 
 import 'dart:async';
+import 'dart:io';
 
 import 'package:openvine/models/video_event.dart';
 import 'package:openvine/models/video_state.dart';
@@ -20,6 +21,18 @@ enum PreloadPriority {
 
   /// Background preloading - low priority
   background,
+}
+
+/// Types of video controllers supported by VideoManager
+enum VideoControllerType {
+  /// Network URL video (regular videos from URLs)
+  network,
+
+  /// Local file video (recorded videos, uploads)
+  file,
+
+  /// Thumbnail generation (preview frames)
+  thumbnail,
 }
 
 /// Strategies for cleaning up video controllers and memory
@@ -112,6 +125,57 @@ abstract class IVideoManager {
   ///
   /// No-op if video is already preloaded or permanently failed
   Future<void> preloadVideo(String videoId);
+
+  /// Create a controller for a network URL video
+  ///
+  /// This method:
+  /// - Validates the URL for security
+  /// - Creates VideoPlayerController.networkUrl
+  /// - Registers with both VideoManager and GlobalVideoRegistry
+  /// - Enforces memory limits and cleanup
+  ///
+  /// [videoId] - Unique identifier for the video
+  /// [videoUrl] - Network URL to the video
+  /// [priority] - Priority level for memory management
+  Future<VideoPlayerController?> createNetworkController(
+    String videoId,
+    String videoUrl, {
+    PreloadPriority priority = PreloadPriority.nearby,
+  });
+
+  /// Create a controller for a local file video
+  ///
+  /// This method:  
+  /// - Validates the file exists and is readable
+  /// - Creates VideoPlayerController.file
+  /// - Registers with both VideoManager and GlobalVideoRegistry
+  /// - Enforces memory limits and cleanup
+  ///
+  /// [videoId] - Unique identifier for the video
+  /// [videoFile] - Local file containing the video
+  /// [priority] - Priority level for memory management
+  Future<VideoPlayerController?> createFileController(
+    String videoId,
+    File videoFile, {
+    PreloadPriority priority = PreloadPriority.nearby,
+  });
+
+  /// Create a controller for thumbnail generation
+  ///
+  /// This method:
+  /// - Creates a lightweight controller for frame extraction
+  /// - Automatically mutes audio and seeks to specified time
+  /// - Uses lower priority for memory management
+  /// - Automatically disposes after thumbnail generation
+  ///
+  /// [videoId] - Unique identifier for the video  
+  /// [videoUrl] - Network URL to the video
+  /// [seekTimeSeconds] - Time to seek to for thumbnail
+  Future<VideoPlayerController?> createThumbnailController(
+    String videoId,
+    String videoUrl, {
+    double seekTimeSeconds = 2.5,
+  });
 
   /// Preload videos around the current index for smooth scrolling
   ///

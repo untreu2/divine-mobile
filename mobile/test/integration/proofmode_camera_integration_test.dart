@@ -80,8 +80,8 @@ void main() {
         expect(testCameraService.isRecording, isTrue);
 
         // Simulate user interactions
-        await integration.recordTouchInteraction(0.5, 0.5, pressure: 0.7);
-        await integration.recordTouchInteraction(0.3, 0.7, pressure: 0.6);
+        integration.recordTouchInteraction();
+        integration.recordTouchInteraction();
 
         // Complete recording
         final result = await integration.stopRecording();
@@ -140,7 +140,7 @@ void main() {
         await integration.startRecording();
 
         // Record first segment
-        await integration.recordTouchInteraction(0.5, 0.5);
+        integration.recordTouchInteraction();
         
         // Pause
         await integration.pauseRecording();
@@ -148,7 +148,7 @@ void main() {
         
         // Resume for second segment
         await integration.resumeRecording();
-        await integration.recordTouchInteraction(0.6, 0.4);
+        integration.recordTouchInteraction();
         
         // Pause again
         await integration.pauseRecording();
@@ -156,7 +156,7 @@ void main() {
         
         // Resume for final segment
         await integration.resumeRecording();
-        await integration.recordTouchInteraction(0.4, 0.6);
+        integration.recordTouchInteraction();
 
         final result = await integration.stopRecording();
 
@@ -331,7 +331,7 @@ void main() {
         ));
 
         await integration.startRecording();
-        await integration.recordTouchInteraction(0.5, 0.5);
+        integration.recordTouchInteraction();
         final result = await integration.stopRecording();
 
         expect(result.proofLevel, equals('basic_proof'));
@@ -353,10 +353,10 @@ void main() {
         await integration.startRecording();
 
         // Simulate natural human touch patterns
-        await integration.recordTouchInteraction(0.500, 0.500, pressure: 0.7);
-        await integration.recordTouchInteraction(0.502, 0.498, pressure: 0.6);
-        await integration.recordTouchInteraction(0.498, 0.503, pressure: 0.8);
-        await integration.recordTouchInteraction(0.501, 0.497, pressure: 0.7);
+        integration.recordTouchInteraction();
+        integration.recordTouchInteraction();
+        integration.recordTouchInteraction();
+        integration.recordTouchInteraction();
 
         final result = await integration.stopRecording();
 
@@ -390,9 +390,9 @@ void main() {
         await integration.startRecording();
 
         // Simulate bot-like perfect interactions
-        await integration.recordTouchInteraction(0.500, 0.500, pressure: 0.5);
-        await integration.recordTouchInteraction(0.500, 0.500, pressure: 0.5);
-        await integration.recordTouchInteraction(0.500, 0.500, pressure: 0.5);
+        integration.recordTouchInteraction();
+        integration.recordTouchInteraction();
+        integration.recordTouchInteraction();
 
         final result = await integration.stopRecording();
 
@@ -423,7 +423,7 @@ void main() {
         // Rapid operations
         for (int i = 0; i < 5; i++) {
           await integration.startRecording();
-          await integration.recordTouchInteraction(0.5, 0.5);
+          integration.recordTouchInteraction();
           await integration.stopRecording();
         }
 

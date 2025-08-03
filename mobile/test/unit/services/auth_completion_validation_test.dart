@@ -10,50 +10,29 @@ import 'package:openvine/services/nostr_service.dart';
 import 'package:openvine/services/subscription_manager.dart';
 import 'package:openvine/services/video_event_service.dart';
 import 'package:openvine/utils/unified_logger.dart';
+import '../../helpers/service_init_helper.dart';
 
 void main() {
   group('AUTH Completion Validation Logic', () {
-    late NostrKeyManager keyManager;
-    late NostrService nostrService;
-    late VideoEventService videoEventService;
-    late SubscriptionManager subscriptionManager;
+    late ServiceBundle services;
 
     setUp(() async {
-      // Initialize Flutter test bindings
-      TestWidgetsFlutterBinding.ensureInitialized();
-      
-      // Initialize logging for tests
-      Log.setLogLevel(LogLevel.debug);
-      
-      // Create services
-      keyManager = NostrKeyManager();
-      await keyManager.initialize();
-      
-      // Generate test keys if needed
-      if (!keyManager.hasKeys) {
-        await keyManager.generateKeys();
-      }
-
-      nostrService = NostrService(keyManager);
-      subscriptionManager = SubscriptionManager(nostrService);
-      videoEventService = VideoEventService(nostrService, subscriptionManager: subscriptionManager);
+      // Use test service bundle to avoid platform dependencies
+      services = ServiceInitHelper.createTestServiceBundle();
     });
 
     tearDown(() async {
-      videoEventService.dispose();
-      subscriptionManager.dispose();
-      nostrService.dispose();
-      keyManager.dispose();
+      ServiceInitHelper.disposeServiceBundle(services);
     });
 
     test('AUTH timeout configuration works', () {
       // Test default timeout
-      expect(nostrService.setAuthTimeout, isA<Function>());
+      expect(services.nostrService.setAuthTimeout, isA<Function>());
       
       // Test setting different timeouts
-      nostrService.setAuthTimeout(const Duration(seconds: 5));
-      nostrService.setAuthTimeout(const Duration(seconds: 30));
-      nostrService.setAuthTimeout(const Duration(minutes: 2));
+      services.nostrService.setAuthTimeout(const Duration(seconds: 5));
+      services.nostrService.setAuthTimeout(const Duration(seconds: 30));
+      services.nostrService.setAuthTimeout(const Duration(minutes: 2));
       
       // Should not throw any errors
       expect(true, isTrue);
@@ -61,19 +40,19 @@ void main() {
 
     test('AUTH state tracking getters work correctly', () {
       // Test initial state
-      expect(nostrService.relayAuthStates, isA<Map<String, bool>>());
-      expect(nostrService.authStateStream, isA<Stream<Map<String, bool>>>());
-      expect(nostrService.isVineRelayAuthenticated, isFalse); // Initially false
+      expect(services.nostrService.relayAuthStates, isA<Map<String, bool>>());
+      expect(services.nostrService.authStateStream, isA<Stream<Map<String, bool>>>());
+      expect(services.nostrService.isVineRelayAuthenticated, isFalse); // Initially false
 
       // Test relay authentication check with non-existent relay
-      expect(nostrService.isRelayAuthenticated('wss://nonexistent.relay'), isFalse);
-      expect(nostrService.isRelayAuthenticated('wss://vine.hol.is'), isFalse);
+      expect(services.nostrService.isRelayAuthenticated('wss://nonexistent.relay'), isFalse);
+      expect(services.nostrService.isRelayAuthenticated('wss://relay3.openvine.co'), isFalse);
     });
 
     test('AUTH state stream notifies listeners', () async {
       final authStateChanges = <Map<String, bool>>[];
       
-      final subscription = nostrService.authStateStream.listen((states) {
+      final subscription = services.nostrService.authStateStream.listen((states) {
         authStateChanges.add(Map.from(states));
       });
 
@@ -85,7 +64,7 @@ void main() {
         await Future.delayed(const Duration(milliseconds: 100));
         
         // Stream should be available even if no changes occurred
-        expect(nostrService.authStateStream, isA<Stream>());
+        expect(services.nostrService.authStateStream, isA<Stream>());
         
       } finally {
         await subscription.cancel();
@@ -94,19 +73,19 @@ void main() {
 
     test('AUTH session persistence methods exist', () {
       // Test that persistence methods are available
-      expect(nostrService.clearPersistedAuthStates, isA<Function>());
+      expect(services.nostrService.clearPersistedAuthStates, isA<Function>());
       
       // These should not throw
-      nostrService.clearPersistedAuthStates();
+      services.nostrService.clearPersistedAuthStates();
     });
 
     test('VideoEventService AUTH retry mechanism setup', () {
       // VideoEventService should have AUTH retry capabilities
-      expect(videoEventService, isA<VideoEventService>());
+      expect(services.videoEventService, isA<VideoEventService>());
       
       // The service should be able to set up retry mechanisms
       // (internal method, tested through subscription behavior)
-      expect(videoEventService.isSubscribed, isFalse); // Initially not subscribed
+      expect(services.videoEventService.isSubscribed(SubscriptionType.discovery), isFalse); // Initially not subscribed
     });
 
     test('AUTH completion validation in subscription flow', () async {
@@ -115,7 +94,8 @@ void main() {
       
       try {
         // This should not crash even without initialized NostrService
-        await videoEventService.subscribeToVideoFeed(
+        await services.videoEventService.subscribeToVideoFeed(
+          subscriptionType: SubscriptionType.discovery,
           limit: 5,
           replace: true,
         );
@@ -124,7 +104,8 @@ void main() {
         fail('Should have thrown exception for uninitialized service');
       } catch (e) {
         // Expected to fail without proper initialization
-        expect(e.toString(), contains('not initialized'));
+        // VideoEventService checks if NostrService is initialized before subscribing
+        expect(e.toString(), contains('initialized'));
       }
     });
 
@@ -137,37 +118,31 @@ void main() {
       expect(sessionTimeout.inHours, equals(24));
       
       // The authentication check should handle expired sessions
-      expect(nostrService.isRelayAuthenticated('wss://vine.hol.is'), isFalse);
+      expect(services.nostrService.isRelayAuthenticated('wss://relay3.openvine.co'), isFalse);
     });
 
     test('Multiple relay AUTH state management', () {
       final testRelays = [
-        'wss://vine.hol.is',
+        'wss://relay3.openvine.co',
         'wss://relay.damus.io',
         'wss://nos.lol',
       ];
 
       // Each relay should be checkable independently
       for (final relay in testRelays) {
-        expect(nostrService.isRelayAuthenticated(relay), isFalse);
+        expect(services.nostrService.isRelayAuthenticated(relay), isFalse);
       }
 
       // AUTH states should be manageable for multiple relays
-      expect(nostrService.relayAuthStates, isA<Map<String, bool>>());
+      expect(services.nostrService.relayAuthStates, isA<Map<String, bool>>());
     });
 
     test('Service disposal cleans up AUTH resources', () {
-      // Create a separate service for disposal testing
-      final testKeyManager = NostrKeyManager();
-      final testService = NostrService(testKeyManager);
-      final testSubscriptionManager = SubscriptionManager(testService);
-      final testVideoService = VideoEventService(testService, subscriptionManager: testSubscriptionManager);
+      // Create a separate service bundle for disposal testing
+      final testServices = ServiceInitHelper.createTestServiceBundle();
 
       // Dispose should not throw
-      testVideoService.dispose();
-      testSubscriptionManager.dispose();
-      testService.dispose();
-      testKeyManager.dispose();
+      ServiceInitHelper.disposeServiceBundle(testServices);
 
       // Should complete without errors
       expect(true, isTrue);

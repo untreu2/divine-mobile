@@ -1,5 +1,5 @@
 // ABOUTME: Real relay test for SubscriptionManager - NO MOCKING to prove it's broken
-// ABOUTME: This test hits vine.hol.is relay directly to show SubscriptionManager doesn't work
+// ABOUTME: This test hits relay3.openvine.co relay directly to show SubscriptionManager doesn't work
 
 import 'dart:async';
 import 'package:flutter/services.dart';
@@ -74,11 +74,23 @@ void main() {
       nostrService = NostrService(keyManager);
       await nostrService.initialize();
       
-      // Add vine.hol.is relay
-      await nostrService.addRelay('wss://vine.hol.is');
+      // Add relay3.openvine.co relay
+      await nostrService.addRelay('wss://relay3.openvine.co');
       
-      // Wait for connection
-      await Future.delayed(Duration(seconds: 2));
+      // Wait for connection using proper async pattern
+      final connectionCompleter = Completer<void>();
+      Timer.periodic(Duration(milliseconds: 100), (timer) {
+        if (nostrService.connectedRelays.isNotEmpty) {
+          timer.cancel();
+          connectionCompleter.complete();
+        }
+      });
+      
+      try {
+        await connectionCompleter.future.timeout(Duration(seconds: 10));
+      } catch (e) {
+        Log.warning('Connection timeout, proceeding anyway: $e');
+      }
       
       subscriptionManager = SubscriptionManager(nostrService);
     });
@@ -88,7 +100,7 @@ void main() {
       nostrService.dispose();
     });
 
-    test('SubscriptionManager should receive kind 22 events from vine.hol.is - REAL RELAY', () async {
+    test('SubscriptionManager should receive kind 22 events from relay3.openvine.co - REAL RELAY', () async {
       Log.debug('🔍 TEST: Starting SubscriptionManager real relay test...', name: 'SubscriptionManagerRealRelayTest', category: LogCategory.system);
       
       final receivedEvents = <Event>[];
@@ -192,13 +204,13 @@ void main() {
       
       // The test assertion
       expect(receivedEvents.length, greaterThan(0), 
-        reason: 'SubscriptionManager should receive events from vine.hol.is relay like direct subscription does');
+        reason: 'SubscriptionManager should receive events from relay3.openvine.co relay like direct subscription does');
       
       // Clean up
       await subscriptionManager.cancelSubscription(subscriptionId);
     });
 
-    test('Direct comparison: Both should get same events from vine.hol.is', () async {
+    test('Direct comparison: Both should get same events from relay3.openvine.co', () async {
       Log.debug('🔍 TEST: Direct comparison test...', name: 'SubscriptionManagerRealRelayTest', category: LogCategory.system);
       
       // Test SubscriptionManager

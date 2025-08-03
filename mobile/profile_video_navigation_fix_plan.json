@@ -1,0 +1,94 @@
+{
+  "title": "Profile Video Navigation Fix Plan - Embedded Feed Approach",
+  "problem": "When clicking videos from user profiles, users get stuck in fullscreen with no navigation controls",
+  
+  "current_behavior": {
+    "profile_screen": "Shows grid of user videos with thumbnails",
+    "video_tap_action": "Calls _openVine() or _openLikedVideo()",
+    "navigation_method": "Navigator.push() to VideoFeedScreen",
+    "result": "Fullscreen video with no way back to profile"
+  },
+  
+  "root_cause": {
+    "issue": "Profile screen navigates away completely instead of keeping profile context",
+    "technical_detail": "Using Navigator.push() loses all profile UI and navigation"
+  },
+  
+  "recommended_solution": {
+    "approach": "Embedded Video Feed with Slide-Up Animation",
+    "description": "Keep user on profile screen but slide video feed up over the grid area",
+    
+    "ui_layout": {
+      "top": "Profile header (avatar, username, stats) - ALWAYS VISIBLE",
+      "middle": "Dynamic area - grid view OR video feed based on state",
+      "bottom": "Navigation footer - ALWAYS VISIBLE"
+    },
+    
+    "user_interaction": {
+      "tap_video": "Video feed slides up from bottom, replacing grid area",
+      "tap_header": "Return to grid view (slide feed down)",
+      "video_swiping": "Navigate through only this user's videos",
+      "back_navigation": "Natural - never left the profile screen"
+    },
+    
+    "implementation_steps": [
+      {
+        "step": 1,
+        "action": "Add video feed state to ProfileScreen",
+        "details": "Add boolean _isInVideoMode and selected video state"
+      },
+      {
+        "step": 2,
+        "action": "Create conditional rendering in profile body",
+        "details": "Show grid OR video feed based on _isInVideoMode"
+      },
+      {
+        "step": 3,
+        "action": "Replace _openVine() navigation logic", 
+        "details": "Instead of Navigator.push(), setState to show video feed"
+      },
+      {
+        "step": 4,
+        "action": "Add slide animation between grid and feed",
+        "details": "Use AnimatedSwitcher or PageView for smooth transition"
+      },
+      {
+        "step": 5,
+        "action": "Make profile header interactive",
+        "details": "Tap header to return to grid view when in video mode"
+      },
+      {
+        "step": 6,
+        "action": "Filter video feed to profile videos only",
+        "details": "Pass filtered video list to embedded feed component"
+      }
+    ]
+  },
+  
+  "advantages": [
+    "No navigation complexity - stay on same screen",
+    "Profile context always visible",
+    "Natural back navigation (no special handling needed)",
+    "Reuses existing video feed logic",
+    "Simpler implementation than external navigation",
+    "Better UX - user never loses profile context"
+  ],
+  
+  "files_to_modify": [
+    "lib/screens/profile_screen.dart"
+  ],
+  
+  "components_needed": [
+    "Embedded video feed widget (reuse existing VideoFeedScreen logic)",
+    "Slide animation between grid and feed views",
+    "Interactive profile header for returning to grid"
+  ],
+  
+  "testing_requirements": [
+    "Video tap shows feed with slide animation",
+    "Profile header tap returns to grid",
+    "Video swiping works within profile videos only", 
+    "Profile header and footer always visible",
+    "No navigation away from profile screen"
+  ]
+}

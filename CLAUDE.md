@@ -18,7 +18,7 @@ OpenVine is a decentralized vine-like video sharing application powered by Nostr
 OpenVine requires specific Nostr event types for proper functionality:
 - **Kind 0**: User profiles (NIP-01) - Required for user display names and avatars
 - **Kind 6**: Reposts (NIP-18) - Required for video repost/reshare functionality  
-- **Kind 22**: Short videos (NIP-71) - Primary video content
+- **Kind 32222**: Addressable short looping videos (NIP-32222) - Primary video content with editable metadata
 - **Kind 7**: Reactions (NIP-25) - Like/heart interactions
 - **Kind 3**: Contact lists (NIP-02) - Follow/following relationships
 
@@ -59,13 +59,12 @@ npm test                           # Run backend tests
 **Backend API Reference**: See `docs/BACKEND_API_REFERENCE.md` for complete documentation of all backend endpoints.
 
 **Domain Architecture**:
-- `api.openvine.co` - Main backend (uploads, media, video management, NIP-05, moderation)
-- `analytics.openvine.co` - Analytics worker (view tracking, trending algorithms)
+- `api.openvine.co` - Main backend (uploads, media, video management, NIP-05, moderation, analytics)
 
 **Key Endpoints**:
 - File uploads: `POST api.openvine.co/api/upload`
-- Video analytics: `POST analytics.openvine.co/analytics/view`
-- Trending content: `GET analytics.openvine.co/analytics/trending/vines`
+- Video analytics: `POST api.openvine.co/analytics/view`
+- Trending content: `GET api.openvine.co/analytics/trending/vines`
 
 ## Native Build Scripts
 **IMPORTANT**: Use these scripts instead of direct Flutter builds for iOS/macOS to prevent CocoaPods sync errors.

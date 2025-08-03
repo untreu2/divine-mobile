@@ -108,11 +108,11 @@ void main() {
     // Tracking state changes via periodic checks instead of listeners
     void logServiceState(String context) {
       Log.info('📊 VideoEventService state ($context):', name: 'DebugTest');
-      Log.info('  - Event count: ${videoEventService.eventCount}',
+      Log.info('  - Event count: ${videoEventService.getEventCount(SubscriptionType.discovery)}',
           name: 'DebugTest');
-      Log.info('  - Has events: ${videoEventService.hasEvents}',
+      Log.info('  - Has events: ${videoEventService.hasEvents(SubscriptionType.discovery)}',
           name: 'DebugTest');
-      Log.info('  - Is subscribed: ${videoEventService.isSubscribed}',
+      Log.info('  - Is subscribed: ${videoEventService.isSubscribed(SubscriptionType.discovery)}',
           name: 'DebugTest');
     }
 
@@ -122,7 +122,10 @@ void main() {
     // Subscribe to video feed
     Log.info('🚀 Calling subscribeToVideoFeed...', name: 'DebugTest');
     try {
-      await videoEventService.subscribeToVideoFeed(limit: 10);
+      await videoEventService.subscribeToVideoFeed(
+        subscriptionType: SubscriptionType.discovery,
+        limit: 10,
+      );
       Log.info('✅ subscribeToVideoFeed completed successfully',
           name: 'DebugTest');
     } catch (e) {
@@ -142,9 +145,9 @@ void main() {
     Log.info('  - Note: Change notifications no longer available after ChangeNotifier removal',
         name: 'DebugTest');
 
-    if (videoEventService.hasEvents) {
+    if (videoEventService.hasEvents(SubscriptionType.discovery)) {
       Log.info('📝 Events received:', name: 'DebugTest');
-      for (final event in videoEventService.videoEvents) {
+      for (final event in videoEventService.discoveryVideos) {
         Log.info(
             '  - Event: ${event.id.substring(0, 8)}... title="${event.title}"',
             name: 'DebugTest');

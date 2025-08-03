@@ -7,6 +7,7 @@ import 'package:openvine/models/video_event.dart';
 import 'package:openvine/providers/video_manager_providers.dart';
 import '../../builders/test_video_event_builder.dart';
 import '../../helpers/mock_video_manager_notifier.dart';
+import '../../helpers/service_init_helper.dart';
 import 'package:openvine/utils/unified_logger.dart';
 
 void main() {
@@ -14,12 +15,12 @@ void main() {
     late ProviderContainer container;
 
     setUpAll(() {
-      TestWidgetsFlutterBinding.ensureInitialized();
+      ServiceInitHelper.initializeTestEnvironment(); // This calls TestWidgetsFlutterBinding.ensureInitialized()
     });
 
     setUp(() {
-      container = ProviderContainer(
-        overrides: [
+      container = ServiceInitHelper.createTestContainer(
+        additionalOverrides: [
           videoManagerProvider.overrideWith(() => MockVideoManager()),
         ],
       );

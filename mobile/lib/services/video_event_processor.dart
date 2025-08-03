@@ -25,7 +25,7 @@ class VideoEventProcessor {
   /// Process a single event
   void processEvent(Event event) {
     try {
-      if (event.kind == 22) {
+      if (event.kind == 32222) {
         final videoEvent = VideoEvent.fromNostrEvent(event);
         _videoEventController.add(videoEvent);
         Log.debug(

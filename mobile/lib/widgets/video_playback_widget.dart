@@ -152,7 +152,7 @@ class _VideoPlaybackWidgetState extends State<VideoPlaybackWidget>
   void dispose() {
     _playPauseIconController.dispose();
     _playbackController.dispose();
-    
+    super.dispose();
   }
 
   Future<void> _initializeVideo() async {

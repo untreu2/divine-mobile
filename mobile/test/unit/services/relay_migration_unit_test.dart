@@ -12,7 +12,7 @@ void main() {
       SharedPreferences.setMockInitialValues({});
     });
 
-    test('should have migrated from vine.hol.is to relay2.openvine.co', () {
+    test('should have migrated from relay3.openvine.co to relay2.openvine.co', () {
       // Test configuration migration
       final defaultRelays = NostrService.defaultRelays;
       
@@ -21,7 +21,7 @@ void main() {
       expect(defaultRelays.first, equals('wss://relay2.openvine.co'));
       
       // Should NOT have old relays
-      expect(defaultRelays, isNot(contains('wss://vine.hol.is')));
+      expect(defaultRelays, isNot(contains('wss://relay3.openvine.co')));
       expect(defaultRelays, isNot(contains('wss://relay1.openvine.co')));
     });
 

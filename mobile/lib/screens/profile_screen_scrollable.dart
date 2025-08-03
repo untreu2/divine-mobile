@@ -1,6 +1,8 @@
 // ABOUTME: Instagram-style scrollable profile screen implementation
 // ABOUTME: Uses CustomScrollView with slivers for smooth scrolling experience
 
+import 'dart:async';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -16,7 +18,6 @@ import 'package:openvine/services/user_profile_service.dart';
 import 'package:openvine/theme/vine_theme.dart';
 import 'package:openvine/utils/nostr_encoding.dart';
 import 'package:openvine/utils/unified_logger.dart';
-import 'package:openvine/widgets/video_fullscreen_overlay.dart';
 
 class ProfileScreenScrollable extends ConsumerStatefulWidget {
   const ProfileScreenScrollable({super.key, this.profilePubkey});
@@ -32,7 +33,6 @@ class _ProfileScreenScrollableState extends ConsumerState<ProfileScreenScrollabl
   late TabController _tabController;
   bool _isOwnProfile = true;
   String? _targetPubkey;
-  String? _playingVideoId;
   final ScrollController _scrollController = ScrollController();
 
   @override
@@ -45,18 +45,31 @@ class _ProfileScreenScrollableState extends ConsumerState<ProfileScreenScrollabl
     });
   }
 
-  void _initializeProfile() {
+  Future<void> _initializeProfile() async {
     final authService = ref.read(authServiceProvider);
-    final currentUserPubkey = authService.currentPublicKeyHex;
-
-    if (!authService.isAuthenticated || currentUserPubkey == null) {
-      Log.warning('AuthService not ready, deferring profile initialization',
+    
+    // Wait for AuthService to be properly initialized
+    if (!authService.isAuthenticated) {
+      Log.warning('AuthService not ready, waiting for authentication',
           name: 'ProfileScreen', category: LogCategory.ui);
-      Future.delayed(const Duration(milliseconds: 100), _initializeProfile);
-      return;
+      
+      // Use proper async pattern instead of Future.delayed
+      final completer = Completer<void>();
+      
+      void checkAuth() {
+        if (authService.isAuthenticated && authService.currentPublicKeyHex != null) {
+          completer.complete();
+        } else {
+          // Check again on next frame
+          WidgetsBinding.instance.addPostFrameCallback((_) => checkAuth());
+        }
+      }
+      
+      checkAuth();
+      await completer.future;
     }
-
-    _playingVideoId = null;
+    
+    final currentUserPubkey = authService.currentPublicKeyHex;
 
     setState(() {
       _targetPubkey = widget.profilePubkey ?? currentUserPubkey;
@@ -110,7 +123,18 @@ class _ProfileScreenScrollableState extends ConsumerState<ProfileScreenScrollabl
   void _loadUserProfile() {
     if (_targetPubkey == null) return;
     final userProfileService = ref.read(userProfileServiceProvider);
-    userProfileService.fetchProfile(_targetPubkey!);
+    
+    // Only fetch if not already cached - show cached data immediately
+    if (!userProfileService.hasProfile(_targetPubkey!)) {
+      Log.debug('📥 Fetching uncached profile: ${_targetPubkey!.substring(0, 8)}',
+          name: 'ProfileScreenScrollable', category: LogCategory.ui);
+      userProfileService.fetchProfile(_targetPubkey!);
+    } else {
+      Log.debug('📋 Using cached profile: ${_targetPubkey!.substring(0, 8)}',
+          name: 'ProfileScreenScrollable', category: LogCategory.ui);
+      // Still call fetchProfile to trigger background refresh if needed
+      userProfileService.fetchProfile(_targetPubkey!);
+    }
   }
 
   @override
@@ -250,9 +274,6 @@ class _ProfileScreenScrollableState extends ConsumerState<ProfileScreenScrollabl
                     ),
                   ),
                 ),
-
-                // Video overlay for full-screen playback
-                if (_playingVideoId != null) _buildVideoOverlay(),
               ],
             ),
           );
@@ -638,9 +659,7 @@ class _ProfileScreenScrollableState extends ConsumerState<ProfileScreenScrollabl
                 final videoEvent = profileVideosAsync.value?[index];
                 if (videoEvent == null) return Container();
 
-                return GestureDetector(
-                  onTap: () => _openVine(videoEvent),
-                  child: DecoratedBox(
+                return DecoratedBox(
                     decoration: BoxDecoration(
                       color: VineTheme.cardBackground,
                       borderRadius: BorderRadius.circular(4),
@@ -750,8 +769,7 @@ class _ProfileScreenScrollableState extends ConsumerState<ProfileScreenScrollabl
                           ),
                       ],
                     ),
-                  ),
-                );
+                  );
               },
               childCount: profileVideosAsync.value?.length ?? 0,
             ),
@@ -1076,47 +1094,6 @@ class _ProfileScreenScrollableState extends ConsumerState<ProfileScreenScrollabl
     );
   }
 
-  void _openVine(VideoEvent videoEvent) {
-    setState(() {
-      _playingVideoId = videoEvent.id;
-    });
-  }
-
-  Widget _buildVideoOverlay() {
-    final authService = ref.read(authServiceProvider);
-    final targetPubkey = _targetPubkey ?? authService.currentPublicKeyHex ?? '';
-    final profileVideosAsync = ref.watch(profileVideosProvider(targetPubkey));
-    var video = (profileVideosAsync.value ?? []).firstWhere(
-      (v) => v.id == _playingVideoId,
-      orElse: () => VideoEvent(
-        id: _playingVideoId!,
-        pubkey: _targetPubkey ?? '',
-        createdAt: DateTime.now().millisecondsSinceEpoch ~/ 1000,
-        content: 'Video not found',
-        timestamp: DateTime.now(),
-      ),
-    );
-
-          if (video.content == 'Video not found') {
-            final videoEventService =
-                ref.read(videoEventServiceProvider);
-            final allVideos = videoEventService.videoEvents;
-            final foundVideo = allVideos.firstWhere(
-              (v) => v.id == _playingVideoId,
-              orElse: () => video,
-            );
-            video = foundVideo;
-          }
-
-          return VideoFullscreenOverlay(
-            video: video,
-            onClose: () {
-              setState(() {
-                _playingVideoId = null;
-              });
-            },
-          );
-  }
 
   Future<void> _copyNpubToClipboard() async {
     if (_targetPubkey == null) return;

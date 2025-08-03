@@ -541,6 +541,9 @@ mixin _$VideoManagerState {
   /// Current video index for preloading context
   int get currentIndex => throw _privateConstructorUsedError;
 
+  /// Current active tab index (for tab visibility coordination)
+  int get currentTab => throw _privateConstructorUsedError;
+
   /// Configuration for the video manager
   VideoManagerConfig? get config => throw _privateConstructorUsedError;
 
@@ -584,6 +587,7 @@ abstract class $VideoManagerStateCopyWith<$Res> {
   $Res call(
       {Map<String, VideoControllerState> controllers,
       int currentIndex,
+      int currentTab,
       VideoManagerConfig? config,
       VideoMemoryStats memoryStats,
       bool isMemoryPressure,
@@ -614,6 +618,7 @@ class _$VideoManagerStateCopyWithImpl<$Res, $Val extends VideoManagerState>
   $Res call({
     Object? controllers = null,
     Object? currentIndex = null,
+    Object? currentTab = null,
     Object? config = freezed,
     Object? memoryStats = null,
     Object? isMemoryPressure = null,
@@ -632,6 +637,10 @@ class _$VideoManagerStateCopyWithImpl<$Res, $Val extends VideoManagerState>
       currentIndex: null == currentIndex
           ? _value.currentIndex
           : currentIndex // ignore: cast_nullable_to_non_nullable
+              as int,
+      currentTab: null == currentTab
+          ? _value.currentTab
+          : currentTab // ignore: cast_nullable_to_non_nullable
               as int,
       config: freezed == config
           ? _value.config
@@ -694,6 +703,7 @@ abstract class _$$VideoManagerStateImplCopyWith<$Res>
   $Res call(
       {Map<String, VideoControllerState> controllers,
       int currentIndex,
+      int currentTab,
       VideoManagerConfig? config,
       VideoMemoryStats memoryStats,
       bool isMemoryPressure,
@@ -723,6 +733,7 @@ class __$$VideoManagerStateImplCopyWithImpl<$Res>
   $Res call({
     Object? controllers = null,
     Object? currentIndex = null,
+    Object? currentTab = null,
     Object? config = freezed,
     Object? memoryStats = null,
     Object? isMemoryPressure = null,
@@ -741,6 +752,10 @@ class __$$VideoManagerStateImplCopyWithImpl<$Res>
       currentIndex: null == currentIndex
           ? _value.currentIndex
           : currentIndex // ignore: cast_nullable_to_non_nullable
+              as int,
+      currentTab: null == currentTab
+          ? _value.currentTab
+          : currentTab // ignore: cast_nullable_to_non_nullable
               as int,
       config: freezed == config
           ? _value.config
@@ -788,6 +803,7 @@ class _$VideoManagerStateImpl extends _VideoManagerState {
   const _$VideoManagerStateImpl(
       {final Map<String, VideoControllerState> controllers = const {},
       this.currentIndex = 0,
+      this.currentTab = 0,
       this.config,
       this.memoryStats = const VideoMemoryStats(),
       this.isMemoryPressure = false,
@@ -816,6 +832,11 @@ class _$VideoManagerStateImpl extends _VideoManagerState {
   @override
   @JsonKey()
   final int currentIndex;
+
+  /// Current active tab index (for tab visibility coordination)
+  @override
+  @JsonKey()
+  final int currentTab;
 
   /// Configuration for the video manager
   @override
@@ -860,7 +881,7 @@ class _$VideoManagerStateImpl extends _VideoManagerState {
 
   @override
   String toString() {
-    return 'VideoManagerState(controllers: $controllers, currentIndex: $currentIndex, config: $config, memoryStats: $memoryStats, isMemoryPressure: $isMemoryPressure, currentlyPlayingId: $currentlyPlayingId, lastCleanup: $lastCleanup, isDisposed: $isDisposed, error: $error, successfulPreloads: $successfulPreloads, failedLoads: $failedLoads)';
+    return 'VideoManagerState(controllers: $controllers, currentIndex: $currentIndex, currentTab: $currentTab, config: $config, memoryStats: $memoryStats, isMemoryPressure: $isMemoryPressure, currentlyPlayingId: $currentlyPlayingId, lastCleanup: $lastCleanup, isDisposed: $isDisposed, error: $error, successfulPreloads: $successfulPreloads, failedLoads: $failedLoads)';
   }
 
   @override
@@ -872,6 +893,8 @@ class _$VideoManagerStateImpl extends _VideoManagerState {
                 .equals(other._controllers, _controllers) &&
             (identical(other.currentIndex, currentIndex) ||
                 other.currentIndex == currentIndex) &&
+            (identical(other.currentTab, currentTab) ||
+                other.currentTab == currentTab) &&
             (identical(other.config, config) || other.config == config) &&
             (identical(other.memoryStats, memoryStats) ||
                 other.memoryStats == memoryStats) &&
@@ -895,6 +918,7 @@ class _$VideoManagerStateImpl extends _VideoManagerState {
       runtimeType,
       const DeepCollectionEquality().hash(_controllers),
       currentIndex,
+      currentTab,
       config,
       memoryStats,
       isMemoryPressure,
@@ -919,6 +943,7 @@ abstract class _VideoManagerState extends VideoManagerState {
   const factory _VideoManagerState(
       {final Map<String, VideoControllerState> controllers,
       final int currentIndex,
+      final int currentTab,
       final VideoManagerConfig? config,
       final VideoMemoryStats memoryStats,
       final bool isMemoryPressure,
@@ -937,6 +962,10 @@ abstract class _VideoManagerState extends VideoManagerState {
   /// Current video index for preloading context
   @override
   int get currentIndex;
+
+  /// Current active tab index (for tab visibility coordination)
+  @override
+  int get currentTab;
 
   /// Configuration for the video manager
   @override

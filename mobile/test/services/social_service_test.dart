@@ -21,7 +21,7 @@ void main() {
     setUp(() {
       mockNostrService = MockINostrService();
       mockAuthService = MockAuthService();
-      mockSubscriptionManager = MockSubscriptionManager(TestNostrService());
+      mockSubscriptionManager = MockSubscriptionManager();
 
       // Set up default stubs for AuthService
       when(mockAuthService.isAuthenticated).thenReturn(true);
@@ -1036,7 +1036,7 @@ void main() {
               ['k', '3'],
               ['k', '6'],
               ['k', '7'],
-              ['k', '22'],
+              ['k', '32222'],
             ],
           ),
         ).thenAnswer((_) async => mockDeletionEvent);
@@ -1067,7 +1067,7 @@ void main() {
               ['k', '3'],
               ['k', '6'],
               ['k', '7'],
-              ['k', '22'],
+              ['k', '32222'],
             ],
           ),
         ).called(1);
@@ -1122,7 +1122,7 @@ void main() {
               ['k', '3'],
               ['k', '6'],
               ['k', '7'],
-              ['k', '22'],
+              ['k', '32222'],
             ],
           ),
         ).thenAnswer((_) async => null);
@@ -1182,7 +1182,7 @@ void main() {
               ['k', '3'],
               ['k', '6'],
               ['k', '7'],
-              ['k', '22'],
+              ['k', '32222'],
             ],
           ),
         ).thenAnswer((_) async => mockDeletionEvent);
@@ -1253,7 +1253,7 @@ void main() {
               ['k', '3'],
               ['k', '6'],
               ['k', '7'],
-              ['k', '22'],
+              ['k', '32222'],
             ],
           ),
         ).thenAnswer((_) async => mockDeletionEvent);
@@ -1283,7 +1283,7 @@ void main() {
               ['k', '3'],
               ['k', '6'],
               ['k', '7'],
-              ['k', '22'],
+              ['k', '32222'],
             ],
           ),
         ).called(1);

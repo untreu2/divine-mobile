@@ -413,7 +413,7 @@ class NostrViewer {
                 trackingData.creatorPubkey = this.videoEvent.pubkey;
             }
             
-            const response = await fetch('https://analytics.openvine.co/analytics/view', {
+            const response = await fetch('https://api.openvine.co/analytics/view', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

@@ -48,10 +48,10 @@ void main() {
       Log.debug('🔍 Testing VideoEventService uses SubscriptionManager...', name: 'VideoEventServiceManagedTest', category: LogCategory.system);
       
       // Subscribe to video feed - this should use SubscriptionManager now
-      await videoEventService.subscribeToVideoFeed(limit: 3);
+      await videoEventService.subscribeToVideoFeed(subscriptionType: SubscriptionType.discovery, limit: 3);
       
       // Verify subscription was created
-      expect(videoEventService.isSubscribed, true);
+      expect(videoEventService.isSubscribed(SubscriptionType.discovery), true);
       
       // Send a test event
       final testEvent = Event(
@@ -65,8 +65,8 @@ void main() {
       await Future.delayed(Duration(milliseconds: 100));
       
       // VideoEventService should have received the event through SubscriptionManager
-      expect(videoEventService.hasEvents, true);
-      expect(videoEventService.eventCount, greaterThan(0));
+      expect(videoEventService.hasEvents(SubscriptionType.discovery), true);
+      expect(videoEventService.getEventCount(SubscriptionType.discovery), greaterThan(0));
       
       Log.info('✅ VideoEventService successfully uses SubscriptionManager', name: 'VideoEventServiceManagedTest', category: LogCategory.system);
     });

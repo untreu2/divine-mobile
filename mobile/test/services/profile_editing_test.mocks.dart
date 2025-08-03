@@ -253,58 +253,6 @@ class MockINostrService extends _i1.Mock implements _i3.INostrService {
       ) as _i5.Future<_i3.NostrBroadcastResult>);
 
   @override
-  _i5.Future<_i3.NostrBroadcastResult> publishVideoEvent({
-    required String? videoUrl,
-    required String? content,
-    String? title,
-    String? thumbnailUrl,
-    int? duration,
-    String? dimensions,
-    String? mimeType,
-    String? sha256,
-    int? fileSize,
-    List<String>? hashtags = const [],
-  }) =>
-      (super.noSuchMethod(
-        Invocation.method(
-          #publishVideoEvent,
-          [],
-          {
-            #videoUrl: videoUrl,
-            #content: content,
-            #title: title,
-            #thumbnailUrl: thumbnailUrl,
-            #duration: duration,
-            #dimensions: dimensions,
-            #mimeType: mimeType,
-            #sha256: sha256,
-            #fileSize: fileSize,
-            #hashtags: hashtags,
-          },
-        ),
-        returnValue: _i5.Future<_i3.NostrBroadcastResult>.value(
-            _FakeNostrBroadcastResult_1(
-          this,
-          Invocation.method(
-            #publishVideoEvent,
-            [],
-            {
-              #videoUrl: videoUrl,
-              #content: content,
-              #title: title,
-              #thumbnailUrl: thumbnailUrl,
-              #duration: duration,
-              #dimensions: dimensions,
-              #mimeType: mimeType,
-              #sha256: sha256,
-              #fileSize: fileSize,
-              #hashtags: hashtags,
-            },
-          ),
-        )),
-      ) as _i5.Future<_i3.NostrBroadcastResult>);
-
-  @override
   _i5.Future<bool> addRelay(String? relayUrl) => (super.noSuchMethod(
         Invocation.method(
           #addRelay,
@@ -661,6 +609,17 @@ class MockUserProfileService extends _i1.Mock
         ),
         returnValue: _i5.Future<_i11.UserProfile?>.value(),
       ) as _i5.Future<_i11.UserProfile?>);
+
+  @override
+  _i5.Future<void> prefetchProfilesImmediately(List<String>? pubkeys) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #prefetchProfilesImmediately,
+          [pubkeys],
+        ),
+        returnValue: _i5.Future<void>.value(),
+        returnValueForMissingStub: _i5.Future<void>.value(),
+      ) as _i5.Future<void>);
 
   @override
   _i5.Future<void> fetchMultipleProfiles(

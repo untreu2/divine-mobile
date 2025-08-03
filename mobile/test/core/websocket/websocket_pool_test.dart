@@ -37,7 +37,7 @@ void main() {
       await pool.connectAll();
 
       // Wait for connections to propagate
-      await Future.delayed(const Duration(milliseconds: 100));
+      await pumpEventQueue();
 
       expect(pool.connectionCount, equals(3));
       expect(connectedRelays.length, equals(3));
@@ -60,7 +60,7 @@ void main() {
       await pool.connectAll();
 
       // Wait for connections to propagate
-      await Future.delayed(const Duration(milliseconds: 100));
+      await pumpEventQueue();
 
       // Should connect in order of priority
       expect(connectionOrder, equals(relayUrls));
@@ -91,14 +91,14 @@ void main() {
       await pool.connectAll();
 
       // Wait for connections to propagate
-      await Future.delayed(const Duration(milliseconds: 100));
+      await pumpEventQueue();
 
       final receivedMessages = <RelayMessage>[];
       final subscription = pool.messageStream.listen(receivedMessages.add);
 
       pool.broadcast('test message');
 
-      await Future.delayed(const Duration(milliseconds: 10));
+      await pumpEventQueue();
 
       // Should receive message from each connected relay
       expect(receivedMessages.length, equals(3));
@@ -113,14 +113,14 @@ void main() {
       await pool.connectAll();
 
       // Wait for connections to propagate
-      await Future.delayed(const Duration(milliseconds: 100));
+      await pumpEventQueue();
 
       final receivedMessages = <RelayMessage>[];
       final subscription = pool.messageStream.listen(receivedMessages.add);
 
       pool.sendToRelay('wss://relay1.example.com', 'targeted message');
 
-      await Future.delayed(const Duration(milliseconds: 10));
+      await pumpEventQueue();
 
       expect(receivedMessages.length, equals(1));
       expect(
@@ -155,7 +155,7 @@ void main() {
       await pool.connectAll();
 
       // Wait for connections to propagate
-      await Future.delayed(const Duration(milliseconds: 100));
+      await pumpEventQueue();
 
       final disconnectedRelays = <String>[];
       final failoverEvents = <FailoverEvent>[];
@@ -169,7 +169,7 @@ void main() {
       // Simulate relay1 disconnecting
       pool.simulateDisconnection('wss://relay1.example.com');
 
-      await Future.delayed(const Duration(milliseconds: 10));
+      await pumpEventQueue();
 
       expect(disconnectedRelays, contains('wss://relay1.example.com'));
       expect(pool.connectionCount, equals(2));
@@ -183,7 +183,7 @@ void main() {
       await pool.connectAll();
 
       // Wait for connections to propagate
-      await Future.delayed(const Duration(milliseconds: 100));
+      await pumpEventQueue();
 
       final relay1 = pool.getRelay('wss://relay1.example.com');
       expect(relay1, isNotNull);
@@ -216,7 +216,7 @@ void main() {
       await pool.connectAll();
 
       // Wait for connections to propagate
-      await Future.delayed(const Duration(milliseconds: 100));
+      await pumpEventQueue();
 
       expect(pool.connectionCount, equals(3));
       expect(pool.pendingRelays.length, equals(2));
@@ -228,13 +228,13 @@ void main() {
       await pool.connectAll();
 
       // Wait for connections to propagate
-      await Future.delayed(const Duration(milliseconds: 100));
+      await pumpEventQueue();
 
       // Simulate relay failure by putting it in error state
       final relay = pool.getRelay('wss://relay1.example.com');
       relay!.manager.simulateError('Connection failed');
 
-      await Future.delayed(const Duration(milliseconds: 10));
+      await pumpEventQueue();
 
       expect(pool.failedRelays.length, equals(1));
       expect(pool.connectionCount, equals(2));
@@ -243,7 +243,7 @@ void main() {
       await pool.reconnectFailed();
 
       // Wait for reconnection
-      await Future.delayed(const Duration(milliseconds: 100));
+      await pumpEventQueue();
 
       expect(pool.connectionCount, equals(3));
       expect(pool.connectedRelays.map((r) => r.url),
@@ -259,7 +259,7 @@ void main() {
 
       // Connect will only succeed for relay1
       await pool.connectAll();
-      await Future.delayed(const Duration(milliseconds: 100));
+      await pumpEventQueue();
 
       expect(pool.connectionCount, equals(1));
       expect(pool.overallState,
@@ -267,16 +267,14 @@ void main() {
 
       // Connect second relay manually
       pool.simulateConnection('wss://relay2.example.com');
-      await Future.delayed(
-          const Duration(milliseconds: 10)); // Wait for state to propagate
+      await pumpEventQueue(); // Wait for state to propagate
       expect(pool.connectionCount, equals(2));
       expect(pool.overallState,
           equals(PoolConnectionState.partial)); // 2 of 3 connected
 
       // Connect third relay manually
       pool.simulateConnection('wss://relay3.example.com');
-      await Future.delayed(
-          const Duration(milliseconds: 10)); // Wait for state to propagate
+      await pumpEventQueue(); // Wait for state to propagate
       expect(pool.connectionCount, equals(3));
       expect(pool.overallState,
           equals(PoolConnectionState.connected)); // All 3 connected
@@ -284,16 +282,14 @@ void main() {
       // Disconnect two relays
       pool.simulateDisconnection('wss://relay1.example.com');
       pool.simulateDisconnection('wss://relay2.example.com');
-      await Future.delayed(
-          const Duration(milliseconds: 10)); // Wait for state to propagate
+      await pumpEventQueue(); // Wait for state to propagate
       expect(pool.connectionCount, equals(1));
       expect(pool.overallState,
           equals(PoolConnectionState.degraded)); // Only 1 of 3 connected
 
       // Disconnect last relay
       pool.simulateDisconnection('wss://relay3.example.com');
-      await Future.delayed(
-          const Duration(milliseconds: 10)); // Wait for state to propagate
+      await pumpEventQueue(); // Wait for state to propagate
       expect(pool.connectionCount, equals(0));
       expect(pool.overallState, equals(PoolConnectionState.disconnected));
     });
@@ -327,7 +323,7 @@ void main() {
       await pool.connectAll();
 
       // Wait for connections to propagate
-      await Future.delayed(const Duration(milliseconds: 100));
+      await pumpEventQueue();
 
       final relay1 = pool.getRelay('wss://relay1.example.com');
       final relay2 = pool.getRelay('wss://relay2.example.com');
@@ -346,7 +342,7 @@ void main() {
       pool.broadcast('test');
       pool.simulateDisconnection('wss://relay1.example.com');
 
-      await Future.delayed(const Duration(milliseconds: 10));
+      await pumpEventQueue();
 
       expect(events.any((e) => e.type == PoolEventType.connecting), isTrue);
       expect(events.any((e) => e.type == PoolEventType.connected), isTrue);

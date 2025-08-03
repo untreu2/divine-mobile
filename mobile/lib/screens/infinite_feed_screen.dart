@@ -112,8 +112,27 @@ class _InfiniteFeedScreenState extends ConsumerState<InfiniteFeedScreen>
   void _updateVideosList() {
     final newVideos = _feedService.getVideosForFeed(widget.feedType);
     if (newVideos.length != _videos.length) {
+      // Check if this is an append (videos added at the end) or prepend (videos added at start)
+      final isInitialLoad = _videos.isEmpty;
+      final oldLength = _videos.length;
+      final currentVideoId = _currentIndex < _videos.length ? _videos[_currentIndex].id : null;
+      
       setState(() {
         _videos = newVideos;
+        
+        // If videos were prepended and we're not on initial load, adjust position
+        if (!isInitialLoad && currentVideoId != null && newVideos.length > oldLength) {
+          final newIndex = _videos.indexWhere((v) => v.id == currentVideoId);
+          if (newIndex != -1 && newIndex != _currentIndex) {
+            _currentIndex = newIndex;
+            // Use post frame callback to ensure PageView is ready
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted && _pageController.hasClients) {
+                _pageController.jumpToPage(newIndex);
+              }
+            });
+          }
+        }
       });
       Log.debug('Feed updated: ${_videos.length} videos available',
           name: 'InfiniteFeedScreen', category: LogCategory.ui);
@@ -205,7 +224,30 @@ class _InfiniteFeedScreenState extends ConsumerState<InfiniteFeedScreen>
   }
 
   Future<void> _refreshFeed() async {
+    // Remember the current video ID before refresh
+    final currentVideoId = _currentIndex < _videos.length ? _videos[_currentIndex].id : null;
+    
     await _feedService.refreshFeed(widget.feedType);
+    
+    // Update the video list
+    final newVideos = _feedService.getVideosForFeed(widget.feedType);
+    
+    if (mounted) {
+      setState(() {
+        _videos = newVideos;
+        
+        // If we had a current video, find its new index
+        if (currentVideoId != null) {
+          final newIndex = _videos.indexWhere((v) => v.id == currentVideoId);
+          if (newIndex != -1 && newIndex != _currentIndex) {
+            // Adjust the page controller to maintain position
+            _currentIndex = newIndex;
+            // Jump to the new position without animation to maintain user's view
+            _pageController.jumpToPage(newIndex);
+          }
+        }
+      });
+    }
   }
 
   @override

@@ -194,6 +194,19 @@ class AnalyticsTrending extends _$AnalyticsTrending {
       // Keep existing state on error
     }
   }
+
+  /// Load more trending videos for pagination
+  Future<void> loadMore() async {
+    // For now, load more just triggers a refresh to get more content
+    // In the future, this could be enhanced with proper pagination offset/cursor
+    Log.info(
+      'AnalyticsTrending: Loading more trending videos via refresh',
+      name: 'AnalyticsTrendingProvider',
+      category: LogCategory.system,
+    );
+    
+    await refresh();
+  }
 }
 
 /// Provider for analytics-based popular videos (same as trending for now)

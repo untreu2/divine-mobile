@@ -237,7 +237,7 @@ class _ActivityScreenState extends ConsumerState<ActivityScreen>
     final videoEventService = ref.watch(videoEventServiceProvider);
     
     // Get current user's videos
-    final userVideos = videoEventService.videoEvents
+    final userVideos = videoEventService.discoveryVideos
         .where((video) => video.pubkey == authService.currentPublicKeyHex)
         .toList();
 
@@ -330,7 +330,7 @@ class _ActivityScreenState extends ConsumerState<ActivityScreen>
       return;
     }
 
-    final allVideos = videoEventService.videoEvents;
+    final allVideos = videoEventService.discoveryVideos;
 
     Navigator.of(context).push(
       MaterialPageRoute(

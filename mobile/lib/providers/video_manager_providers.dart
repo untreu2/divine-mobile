@@ -938,6 +938,28 @@ class VideoManager extends _$VideoManager {
     }
   }
 
+  /// Add profile videos to VideoManager for playback
+  /// This is called from profile screens to ensure videos are available for playback
+  void addProfileVideos(List<VideoEvent> videos) {
+    if (videos.isEmpty) return;
+    
+    Log.info(
+      'VideoManager: Adding ${videos.length} profile videos to manager state',
+      name: 'VideoManagerProvider',
+      category: LogCategory.video,
+    );
+    
+    for (final video in videos) {
+      _addVideoEvent(video);
+    }
+    
+    Log.debug(
+      'VideoManager: Successfully added ${videos.length} profile videos',
+      name: 'VideoManagerProvider',
+      category: LogCategory.video,
+    );
+  }
+
   /// Get state changes stream
   Stream<void> get stateChanges =>
       _stateChangesController?.stream ?? const Stream.empty();

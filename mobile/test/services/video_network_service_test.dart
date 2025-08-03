@@ -13,6 +13,8 @@ import 'package:openvine/services/nostr_service_interface.dart';
 import 'package:openvine/services/subscription_manager.dart';
 import 'package:openvine/services/video_network_service.dart';
 
+import '../helpers/test_nostr_service.dart';
+
 // Minimal mock that focuses on what we need
 class MockNostrService extends Fake implements INostrService {
   final StreamController<Event> _eventController =
@@ -57,20 +59,21 @@ class QueryMockNostrService extends MockNostrService {
     required List<Filter> filters,
     bool bypassLimits = false,
   }) {
-    // Verify the filter is correct
+    // Verify the filter is correct for ID lookup
     expect(filters.length, 1);
-    expect(filters.first.kinds, contains(22));
     expect(filters.first.ids, contains(expectedVineId));
 
     // Return a stream with the expected event
     return Stream.value(
       Event(
         'abcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcd', // 64-char hex pubkey
-        22,
+        32222,
         [
-          ['url', 'https://example.com/video.mp4']
+          ['d', expectedVineId], // Required for kind 32222
+          ['url', 'https://example.com/video.mp4'],
+          ['title', 'Query Test Video'],
         ],
-        '{"url": "https://example.com/video.mp4"}',
+        'Test video for query',
         createdAt: DateTime.now().millisecondsSinceEpoch ~/ 1000,
       )..id = expectedVineId,
     );
@@ -147,7 +150,7 @@ void main() {
 
     setUp(() {
       mockNostrService = MockNostrService();
-      mockSubscriptionManager = MockSubscriptionManager(TestNostrService());
+      mockSubscriptionManager = MockSubscriptionManager();
 
       networkService = VideoNetworkService(
         nostrService: mockNostrService,
@@ -175,7 +178,7 @@ void main() {
       test('should create subscription with correct filters for hashtags',
           () async {
         // Arrange
-        final capturingMock = CapturingMockSubscriptionManager(TestNostrService());
+        final capturingMock = CapturingMockSubscriptionManager();
 
         networkService = VideoNetworkService(
           nostrService: mockNostrService,
@@ -192,7 +195,7 @@ void main() {
         expect(capturingMock.capturedSubId, isNotNull);
         expect(capturingMock.capturedFilters, isNotNull);
         expect(capturingMock.capturedFilters!.length, 1);
-        expect(capturingMock.capturedFilters!.first.kinds, contains(22));
+        expect(capturingMock.capturedFilters!.first.kinds, contains(32222));
         expect(capturingMock.capturedFilters!.first.t,
             containsAll(['nostr', 'bitcoin']));
         expect(capturingMock.capturedFilters!.first.limit, 25);
@@ -205,15 +208,17 @@ void main() {
 
         await networkService.subscribeToVideoFeed();
 
-        // Create a test event with proper constructor
+        // Create a test event with proper tags for video URL including required 'd' tag
         final testEvent = Event(
           '1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef', // 64-char hex pubkey
-          22, // kind
+          32222, // kind
           [
+            ['d', 'test_vine_id'], // Required for kind 32222
             ['t', 'nostr'],
             ['url', 'https://example.com/video.mp4'],
+            ['title', 'Test Video'],
           ],
-          '{"url": "https://example.com/video.mp4"}',
+          'Test video content',
           createdAt: DateTime.now().millisecondsSinceEpoch ~/ 1000,
         )..id = 'test_event_id';
 

@@ -17,6 +17,9 @@ class MockUploadManager implements UploadManager {
     String? title,
     String? description,
     List<String>? hashtags,
+    int? videoWidth,
+    int? videoHeight,
+    Duration? videoDuration,
   }) async {
     final upload = PendingUpload.create(
       localVideoPath: videoFile.path,
@@ -25,6 +28,9 @@ class MockUploadManager implements UploadManager {
       title: title,
       description: description,
       hashtags: hashtags,
+      videoWidth: videoWidth,
+      videoHeight: videoHeight,
+      videoDuration: videoDuration,
     );
 
     _uploads.add(upload);

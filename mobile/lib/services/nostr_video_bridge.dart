@@ -64,10 +64,10 @@ class NostrVideoBridge  {
         'processedEventIds': _processedEventIds.length,
         'lastEventReceived': _lastEventReceived?.toIso8601String(),
         'videoEventServiceStats': {
-          'isSubscribed': _videoEventService.isSubscribed,
+          'isSubscribed': _videoEventService.isSubscribed(SubscriptionType.discovery),
           'isLoading': _videoEventService.isLoading,
           'hasEvents': _videoEventService.hasEvents,
-          'eventCount': _videoEventService.eventCount,
+          'eventCount': _videoEventService.getEventCount(SubscriptionType.discovery),
           'error': _videoEventService.error,
         },
       };
@@ -93,6 +93,7 @@ class NostrVideoBridge  {
 
       // Subscribe to video events
       await _videoEventService.subscribeToVideoFeed(
+        subscriptionType: SubscriptionType.discovery,
         authors: authors,
         hashtags: hashtags,
         since: since,
@@ -181,7 +182,7 @@ class NostrVideoBridge  {
 
   /// Manually process existing events (useful for initial load)
   Future<void> processExistingEvents() async {
-    final existingEvents = _videoEventService.videoEvents;
+    final existingEvents = _videoEventService.discoveryVideos;
     Log.debug(
         'NostrVideoBridge: Processing ${existingEvents.length} existing events',
         name: 'NostrVideoBridge',
@@ -197,9 +198,9 @@ class NostrVideoBridge  {
         'bridge': processingStats,
         'videoManager': _videoManager.getDebugInfo(),
         'videoEventService': {
-          'isSubscribed': _videoEventService.isSubscribed,
+          'isSubscribed': _videoEventService.isSubscribed(SubscriptionType.discovery),
           'isLoading': _videoEventService.isLoading,
-          'eventCount': _videoEventService.eventCount,
+          'eventCount': _videoEventService.getEventCount(SubscriptionType.discovery),
           'error': _videoEventService.error,
         },
         'connection':

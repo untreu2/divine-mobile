@@ -1,9 +1,10 @@
-// ABOUTME: Service for managing and tracking hashtags from Kind 22 video events
+// ABOUTME: Service for managing and tracking hashtags from video events
 // ABOUTME: Provides hashtag statistics, trending data, and filtered video queries
 
 import 'dart:async';
 import 'package:openvine/models/video_event.dart';
 import 'package:openvine/services/video_event_service.dart';
+import 'package:openvine/services/hashtag_cache_service.dart';
 
 /// Model for hashtag statistics
 /// REFACTORED: Removed ChangeNotifier - now uses pure state management via Riverpod
@@ -43,7 +44,7 @@ class HashtagStats {
 /// Service for managing hashtag data and statistics
 /// REFACTORED: Removed ChangeNotifier - now uses pure state management via Riverpod
 class HashtagService  {
-  HashtagService(this._videoService) {
+  HashtagService(this._videoService, [this._cacheService]) {
       // REFACTORED: Service no longer extends ChangeNotifier - use Riverpod ref.watch instead
     _updateHashtagStats();
 
@@ -53,6 +54,7 @@ class HashtagService  {
     });
   }
   final VideoEventService _videoService;
+  final HashtagCacheService? _cacheService;
   final Map<String, HashtagStats> _hashtagStats = {};
   Timer? _updateTimer;
 
@@ -68,7 +70,7 @@ class HashtagService  {
     final twentyFourHoursAgo = now.subtract(const Duration(hours: 24));
     final newStats = <String, HashtagStats>{};
 
-    for (final video in _videoService.videoEvents) {
+    for (final video in _videoService.discoveryVideos) {
       for (final hashtag in video.hashtags) {
         if (hashtag.isEmpty) continue;
 
@@ -124,9 +126,25 @@ class HashtagService  {
 
   /// Get popular hashtags based on total video count
   List<String> getPopularHashtags({int limit = 25}) {
+    // Try to get from cache first
+    if (_cacheService != null && _cacheService!.isInitialized) {
+      final cachedHashtags = _cacheService!.getCachedPopularHashtags();
+      if (cachedHashtags != null && cachedHashtags.isNotEmpty) {
+        return cachedHashtags.take(limit).toList();
+      }
+    }
+    
+    // Generate fresh list
     final sorted = _hashtagStats.entries.toList()
       ..sort((a, b) => b.value.videoCount.compareTo(a.value.videoCount));
-    return sorted.take(limit).map((e) => e.key).toList();
+    final hashtags = sorted.take(limit).map((e) => e.key).toList();
+    
+    // Cache the result asynchronously
+    if (_cacheService != null && _cacheService!.isInitialized && hashtags.isNotEmpty) {
+      _cacheService!.cachePopularHashtags(hashtags);
+    }
+    
+    return hashtags;
   }
 
   /// Get editor's picks - curated selection of interesting hashtags
@@ -148,8 +166,13 @@ class HashtagService  {
 
   /// Subscribe to videos with specific hashtags
   Future<void> subscribeToHashtagVideos(List<String> hashtags,
-          {int limit = 50}) =>
-      _videoService.subscribeToHashtagVideos(hashtags, limit: limit);
+          {int limit = 50, int? until}) =>
+      _videoService.subscribeToVideoFeed(
+        subscriptionType: SubscriptionType.hashtag,
+        hashtags: hashtags,
+        limit: limit,
+        until: until,
+      );
 
   /// Search hashtags by prefix
   List<String> searchHashtags(String query) {

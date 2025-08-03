@@ -5,6 +5,7 @@ import 'dart:async';
 
 import 'package:flutter/widgets.dart';
 import 'package:openvine/models/video_event.dart';
+import 'package:openvine/services/global_video_registry.dart';
 import 'package:openvine/utils/async_utils.dart';
 import 'package:openvine/utils/unified_logger.dart';
 import 'package:video_player/video_player.dart';
@@ -151,6 +152,9 @@ class VideoPlaybackController
       _controller = VideoPlayerController.networkUrl(
         Uri.parse(videoUrl),
       );
+
+      // CRITICAL: Register with GlobalVideoRegistry for emergency pause
+      GlobalVideoRegistry().registerController(_controller!);
 
       // Configure controller
       await _controller!.initialize();
@@ -406,6 +410,8 @@ class VideoPlaybackController
     _stopPositionTimer();
 
     if (_controller != null) {
+      // CRITICAL: Unregister from GlobalVideoRegistry before disposing
+      GlobalVideoRegistry().unregisterController(_controller!);
       // REFACTORED: Service no longer needs manual listener cleanup
       await _controller!.dispose();
       _controller = null;

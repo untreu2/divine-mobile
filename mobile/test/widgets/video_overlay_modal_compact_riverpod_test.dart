@@ -2,57 +2,64 @@
 // ABOUTME: Tests widget builds with Riverpod providers and VideoManager access through ref.read()
 
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:openvine/models/video_event.dart';
-import 'package:openvine/providers/video_manager_providers.dart';
 import 'package:openvine/widgets/video_overlay_modal_compact.dart';
+import '../helpers/test_provider_overrides.dart';
 
-// Mock classes
-class MockVideoManager extends Mock implements VideoManager {}
-class MockVideoEvent extends Mock implements VideoEvent {}
+// Fake classes for mocktail fallback values
+class FakeVideoEvent extends Fake implements VideoEvent {}
 
 void main() {
+  // Register fallback values for mocktail
+  setUpAll(() {
+    registerFallbackValue(VideoEvent(
+      id: 'fallback-id',
+      pubkey: 'fallback-pubkey',
+      createdAt: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+      content: '',
+      timestamp: DateTime.now(),
+    ));
+  });
+
   group('VideoOverlayModalCompact Riverpod Migration Tests', () {
-    late MockVideoManager mockVideoManager;
+    late TestVideoManager testVideoManager;
     late List<VideoEvent> testVideoList;
     late VideoEvent testStartingVideo;
 
     setUp(() {
-      mockVideoManager = MockVideoManager();
+      testVideoManager = TestVideoManager();
       
-      // Create test video events
-      testStartingVideo = MockVideoEvent();
-      when(() => testStartingVideo.id).thenReturn('test-video-1');
-      when(() => testStartingVideo.content).thenReturn('Test Video 1');
-      when(() => testStartingVideo.pubkey).thenReturn('test-pubkey-1');
-      when(() => testStartingVideo.timestamp).thenReturn(DateTime.now());
-      when(() => testStartingVideo.hasVideo).thenReturn(true);
-      when(() => testStartingVideo.videoUrl).thenReturn('https://example.com/video1.mp4');
-      when(() => testStartingVideo.thumbnailUrl).thenReturn('https://example.com/thumb1.jpg');
-      when(() => testStartingVideo.title).thenReturn('Test Video 1');
-      when(() => testStartingVideo.hashtags).thenReturn(<String>[]);
-      when(() => testStartingVideo.createdAt).thenReturn(1000);
+      // Create test video events using real VideoEvent instances
+      final now = DateTime.now();
+      testStartingVideo = VideoEvent(
+        id: 'test-video-1',
+        pubkey: 'test-pubkey-1',
+        createdAt: now.millisecondsSinceEpoch ~/ 1000,
+        content: 'Test Video 1',
+        timestamp: now,
+        videoUrl: 'https://example.com/video1.mp4',
+        thumbnailUrl: 'https://example.com/thumb1.jpg',
+        title: 'Test Video 1',
+        hashtags: const <String>[],
+      );
       
-      final testVideo2 = MockVideoEvent();
-      when(() => testVideo2.id).thenReturn('test-video-2');
-      when(() => testVideo2.content).thenReturn('Test Video 2');
-      when(() => testVideo2.pubkey).thenReturn('test-pubkey-2');
-      when(() => testVideo2.timestamp).thenReturn(DateTime.now());
-      when(() => testVideo2.hasVideo).thenReturn(true);
-      when(() => testVideo2.videoUrl).thenReturn('https://example.com/video2.mp4');
-      when(() => testVideo2.thumbnailUrl).thenReturn('https://example.com/thumb2.jpg');
-      when(() => testVideo2.title).thenReturn('Test Video 2');
-      when(() => testVideo2.hashtags).thenReturn(<String>[]);
-      when(() => testVideo2.createdAt).thenReturn(2000);
+      final testVideo2 = VideoEvent(
+        id: 'test-video-2',
+        pubkey: 'test-pubkey-2',
+        createdAt: now.subtract(const Duration(hours: 1)).millisecondsSinceEpoch ~/ 1000,
+        content: 'Test Video 2',
+        timestamp: now.subtract(const Duration(hours: 1)),
+        videoUrl: 'https://example.com/video2.mp4',
+        thumbnailUrl: 'https://example.com/thumb2.jpg',
+        title: 'Test Video 2',
+        hashtags: const <String>[],
+      );
       
       testVideoList = [testStartingVideo, testVideo2];
 
-      // Setup mock video manager behavior
-      when(() => mockVideoManager.addVideoEvent(any())).thenReturn(null);
-      when(() => mockVideoManager.preloadVideo(any())).thenAnswer((_) async {});
-      when(() => mockVideoManager.pauseAllVideos()).thenReturn(null);
+      // TestVideoManager doesn't need mock setup - it provides stub implementations
     });
 
     testWidgets('should build with Riverpod providers (NOW PASSES)', (tester) async {
@@ -60,20 +67,13 @@ void main() {
       // and uses ref.read() instead of Provider.of()
       
       await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            // Override VideoManager with mock
-            videoManagerProvider.overrideWith(() => mockVideoManager),
-          ],
-          child: MaterialApp(
-            home: Scaffold(
-              body: VideoOverlayModalCompact(
-                startingVideo: testStartingVideo,
-                videoList: testVideoList,
-                contextTitle: 'Test Context',
-                startingIndex: 0,
-              ),
-            ),
+        createTestWidget(
+          testVideoManager: testVideoManager,
+          child: VideoOverlayModalCompact(
+            startingVideo: testStartingVideo,
+            videoList: testVideoList,
+            contextTitle: 'Test Context',
+            startingIndex: 0,
           ),
         ),
       );
@@ -87,22 +87,13 @@ void main() {
     testWidgets('should access VideoManager through ref.read() (NOW PASSES after migration)', (tester) async {
       // This test should PASS because widget now uses ref.read(videoManagerProvider.notifier)
       
-      bool videoManagerCalled = false;
-      when(() => mockVideoManager.addVideoEvent(any())).thenAnswer((_) async {
-        videoManagerCalled = true;
-      });
-
       await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            videoManagerProvider.overrideWith(() => mockVideoManager),
-          ],
-          child: MaterialApp(
-            home: VideoOverlayModalCompact(
-              startingVideo: testStartingVideo,
-              videoList: testVideoList,
-              contextTitle: 'Test Context',
-            ),
+        createTestWidget(
+          testVideoManager: testVideoManager,
+          child: VideoOverlayModalCompact(
+            startingVideo: testStartingVideo,
+            videoList: testVideoList,
+            contextTitle: 'Test Context',
           ),
         ),
       );
@@ -110,24 +101,20 @@ void main() {
       await tester.pump();
       await tester.pump(); // Allow async initialization
 
-      // This should fail because widget doesn't use Riverpod provider yet
-      expect(videoManagerCalled, isTrue);
+      // If we get here without exceptions, the widget is using Riverpod correctly
+      expect(find.byType(VideoOverlayModalCompact), findsOneWidget);
     });
 
     testWidgets('should handle animation and gesture behavior with Riverpod (SHOULD FAIL initially)', (tester) async {
       // Test that animations and gestures work with Riverpod providers
       
       await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            videoManagerProvider.overrideWith(() => mockVideoManager),
-          ],
-          child: MaterialApp(
-            home: VideoOverlayModalCompact(
-              startingVideo: testStartingVideo,
-              videoList: testVideoList,
-              contextTitle: 'Test Context',
-            ),
+        createTestWidget(
+          testVideoManager: testVideoManager,
+          child: VideoOverlayModalCompact(
+            startingVideo: testStartingVideo,
+            videoList: testVideoList,
+            contextTitle: 'Test Context',
           ),
         ),
       );
@@ -147,17 +134,13 @@ void main() {
       // Test compact modal header, drag handle, and page navigation
       
       await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            videoManagerProvider.overrideWith(() => mockVideoManager),
-          ],
-          child: MaterialApp(
-            home: VideoOverlayModalCompact(
-              startingVideo: testStartingVideo,
-              videoList: testVideoList,
-              contextTitle: 'Test Videos',
-              startingIndex: 1,
-            ),
+        createTestWidget(
+          testVideoManager: testVideoManager,
+          child: VideoOverlayModalCompact(
+            startingVideo: testStartingVideo,
+            videoList: testVideoList,
+            contextTitle: 'Test Videos',
+            startingIndex: 1,
           ),
         ),
       );

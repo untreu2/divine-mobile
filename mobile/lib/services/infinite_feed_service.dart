@@ -36,7 +36,7 @@ class InfiniteFeedService  {
   final Map<FeedType, Set<String>> _seenVideoIds = {};
 
   static const int _pageSize = 20;
-  static const String _analyticsEndpoint = 'https://analytics.openvine.co';
+  static const String _analyticsEndpoint = 'https://api.openvine.co';
 
   /// Get videos for a specific feed type
   List<VideoEvent> getVideosForFeed(FeedType feedType) =>
@@ -145,7 +145,7 @@ class InfiniteFeedService  {
           final eventId = vineData['eventId'] as String?;
           if (eventId != null) {
             // Try to find the video in our local cache first
-            final localVideo = _videoEventService.videoEvents.firstWhere(
+            final localVideo = _videoEventService.discoveryVideos.firstWhere(
               (video) => video.id == eventId,
               orElse: () => VideoEvent(
                 id: '',
@@ -195,7 +195,7 @@ class InfiniteFeedService  {
 
   /// Load fallback videos from local cache and Nostr
   Future<List<VideoEvent>> _loadFallbackVideos(FeedType feedType) async {
-    final allVideos = List<VideoEvent>.from(_videoEventService.videoEvents);
+    final allVideos = List<VideoEvent>.from(_videoEventService.discoveryVideos);
     final seenIds = _seenVideoIds[feedType] ?? {};
     
     // Filter out already seen videos
@@ -233,7 +233,7 @@ class InfiniteFeedService  {
       final eventStream = _nostrService.subscribeToEvents(filters: [filter]);
       
       final fetchedVideos = <VideoEvent>[];
-      await for (final event in eventStream.timeout(const Duration(seconds: 5))) {
+      await for (final event in eventStream.timeout(const Duration(seconds: 30))) {
         try {
           final video = VideoEvent.fromNostrEvent(event);
           fetchedVideos.add(video);
@@ -266,7 +266,7 @@ class InfiniteFeedService  {
       }
 
       final filter = Filter(
-        kinds: [22], // NIP-71 video events
+        kinds: [32222], // NIP-32222 addressable video events
         limit: _pageSize,
         until: since,
       );
@@ -274,7 +274,7 @@ class InfiniteFeedService  {
       final eventStream = _nostrService.subscribeToEvents(filters: [filter]);
       
       final newVideos = <VideoEvent>[];
-      await for (final event in eventStream.timeout(const Duration(seconds: 10))) {
+      await for (final event in eventStream.timeout(const Duration(seconds: 30))) {
         try {
           final video = VideoEvent.fromNostrEvent(event);
           newVideos.add(video);
@@ -294,14 +294,61 @@ class InfiniteFeedService  {
     }
   }
 
-  /// Refresh a feed (clear and reload)
+  /// Refresh a feed (fetch new videos and prepend to existing)
   Future<void> refreshFeed(FeedType feedType) async {
-    _feeds[feedType] = [];
-    _currentPage[feedType] = 0;
-    _hasMore[feedType] = true;
-    _seenVideoIds[feedType] = {};
+    if (_isLoading[feedType] == true) return;
     
-    await loadMoreContent(feedType);
+    _isLoading[feedType] = true;
+    
+    try {
+      // Temporarily reset page to 0 to get latest videos
+      final savedPage = _currentPage[feedType] ?? 0;
+      _currentPage[feedType] = 0;
+      
+      List<VideoEvent> newVideos = [];
+      
+      switch (feedType) {
+        case FeedType.trending:
+          newVideos = await _loadTrendingVideos();
+          break;
+        case FeedType.popularNow:
+          newVideos = await _loadPopularNowVideos();
+          break;
+        case FeedType.recent:
+          newVideos = await _loadRecentVideos();
+          break;
+      }
+      
+      // Restore the page counter
+      _currentPage[feedType] = savedPage;
+      
+      // Filter out videos we've already seen
+      final seenIds = _seenVideoIds[feedType] ?? <String>{};
+      final uniqueNewVideos = newVideos.where((video) => !seenIds.contains(video.id)).toList();
+      
+      if (uniqueNewVideos.isNotEmpty) {
+        // Prepend new videos to the beginning of the feed
+        final existingVideos = _feeds[feedType] ?? [];
+        _feeds[feedType] = [...uniqueNewVideos, ...existingVideos];
+        
+        // Mark new videos as seen
+        for (final video in uniqueNewVideos) {
+          seenIds.add(video.id);
+        }
+        
+        Log.info('Refreshed feed with ${uniqueNewVideos.length} new videos for ${feedType.displayName}',
+            name: 'InfiniteFeedService', category: LogCategory.system);
+      } else {
+        Log.info('No new videos found during refresh for ${feedType.displayName}',
+            name: 'InfiniteFeedService', category: LogCategory.system);
+      }
+      
+    } catch (e) {
+      Log.error('Error refreshing feed for ${feedType.displayName}: $e',
+          name: 'InfiniteFeedService', category: LogCategory.system);
+    } finally {
+      _isLoading[feedType] = false;
+    }
   }
 
   void dispose() {

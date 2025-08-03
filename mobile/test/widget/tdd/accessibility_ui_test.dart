@@ -2,21 +2,11 @@
 // ABOUTME: Defines expected accessibility behavior and user interaction patterns
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:openvine/models/video_event.dart';
-
-import '../../helpers/test_helpers.dart';
 
 void main() {
   group('TDD Accessibility and User Interaction Requirements', () {
-    late VideoEvent testVideoEvent;
-
     setUp(() {
-      testVideoEvent = TestHelpers.createVideoEvent(
-        id: 'accessibility-test-video',
-        title: 'Accessibility Test Video',
-        content: 'This video tests accessibility features',
-        hashtags: ['test', 'accessibility'],
-      );
+      // Test setup
     });
 
     group('Screen Reader Support Requirements', () {

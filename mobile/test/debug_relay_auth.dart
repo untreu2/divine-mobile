@@ -1,4 +1,4 @@
-// ABOUTME: Debug script to test direct WebSocket connection to vine.hol.is
+// ABOUTME: Debug script to test direct WebSocket connection to OpenVine relay
 // ABOUTME: Shows raw messages to understand NIP-42 AUTH flow
 
 import 'dart:convert';
@@ -8,11 +8,11 @@ import 'package:openvine/utils/unified_logger.dart';
 import 'package:web_socket_channel/io.dart';
 
 void main() async {
-  Log.debug('=== Direct WebSocket Test for vine.hol.is ===\n');
+  Log.debug('=== Direct WebSocket Test for OpenVine relay ===\n');
 
   try {
     // Connect to the relay
-    final wsUrl = Uri.parse('wss://vine.hol.is');
+    final wsUrl = Uri.parse('wss://relay3.openvine.co');
     final channel = IOWebSocketChannel.connect(wsUrl);
 
     Log.debug('1. Connecting to $wsUrl...');
@@ -56,7 +56,7 @@ void main() async {
       'REQ',
       'test-sub-1',
       {
-        'kinds': [22],
+        'kinds': [32222],
         'limit': 1,
       }
     ]);

@@ -176,6 +176,9 @@ class MockUploadManager extends _i1.Mock implements _i6.UploadManager {
     String? title,
     String? description,
     List<String>? hashtags,
+    int? videoWidth,
+    int? videoHeight,
+    Duration? videoDuration,
   }) =>
       (super.noSuchMethod(
         Invocation.method(
@@ -188,6 +191,9 @@ class MockUploadManager extends _i1.Mock implements _i6.UploadManager {
             #title: title,
             #description: description,
             #hashtags: hashtags,
+            #videoWidth: videoWidth,
+            #videoHeight: videoHeight,
+            #videoDuration: videoDuration,
           },
         ),
         returnValue: _i7.Future<_i2.PendingUpload>.value(_FakePendingUpload_0(
@@ -202,6 +208,9 @@ class MockUploadManager extends _i1.Mock implements _i6.UploadManager {
               #title: title,
               #description: description,
               #hashtags: hashtags,
+              #videoWidth: videoWidth,
+              #videoHeight: videoHeight,
+              #videoDuration: videoDuration,
             },
           ),
         )),
@@ -523,58 +532,6 @@ class MockINostrService extends _i1.Mock implements _i4.INostrService {
             {
               #metadata: metadata,
               #content: content,
-              #hashtags: hashtags,
-            },
-          ),
-        )),
-      ) as _i7.Future<_i4.NostrBroadcastResult>);
-
-  @override
-  _i7.Future<_i4.NostrBroadcastResult> publishVideoEvent({
-    required String? videoUrl,
-    required String? content,
-    String? title,
-    String? thumbnailUrl,
-    int? duration,
-    String? dimensions,
-    String? mimeType,
-    String? sha256,
-    int? fileSize,
-    List<String>? hashtags = const [],
-  }) =>
-      (super.noSuchMethod(
-        Invocation.method(
-          #publishVideoEvent,
-          [],
-          {
-            #videoUrl: videoUrl,
-            #content: content,
-            #title: title,
-            #thumbnailUrl: thumbnailUrl,
-            #duration: duration,
-            #dimensions: dimensions,
-            #mimeType: mimeType,
-            #sha256: sha256,
-            #fileSize: fileSize,
-            #hashtags: hashtags,
-          },
-        ),
-        returnValue: _i7.Future<_i4.NostrBroadcastResult>.value(
-            _FakeNostrBroadcastResult_2(
-          this,
-          Invocation.method(
-            #publishVideoEvent,
-            [],
-            {
-              #videoUrl: videoUrl,
-              #content: content,
-              #title: title,
-              #thumbnailUrl: thumbnailUrl,
-              #duration: duration,
-              #dimensions: dimensions,
-              #mimeType: mimeType,
-              #sha256: sha256,
-              #fileSize: fileSize,
               #hashtags: hashtags,
             },
           ),

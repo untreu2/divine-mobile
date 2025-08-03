@@ -22,12 +22,13 @@ void main() {
     });
 
     group('Event Processing', () {
-      test('should process kind 22 video events', () async {
+      test('should process kind 32222 video events', () async {
         // ARRANGE
         final validEvent = Event(
           '1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef', // pubkey (hex)
-          22,
+          32222,
           [
+            ['d', 'test_vine_id'], // Required for kind 32222
             ['url', 'https://example.com/video.mp4'],
             ['title', 'Test Video'],
             ['duration', '30'],
@@ -116,30 +117,34 @@ void main() {
         await errorSubscription.cancel();
       });
 
-      test('should emit errors for invalid video events', () async {
+      test('should process video events with missing URL gracefully', () async {
         // ARRANGE
-        final invalidEvent = Event(
+        final eventWithoutUrl = Event(
           '1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef', // pubkey (hex)
-          22,
+          32222,
           [
-            // Missing required 'url' tag
+            ['d', 'invalid_vine_id'], // Required for kind 32222
+            // Missing 'url' tag - should be handled gracefully
             ['title', 'Video without URL'],
           ],
-          'This should fail',
+          'This should not fail',
         );
 
-        // Subscribe to error stream
-        final errorCompleter = Completer<String>();
-        final subscription = processor.errorStream.listen((error) {
-          errorCompleter.complete(error);
+        // Subscribe to video event stream
+        final videoEventCompleter = Completer<VideoEvent>();
+        final subscription = processor.videoEventStream.listen((event) {
+          videoEventCompleter.complete(event);
         });
 
         // ACT
-        processor.processEvent(invalidEvent);
+        processor.processEvent(eventWithoutUrl);
 
-        // ASSERT
-        final error = await errorCompleter.future;
-        expect(error, contains('Error processing video event'));
+        // ASSERT - Should create VideoEvent with null videoUrl
+        final videoEvent = await videoEventCompleter.future;
+        expect(videoEvent, isNotNull);
+        expect(videoEvent.id, isNotEmpty);
+        expect(videoEvent.title, 'Video without URL');
+        expect(videoEvent.videoUrl, isNull); // URL should be null, not cause error
 
         // Cleanup
         await subscription.cancel();
@@ -152,8 +157,9 @@ void main() {
         final eventStreamController = StreamController<Event>.broadcast();
         final testEvent = Event(
           '1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
-          22,
+          32222,
           [
+            ['d', 'stream_test_vine'], // Required for kind 32222
             ['url', 'https://example.com/video.mp4'],
           ],
           'Test video',
@@ -217,8 +223,11 @@ void main() {
 
         eventStreamController.add(Event(
           '1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
-          22,
-          [['url', 'https://example.com/video.mp4']],
+          32222,
+          [
+            ['d', 'disconnect_test_vine'], // Required for kind 32222
+            ['url', 'https://example.com/video.mp4'],
+          ],
           'Should not be processed',
         ));
 
@@ -238,8 +247,9 @@ void main() {
         // ARRANGE
         final imetaEvent = Event(
           '1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
-          22,
+          32222,
           [
+            ['d', 'imeta_test_vine'], // Required for kind 32222
             [
               'imeta',
               'url https://example.com/imeta_video.mp4',
@@ -280,8 +290,9 @@ void main() {
         // ARRANGE
         final minimalEvent = Event(
           '1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
-          22,
+          32222,
           [
+            ['d', 'minimal_test_vine'], // Required for kind 32222
             ['url', 'https://example.com/minimal.mp4'],
           ],
           'Minimal video event',
@@ -313,8 +324,9 @@ void main() {
         // ARRANGE
         final events = List.generate(3, (i) => Event(
           '1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
-          22,
+          32222,
           [
+            ['d', 'sequence_test_vine_$i'], // Required for kind 32222
             ['url', 'https://example.com/video$i.mp4'],
             ['title', 'Video $i'],
           ],

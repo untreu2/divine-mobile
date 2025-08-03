@@ -19,26 +19,14 @@ mixin _$VideoFeedState {
   /// List of videos in the feed
   List<VideoEvent> get videos => throw _privateConstructorUsedError;
 
-  /// Current feed mode
-  FeedMode get feedMode => throw _privateConstructorUsedError;
-
-  /// Whether this is a following-based feed
-  bool get isFollowingFeed => throw _privateConstructorUsedError;
-
   /// Whether more content can be loaded
   bool get hasMoreContent => throw _privateConstructorUsedError;
-
-  /// Number of videos from primary source (following/curated)
-  int get primaryVideoCount => throw _privateConstructorUsedError;
 
   /// Loading state for pagination
   bool get isLoadingMore => throw _privateConstructorUsedError;
 
   /// Refreshing state for pull-to-refresh
   bool get isRefreshing => throw _privateConstructorUsedError;
-
-  /// Current context value (hashtag or pubkey)
-  String? get feedContext => throw _privateConstructorUsedError;
 
   /// Error message if any
   String? get error => throw _privateConstructorUsedError;
@@ -61,13 +49,9 @@ abstract class $VideoFeedStateCopyWith<$Res> {
   @useResult
   $Res call(
       {List<VideoEvent> videos,
-      FeedMode feedMode,
-      bool isFollowingFeed,
       bool hasMoreContent,
-      int primaryVideoCount,
       bool isLoadingMore,
       bool isRefreshing,
-      String? feedContext,
       String? error,
       DateTime? lastUpdated});
 }
@@ -88,13 +72,9 @@ class _$VideoFeedStateCopyWithImpl<$Res, $Val extends VideoFeedState>
   @override
   $Res call({
     Object? videos = null,
-    Object? feedMode = null,
-    Object? isFollowingFeed = null,
     Object? hasMoreContent = null,
-    Object? primaryVideoCount = null,
     Object? isLoadingMore = null,
     Object? isRefreshing = null,
-    Object? feedContext = freezed,
     Object? error = freezed,
     Object? lastUpdated = freezed,
   }) {
@@ -103,22 +83,10 @@ class _$VideoFeedStateCopyWithImpl<$Res, $Val extends VideoFeedState>
           ? _value.videos
           : videos // ignore: cast_nullable_to_non_nullable
               as List<VideoEvent>,
-      feedMode: null == feedMode
-          ? _value.feedMode
-          : feedMode // ignore: cast_nullable_to_non_nullable
-              as FeedMode,
-      isFollowingFeed: null == isFollowingFeed
-          ? _value.isFollowingFeed
-          : isFollowingFeed // ignore: cast_nullable_to_non_nullable
-              as bool,
       hasMoreContent: null == hasMoreContent
           ? _value.hasMoreContent
           : hasMoreContent // ignore: cast_nullable_to_non_nullable
               as bool,
-      primaryVideoCount: null == primaryVideoCount
-          ? _value.primaryVideoCount
-          : primaryVideoCount // ignore: cast_nullable_to_non_nullable
-              as int,
       isLoadingMore: null == isLoadingMore
           ? _value.isLoadingMore
           : isLoadingMore // ignore: cast_nullable_to_non_nullable
@@ -127,10 +95,6 @@ class _$VideoFeedStateCopyWithImpl<$Res, $Val extends VideoFeedState>
           ? _value.isRefreshing
           : isRefreshing // ignore: cast_nullable_to_non_nullable
               as bool,
-      feedContext: freezed == feedContext
-          ? _value.feedContext
-          : feedContext // ignore: cast_nullable_to_non_nullable
-              as String?,
       error: freezed == error
           ? _value.error
           : error // ignore: cast_nullable_to_non_nullable
@@ -153,13 +117,9 @@ abstract class _$$VideoFeedStateImplCopyWith<$Res>
   @useResult
   $Res call(
       {List<VideoEvent> videos,
-      FeedMode feedMode,
-      bool isFollowingFeed,
       bool hasMoreContent,
-      int primaryVideoCount,
       bool isLoadingMore,
       bool isRefreshing,
-      String? feedContext,
       String? error,
       DateTime? lastUpdated});
 }
@@ -178,13 +138,9 @@ class __$$VideoFeedStateImplCopyWithImpl<$Res>
   @override
   $Res call({
     Object? videos = null,
-    Object? feedMode = null,
-    Object? isFollowingFeed = null,
     Object? hasMoreContent = null,
-    Object? primaryVideoCount = null,
     Object? isLoadingMore = null,
     Object? isRefreshing = null,
-    Object? feedContext = freezed,
     Object? error = freezed,
     Object? lastUpdated = freezed,
   }) {
@@ -193,22 +149,10 @@ class __$$VideoFeedStateImplCopyWithImpl<$Res>
           ? _value._videos
           : videos // ignore: cast_nullable_to_non_nullable
               as List<VideoEvent>,
-      feedMode: null == feedMode
-          ? _value.feedMode
-          : feedMode // ignore: cast_nullable_to_non_nullable
-              as FeedMode,
-      isFollowingFeed: null == isFollowingFeed
-          ? _value.isFollowingFeed
-          : isFollowingFeed // ignore: cast_nullable_to_non_nullable
-              as bool,
       hasMoreContent: null == hasMoreContent
           ? _value.hasMoreContent
           : hasMoreContent // ignore: cast_nullable_to_non_nullable
               as bool,
-      primaryVideoCount: null == primaryVideoCount
-          ? _value.primaryVideoCount
-          : primaryVideoCount // ignore: cast_nullable_to_non_nullable
-              as int,
       isLoadingMore: null == isLoadingMore
           ? _value.isLoadingMore
           : isLoadingMore // ignore: cast_nullable_to_non_nullable
@@ -217,10 +161,6 @@ class __$$VideoFeedStateImplCopyWithImpl<$Res>
           ? _value.isRefreshing
           : isRefreshing // ignore: cast_nullable_to_non_nullable
               as bool,
-      feedContext: freezed == feedContext
-          ? _value.feedContext
-          : feedContext // ignore: cast_nullable_to_non_nullable
-              as String?,
       error: freezed == error
           ? _value.error
           : error // ignore: cast_nullable_to_non_nullable
@@ -235,20 +175,15 @@ class __$$VideoFeedStateImplCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$VideoFeedStateImpl extends _VideoFeedState {
+class _$VideoFeedStateImpl implements _VideoFeedState {
   const _$VideoFeedStateImpl(
       {required final List<VideoEvent> videos,
-      required this.feedMode,
-      required this.isFollowingFeed,
       required this.hasMoreContent,
-      required this.primaryVideoCount,
       this.isLoadingMore = false,
       this.isRefreshing = false,
-      this.feedContext,
       this.error,
       this.lastUpdated})
-      : _videos = videos,
-        super._();
+      : _videos = videos;
 
   /// List of videos in the feed
   final List<VideoEvent> _videos;
@@ -261,21 +196,9 @@ class _$VideoFeedStateImpl extends _VideoFeedState {
     return EqualUnmodifiableListView(_videos);
   }
 
-  /// Current feed mode
-  @override
-  final FeedMode feedMode;
-
-  /// Whether this is a following-based feed
-  @override
-  final bool isFollowingFeed;
-
   /// Whether more content can be loaded
   @override
   final bool hasMoreContent;
-
-  /// Number of videos from primary source (following/curated)
-  @override
-  final int primaryVideoCount;
 
   /// Loading state for pagination
   @override
@@ -287,10 +210,6 @@ class _$VideoFeedStateImpl extends _VideoFeedState {
   @JsonKey()
   final bool isRefreshing;
 
-  /// Current context value (hashtag or pubkey)
-  @override
-  final String? feedContext;
-
   /// Error message if any
   @override
   final String? error;
@@ -301,7 +220,7 @@ class _$VideoFeedStateImpl extends _VideoFeedState {
 
   @override
   String toString() {
-    return 'VideoFeedState(videos: $videos, feedMode: $feedMode, isFollowingFeed: $isFollowingFeed, hasMoreContent: $hasMoreContent, primaryVideoCount: $primaryVideoCount, isLoadingMore: $isLoadingMore, isRefreshing: $isRefreshing, feedContext: $feedContext, error: $error, lastUpdated: $lastUpdated)';
+    return 'VideoFeedState(videos: $videos, hasMoreContent: $hasMoreContent, isLoadingMore: $isLoadingMore, isRefreshing: $isRefreshing, error: $error, lastUpdated: $lastUpdated)';
   }
 
   @override
@@ -310,20 +229,12 @@ class _$VideoFeedStateImpl extends _VideoFeedState {
         (other.runtimeType == runtimeType &&
             other is _$VideoFeedStateImpl &&
             const DeepCollectionEquality().equals(other._videos, _videos) &&
-            (identical(other.feedMode, feedMode) ||
-                other.feedMode == feedMode) &&
-            (identical(other.isFollowingFeed, isFollowingFeed) ||
-                other.isFollowingFeed == isFollowingFeed) &&
             (identical(other.hasMoreContent, hasMoreContent) ||
                 other.hasMoreContent == hasMoreContent) &&
-            (identical(other.primaryVideoCount, primaryVideoCount) ||
-                other.primaryVideoCount == primaryVideoCount) &&
             (identical(other.isLoadingMore, isLoadingMore) ||
                 other.isLoadingMore == isLoadingMore) &&
             (identical(other.isRefreshing, isRefreshing) ||
                 other.isRefreshing == isRefreshing) &&
-            (identical(other.feedContext, feedContext) ||
-                other.feedContext == feedContext) &&
             (identical(other.error, error) || other.error == error) &&
             (identical(other.lastUpdated, lastUpdated) ||
                 other.lastUpdated == lastUpdated));
@@ -333,13 +244,9 @@ class _$VideoFeedStateImpl extends _VideoFeedState {
   int get hashCode => Object.hash(
       runtimeType,
       const DeepCollectionEquality().hash(_videos),
-      feedMode,
-      isFollowingFeed,
       hasMoreContent,
-      primaryVideoCount,
       isLoadingMore,
       isRefreshing,
-      feedContext,
       error,
       lastUpdated);
 
@@ -353,39 +260,22 @@ class _$VideoFeedStateImpl extends _VideoFeedState {
           this, _$identity);
 }
 
-abstract class _VideoFeedState extends VideoFeedState {
+abstract class _VideoFeedState implements VideoFeedState {
   const factory _VideoFeedState(
       {required final List<VideoEvent> videos,
-      required final FeedMode feedMode,
-      required final bool isFollowingFeed,
       required final bool hasMoreContent,
-      required final int primaryVideoCount,
       final bool isLoadingMore,
       final bool isRefreshing,
-      final String? feedContext,
       final String? error,
       final DateTime? lastUpdated}) = _$VideoFeedStateImpl;
-  const _VideoFeedState._() : super._();
 
   /// List of videos in the feed
   @override
   List<VideoEvent> get videos;
 
-  /// Current feed mode
-  @override
-  FeedMode get feedMode;
-
-  /// Whether this is a following-based feed
-  @override
-  bool get isFollowingFeed;
-
   /// Whether more content can be loaded
   @override
   bool get hasMoreContent;
-
-  /// Number of videos from primary source (following/curated)
-  @override
-  int get primaryVideoCount;
 
   /// Loading state for pagination
   @override
@@ -394,10 +284,6 @@ abstract class _VideoFeedState extends VideoFeedState {
   /// Refreshing state for pull-to-refresh
   @override
   bool get isRefreshing;
-
-  /// Current context value (hashtag or pubkey)
-  @override
-  String? get feedContext;
 
   /// Error message if any
   @override

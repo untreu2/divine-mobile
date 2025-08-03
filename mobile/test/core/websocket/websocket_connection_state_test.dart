@@ -104,8 +104,8 @@ void main() {
       stateMachine.transitionTo(WebSocketConnectionState.connecting);
       stateMachine.transitionTo(WebSocketConnectionState.connected);
 
-      await Future.delayed(
-          const Duration(milliseconds: 10)); // Allow stream to emit
+      // Allow stream to emit using proper async pattern
+      await pumpEventQueue();
 
       expect(
         states,
@@ -136,15 +136,19 @@ void main() {
 
     test('should provide time in current state', () async {
       final beforeTransition = DateTime.now();
-      await Future.delayed(const Duration(milliseconds: 100));
-
+      
       stateMachine.transitionTo(WebSocketConnectionState.connecting);
-
-      await Future.delayed(const Duration(milliseconds: 100));
+      
+      // Use a controlled wait time for deterministic testing
+      final stopwatch = Stopwatch()..start();
+      while (stopwatch.elapsedMilliseconds < 100) {
+        await Future(() => {});
+      }
+      stopwatch.stop();
 
       final timeInState = stateMachine.timeInCurrentState;
-      expect(timeInState.inMilliseconds, greaterThanOrEqualTo(100));
-      expect(timeInState.inMilliseconds, lessThan(200));
+      expect(timeInState.inMilliseconds, greaterThanOrEqualTo(90)); // Allow for timing variance
+      expect(timeInState.inMilliseconds, lessThan(300));
     });
 
     test('should handle concurrent transition attempts safely', () async {

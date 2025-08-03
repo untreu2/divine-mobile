@@ -1,4 +1,4 @@
-group 'com.github.todd-sundsted.cryptography_flutter'
+group 'dev.dint.cryptography_flutter'
 version '1.0-SNAPSHOT'
 
 buildscript {
@@ -22,10 +22,7 @@ rootProject.allprojects {
 apply plugin: 'com.android.library'
 
 android {
-    // Conditional for compatibility with AGP < 4.2.
-    if (project.android.hasProperty("namespace")) {
-        namespace "com.github.todd_sundsted.cryptography_flutter"
-    }
+    namespace "dev.dint.cryptography_flutter"
 
     compileSdkVersion 34
 

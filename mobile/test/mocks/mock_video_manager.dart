@@ -2,6 +2,7 @@
 // ABOUTME: Provides deterministic behavior and test scenario control
 
 import 'dart:async';
+import 'dart:io';
 
 import 'package:openvine/models/video_event.dart';
 import 'package:openvine/models/video_state.dart';
@@ -658,6 +659,36 @@ class MockVideoManager implements IVideoManager {
     if (_operationLog.length > 100) {
       _operationLog.removeRange(0, _operationLog.length - 100);
     }
+  }
+
+  @override
+  Future<VideoPlayerController?> createNetworkController(
+    String videoId,
+    String videoUrl, {
+    PreloadPriority priority = PreloadPriority.nearby,
+  }) async {
+    // Mock implementation - return null to simulate no controller
+    return null;
+  }
+
+  @override
+  Future<VideoPlayerController?> createFileController(
+    String videoId,
+    File videoFile, {
+    PreloadPriority priority = PreloadPriority.nearby,
+  }) async {
+    // Mock implementation - return null to simulate no controller
+    return null;
+  }
+
+  @override
+  Future<VideoPlayerController?> createThumbnailController(
+    String videoId,
+    String videoUrl, {
+    double seekTimeSeconds = 2.5,
+  }) async {
+    // Mock implementation - return null to simulate no controller
+    return null;
   }
 
   void _notifyStateChange() {

@@ -4,6 +4,7 @@
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'dart:async' as _i3;
+import 'dart:io' as _i9;
 
 import 'package:mockito/mockito.dart' as _i1;
 import 'package:nostr_sdk/event.dart' as _i4;
@@ -63,10 +64,19 @@ class MockSocialService extends _i1.Mock implements _i2.SocialService {
       ) as bool);
 
   @override
-  bool hasReposted(String? eventId) => (super.noSuchMethod(
+  bool hasReposted(
+    String? eventId, {
+    String? pubkey,
+    String? dTag,
+  }) =>
+      (super.noSuchMethod(
         Invocation.method(
           #hasReposted,
           [eventId],
+          {
+            #pubkey: pubkey,
+            #dTag: dTag,
+          },
         ),
         returnValue: false,
       ) as bool);
@@ -452,6 +462,60 @@ class MockIVideoManager extends _i1.Mock implements _i5.IVideoManager {
         returnValue: _i3.Future<void>.value(),
         returnValueForMissingStub: _i3.Future<void>.value(),
       ) as _i3.Future<void>);
+
+  @override
+  _i3.Future<_i8.VideoPlayerController?> createNetworkController(
+    String? videoId,
+    String? videoUrl, {
+    _i5.PreloadPriority? priority = _i5.PreloadPriority.nearby,
+  }) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #createNetworkController,
+          [
+            videoId,
+            videoUrl,
+          ],
+          {#priority: priority},
+        ),
+        returnValue: _i3.Future<_i8.VideoPlayerController?>.value(),
+      ) as _i3.Future<_i8.VideoPlayerController?>);
+
+  @override
+  _i3.Future<_i8.VideoPlayerController?> createFileController(
+    String? videoId,
+    _i9.File? videoFile, {
+    _i5.PreloadPriority? priority = _i5.PreloadPriority.nearby,
+  }) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #createFileController,
+          [
+            videoId,
+            videoFile,
+          ],
+          {#priority: priority},
+        ),
+        returnValue: _i3.Future<_i8.VideoPlayerController?>.value(),
+      ) as _i3.Future<_i8.VideoPlayerController?>);
+
+  @override
+  _i3.Future<_i8.VideoPlayerController?> createThumbnailController(
+    String? videoId,
+    String? videoUrl, {
+    double? seekTimeSeconds = 2.5,
+  }) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #createThumbnailController,
+          [
+            videoId,
+            videoUrl,
+          ],
+          {#seekTimeSeconds: seekTimeSeconds},
+        ),
+        returnValue: _i3.Future<_i8.VideoPlayerController?>.value(),
+      ) as _i3.Future<_i8.VideoPlayerController?>);
 
   @override
   void preloadAroundIndex(

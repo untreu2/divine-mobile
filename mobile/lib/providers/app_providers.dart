@@ -26,10 +26,12 @@ import 'package:openvine/services/nostr_key_manager.dart';
 import 'package:openvine/services/nostr_service.dart';
 import 'package:openvine/services/nostr_service_interface.dart';
 import 'package:openvine/services/notification_service_enhanced.dart';
+import 'package:openvine/services/personal_event_cache_service.dart';
 import 'package:openvine/services/profile_cache_service.dart';
 import 'package:openvine/services/secure_key_storage_service.dart';
 import 'package:openvine/services/seen_videos_service.dart';
 import 'package:openvine/services/social_service.dart';
+import 'package:openvine/services/hashtag_cache_service.dart';
 import 'package:openvine/services/stream_upload_service.dart';
 import 'package:openvine/services/subscription_manager.dart';
 import 'package:openvine/services/upload_manager.dart';
@@ -63,10 +65,19 @@ VideoVisibilityManager videoVisibilityManager(Ref ref) {
 }
 
 /// Analytics service with opt-out support
-@riverpod
+@Riverpod(keepAlive: true) // Keep alive to maintain singleton behavior
 AnalyticsService analyticsService(Ref ref) {
   final service = AnalyticsService();
-  service.initialize(); // Initialize asynchronously
+  
+  // Ensure cleanup on disposal
+  ref.onDispose(() {
+    service.dispose();
+  });
+  
+  // Initialize asynchronously but don't block the provider
+  // Use a microtask to avoid blocking the provider creation
+  Future.microtask(() => service.initialize());
+  
   return service;
 }
 
@@ -106,6 +117,35 @@ ProfileCacheService profileCacheService(Ref ref) {
     Log.error('Failed to initialize ProfileCacheService',
         name: 'AppProviders', error: e);
   });
+  return service;
+}
+
+/// Hashtag cache service for persistent hashtag storage
+@riverpod
+HashtagCacheService hashtagCacheService(Ref ref) {
+  final service = HashtagCacheService();
+  // Initialize asynchronously to avoid blocking UI
+  service.initialize().catchError((e) {
+    Log.error('Failed to initialize HashtagCacheService',
+        name: 'AppProviders', error: e);
+  });
+  return service;
+}
+
+/// Personal event cache service for ALL user's own events
+@riverpod
+PersonalEventCacheService personalEventCacheService(Ref ref) {
+  final authService = ref.watch(authServiceProvider);
+  final service = PersonalEventCacheService();
+  
+  // Initialize with current user's pubkey when authenticated
+  if (authService.isAuthenticated && authService.currentPublicKeyHex != null) {
+    service.initialize(authService.currentPublicKeyHex!).catchError((e) {
+      Log.error('Failed to initialize PersonalEventCacheService',
+          name: 'AppProviders', error: e);
+    });
+  }
+  
   return service;
 }
 
@@ -166,20 +206,23 @@ VideoEventService videoEventService(Ref ref) {
   final nostrService = ref.watch(nostrServiceProvider);
   final subscriptionManager = ref.watch(subscriptionManagerProvider);
   final blocklistService = ref.watch(contentBlocklistServiceProvider);
+  final videoManager = ref.watch(videoManagerProvider.notifier);
   
   final service = VideoEventService(
     nostrService,
     subscriptionManager: subscriptionManager,
+    videoManager: videoManager,
   );
   service.setBlocklistService(blocklistService);
   return service;
 }
 
-/// Hashtag service depends on Video event service
+/// Hashtag service depends on Video event service and cache service
 @riverpod
 HashtagService hashtagService(Ref ref) {
   final videoEventService = ref.watch(videoEventServiceProvider);
-  return HashtagService(videoEventService);
+  final cacheService = ref.watch(hashtagCacheServiceProvider);
+  return HashtagService(videoEventService, cacheService);
 }
 
 /// User profile service depends on Nostr service, SubscriptionManager, and ProfileCacheService
@@ -203,11 +246,13 @@ SocialService socialService(Ref ref) {
   final nostrService = ref.watch(nostrServiceProvider);
   final authService = ref.watch(authServiceProvider);
   final subscriptionManager = ref.watch(subscriptionManagerProvider);
+  final personalEventCache = ref.watch(personalEventCacheServiceProvider);
   
   return SocialService(
     nostrService,
     authService,
     subscriptionManager: subscriptionManager,
+    personalEventCache: personalEventCache,
   );
 }
 
@@ -283,7 +328,7 @@ DirectUploadService directUploadService(Ref ref) {
 }
 
 /// Upload manager depends on direct upload service
-@riverpod
+@Riverpod(keepAlive: true)
 UploadManager uploadManager(Ref ref) {
   final uploadService = ref.watch(directUploadServiceProvider);
   return UploadManager(uploadService: uploadService);
@@ -297,19 +342,18 @@ ApiService apiService(Ref ref) {
 }
 
 /// Video event publisher depends on multiple services
-@riverpod
+@Riverpod(keepAlive: true)
 VideoEventPublisher videoEventPublisher(Ref ref) {
   final uploadManager = ref.watch(uploadManagerProvider);
   final nostrService = ref.watch(nostrServiceProvider);
   final authService = ref.watch(authServiceProvider);
-  final apiService = ref.watch(apiServiceProvider);
+  final personalEventCache = ref.watch(personalEventCacheServiceProvider);
   
   return VideoEventPublisher(
     uploadManager: uploadManager,
     nostrService: nostrService,
     authService: authService,
-    fetchReadyEvents: () => apiService.getReadyEvents(),
-    cleanupRemoteEvent: (publicId) => apiService.cleanupRemoteEvent(publicId),
+    personalEventCache: personalEventCache,
   );
 }
 
@@ -415,3 +459,4 @@ ContentDeletionService contentDeletionService(Ref ref) {
     prefs: FakeSharedPreferences(),
   );
 }
+

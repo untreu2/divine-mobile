@@ -13,7 +13,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 part 'social_providers.g.dart';
 
 /// Social state notifier with reactive state management
-@riverpod
+@Riverpod(keepAlive: true)
 class SocialNotifier extends _$SocialNotifier {
   // Managed subscription IDs
   String? _likeSubscriptionId;
@@ -31,20 +31,35 @@ class SocialNotifier extends _$SocialNotifier {
 
   /// Initialize the service
   Future<void> initialize() async {
-    if (state.isInitialized) return;
+    if (state.isInitialized) {
+      Log.info('🤝 SocialNotifier already initialized with ${state.followingPubkeys.length} following',
+          name: 'SocialNotifier', category: LogCategory.system);
+      return;
+    }
 
-    Log.debug('🤝 Initializing SocialNotifier',
+    Log.info('🤝 Initializing SocialNotifier',
         name: 'SocialNotifier', category: LogCategory.system);
 
     state = state.copyWith(isLoading: true);
 
     try {
       final authService = ref.read(authServiceProvider);
+      
+      Log.info('🤝 SocialNotifier: Auth state = ${authService.isAuthenticated}, pubkey = ${authService.currentPublicKeyHex?.substring(0, 8)}',
+          name: 'SocialNotifier', category: LogCategory.system);
 
       // Initialize current user's social data if authenticated
-      if (authService.isAuthenticated) {
+      if (authService.isAuthenticated && authService.currentPublicKeyHex != null) {
+        Log.info('🤝 SocialNotifier: Fetching contact list for authenticated user',
+            name: 'SocialNotifier', category: LogCategory.system);
         // Only load follow list - reactions will be checked per-video
         await fetchCurrentUserFollowList();
+        
+        Log.info('🤝 SocialNotifier: Contact list fetch complete, following=${state.followingPubkeys.length}',
+            name: 'SocialNotifier', category: LogCategory.system);
+      } else {
+        Log.warning('🤝 SocialNotifier: Skipping contact list fetch - not authenticated',
+            name: 'SocialNotifier', category: LogCategory.system);
       }
 
       state = state.copyWith(
@@ -53,10 +68,10 @@ class SocialNotifier extends _$SocialNotifier {
         error: null,
       );
 
-      Log.info('SocialNotifier initialized',
+      Log.info('✅ SocialNotifier initialized successfully with ${state.followingPubkeys.length} following',
           name: 'SocialNotifier', category: LogCategory.system);
     } catch (e) {
-      Log.error('SocialNotifier initialization error: $e',
+      Log.error('❌ SocialNotifier initialization error: $e',
           name: 'SocialNotifier', category: LogCategory.system);
       state = state.copyWith(
         isInitialized: true,
@@ -343,6 +358,33 @@ class SocialNotifier extends _$SocialNotifier {
   void updateFollowingList(List<String> followingPubkeys) {
     state = state.copyWith(followingPubkeys: followingPubkeys);
   }
+  
+  /// Manually refresh the contact list
+  Future<void> refreshContactList() async {
+    Log.info('🔄 Manually refreshing contact list',
+        name: 'SocialNotifier', category: LogCategory.system);
+    
+    state = state.copyWith(isLoading: true);
+    
+    try {
+      await fetchCurrentUserFollowList();
+      
+      state = state.copyWith(
+        isLoading: false,
+        error: null,
+      );
+      
+      Log.info('✅ Contact list refresh complete with ${state.followingPubkeys.length} following',
+          name: 'SocialNotifier', category: LogCategory.system);
+    } catch (e) {
+      Log.error('❌ Contact list refresh error: $e',
+          name: 'SocialNotifier', category: LogCategory.system);
+      state = state.copyWith(
+        isLoading: false,
+        error: e.toString(),
+      );
+    }
+  }
 
   /// Fetch current user's follow list
   Future<void> fetchCurrentUserFollowList() async {
@@ -357,7 +399,7 @@ class SocialNotifier extends _$SocialNotifier {
     }
 
     try {
-      Log.debug('📋 Fetching current user follow list',
+      Log.info('📋 Fetching current user follow list for: ${authService.currentPublicKeyHex!.substring(0, 8)}...',
           name: 'SocialNotifier', category: LogCategory.system);
 
       // Query for Kind 3 events (contact lists) from current user
@@ -370,33 +412,63 @@ class SocialNotifier extends _$SocialNotifier {
       // Use stream subscription to get events
       final completer = Completer<List<Event>>();
       final events = <Event>[];
+      StreamSubscription<Event>? subscription;
+
+      // Set up a timer to complete after getting at least one event or timeout
+      Timer? timer;
+      
+      void completeAndCleanup() {
+        timer?.cancel();
+        subscription?.cancel();
+        if (!completer.isCompleted) {
+          completer.complete(events);
+        }
+      }
 
       final stream = nostrService.subscribeToEvents(filters: [filter]);
-      final subscription = stream.listen(
-        events.add,
+      subscription = stream.listen(
+        (event) {
+          Log.debug('📋 Received contact list event: ${event.id.substring(0, 8)}...',
+              name: 'SocialNotifier', category: LogCategory.system);
+          
+          // Process contact list event immediately
+          _processContactListEvent(event);
+          
+          // Add to events list for potential sorting
+          events.add(event);
+          
+          Log.info('✅ Processed contact list with ${state.followingPubkeys.length} following immediately',
+              name: 'SocialNotifier', category: LogCategory.system);
+          
+          // Complete immediately after processing first contact list event
+          completeAndCleanup();
+        },
         onDone: () {
-          if (!completer.isCompleted) {
-            completer.complete(events);
+          Log.debug('📋 Stream completed - contact list subscription remains open for real-time updates',
+              name: 'SocialNotifier', category: LogCategory.system);
+          // Don't complete here - let timeout handle it if no events received
+          if (events.isEmpty) {
+            completeAndCleanup();
           }
         },
         onError: (error) {
+          Log.error('📋 Stream error: $error',
+              name: 'SocialNotifier', category: LogCategory.system);
           if (!completer.isCompleted) {
             completer.completeError(error);
           }
         },
       );
 
-      // Wait for events with timeout
-      final fetchedEvents = await completer.future.timeout(
-        const Duration(seconds: 5),
-        onTimeout: () {
-          subscription.cancel();
-          return events;
-        },
-      );
+      // Set timeout timer
+      timer = Timer(const Duration(seconds: 10), () {
+        Log.warning('📋 Contact list fetch timeout after 10 seconds with ${events.length} events',
+            name: 'SocialNotifier', category: LogCategory.system);
+        completeAndCleanup();
+      });
 
-      // Cancel subscription after getting events
-      subscription.cancel();
+      // Wait for events
+      final fetchedEvents = await completer.future;
 
       if (fetchedEvents.isNotEmpty) {
         // Get the most recent contact list event
@@ -410,6 +482,17 @@ class SocialNotifier extends _$SocialNotifier {
           name: 'SocialNotifier',
           category: LogCategory.system,
         );
+        
+        // Log first few pubkeys for debugging
+        if (state.followingPubkeys.isNotEmpty) {
+          final preview = state.followingPubkeys.take(3).join(', ');
+          final suffix = state.followingPubkeys.length > 3 ? '...' : '';
+          Log.debug(
+            'Following pubkeys sample: $preview$suffix',
+            name: 'SocialNotifier',
+            category: LogCategory.system,
+          );
+        }
       } else {
         Log.info('No contact list found for current user',
             name: 'SocialNotifier', category: LogCategory.system);
@@ -549,8 +632,8 @@ class SocialNotifier extends _$SocialNotifier {
       ];
 
       // Add original event kind tag if it's a video
-      if (eventToRepost.kind == 22) {
-        tags.add(['k', '22']);
+      if (eventToRepost.kind == 32222) {
+        tags.add(['k', '32222']);
       }
 
       // Create Kind 6 event (repost)
@@ -583,7 +666,14 @@ class SocialNotifier extends _$SocialNotifier {
   }
 
   void _processContactListEvent(Event event) {
-    if (event.kind != 3) return;
+    if (event.kind != 3) {
+      Log.warning('📋 Received non-contact list event: kind=${event.kind}',
+          name: 'SocialNotifier', category: LogCategory.system);
+      return;
+    }
+
+    Log.info('📋 Processing contact list event: ${event.id.substring(0, 8)}... with ${event.tags.length} tags',
+        name: 'SocialNotifier', category: LogCategory.system);
 
     final followingPubkeys = <String>[];
 
@@ -591,6 +681,8 @@ class SocialNotifier extends _$SocialNotifier {
     for (final tag in event.tags) {
       if (tag.length >= 2 && tag[0] == 'p') {
         followingPubkeys.add(tag[1]);
+        Log.debug('📋 Found following: ${tag[1].substring(0, 8)}...',
+            name: 'SocialNotifier', category: LogCategory.system);
       }
     }
 
@@ -600,11 +692,21 @@ class SocialNotifier extends _$SocialNotifier {
       currentUserContactListEvent: event,
     );
 
-    Log.debug(
-      'Processed contact list with ${followingPubkeys.length} pubkeys',
+    Log.info(
+      '✅ Processed contact list with ${followingPubkeys.length} pubkeys',
       name: 'SocialNotifier',
       category: LogCategory.system,
     );
+    
+    // Log sample of following list
+    if (followingPubkeys.isNotEmpty) {
+      final sample = followingPubkeys.take(5).map((p) => p.substring(0, 8)).join(', ');
+      Log.info(
+        '👥 Following sample: $sample${followingPubkeys.length > 5 ? "..." : ""}',
+        name: 'SocialNotifier',
+        category: LogCategory.system,
+      );
+    }
   }
 
 
@@ -679,8 +781,34 @@ class SocialNotifier extends _$SocialNotifier {
     });
 
     subscription = stream.listen(
-      events.add,
+      (event) {
+        // Process reaction immediately when received
+        if (event.content == '+') {
+          // Found a like for this video - update state immediately
+          state = state.copyWith(
+            likedEventIds: {...state.likedEventIds, videoId},
+            likeEventIdToReactionId: {
+              ...state.likeEventIdToReactionId,
+              videoId: event.id
+            },
+          );
+          Log.debug('Found existing like for video: ${videoId.substring(0, 8)}... - processed immediately',
+              name: 'SocialNotifier', category: LogCategory.system);
+          
+          // Complete immediately after finding the reaction
+          timer.cancel();
+          subscription.cancel();
+          if (!completer.isCompleted) {
+            completer.complete();
+          }
+        } else {
+          // Add to events list for other processing if needed
+          events.add(event);
+        }
+      },
       onDone: () {
+        Log.debug('Reaction query stream completed - subscription remains open for real-time updates',
+            name: 'SocialNotifier', category: LogCategory.system);
         timer.cancel();
         if (!completer.isCompleted) {
           completer.complete();
@@ -695,24 +823,6 @@ class SocialNotifier extends _$SocialNotifier {
     );
 
     await completer.future;
-    subscription.cancel();
-
-    // Process any found reactions
-    for (final event in events) {
-      if (event.content == '+') {
-        // Found a like for this video
-        state = state.copyWith(
-          likedEventIds: {...state.likedEventIds, videoId},
-          likeEventIdToReactionId: {
-            ...state.likeEventIdToReactionId,
-            videoId: event.id
-          },
-        );
-        Log.debug('Found existing like for video: ${videoId.substring(0, 8)}...',
-            name: 'SocialNotifier', category: LogCategory.system);
-        break; // Only need one
-      }
-    }
   }
 
   Future<void> _queryForSingleRepost(
@@ -721,7 +831,6 @@ class SocialNotifier extends _$SocialNotifier {
     String videoId
   ) async {
     final completer = Completer<void>();
-    final events = <Event>[];
 
     final stream = nostrService.subscribeToEvents(filters: [filter]);
     late final StreamSubscription<Event> subscription;
@@ -734,8 +843,28 @@ class SocialNotifier extends _$SocialNotifier {
     });
 
     subscription = stream.listen(
-      events.add,
+      (event) {
+        // Process repost immediately when received
+        state = state.copyWith(
+          repostedEventIds: {...state.repostedEventIds, videoId},
+          repostEventIdToRepostId: {
+            ...state.repostEventIdToRepostId,
+            videoId: event.id
+          },
+        );
+        Log.debug('Found existing repost for video: ${videoId.substring(0, 8)}... - processed immediately',
+            name: 'SocialNotifier', category: LogCategory.system);
+        
+        // Complete immediately after finding the repost
+        timer.cancel();
+        subscription.cancel();
+        if (!completer.isCompleted) {
+          completer.complete();
+        }
+      },
       onDone: () {
+        Log.debug('Repost query stream completed - subscription remains open for real-time updates',
+            name: 'SocialNotifier', category: LogCategory.system);  
         timer.cancel();
         if (!completer.isCompleted) {
           completer.complete();
@@ -750,21 +879,6 @@ class SocialNotifier extends _$SocialNotifier {
     );
 
     await completer.future;
-    subscription.cancel();
-
-    // Process any found reposts
-    if (events.isNotEmpty) {
-      final repostEvent = events.first;
-      state = state.copyWith(
-        repostedEventIds: {...state.repostedEventIds, videoId},
-        repostEventIdToRepostId: {
-          ...state.repostEventIdToRepostId,
-          videoId: repostEvent.id
-        },
-      );
-      Log.debug('Found existing repost for video: ${videoId.substring(0, 8)}...',
-          name: 'SocialNotifier', category: LogCategory.system);
-    }
   }
 
   void _cleanupSubscriptions() {

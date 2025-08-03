@@ -75,6 +75,14 @@ class DirectUploadService  {
     Log.debug('Starting direct upload for video: ${videoFile.path}',
         name: 'DirectUploadService', category: LogCategory.system);
 
+    // First check backend connectivity
+    final isHealthy = await checkBackendHealth();
+    if (!isHealthy) {
+      Log.error('❌ Backend is not accessible, aborting upload',
+          name: 'DirectUploadService', category: LogCategory.system);
+      return DirectUploadResult.failure('Backend service is not accessible. Please check your internet connection.');
+    }
+
     String? videoId;
 
     try {
@@ -175,12 +183,22 @@ class DirectUploadService  {
 
       // Create a progress-tracking stream
       var bytesUploaded = 0;
+      var lastProgressLog = 0;
       final progressStream = stream.transform(
         StreamTransformer<List<int>, List<int>>.fromHandlers(
           handleData: (data, sink) {
             bytesUploaded += data.length;
             final progress = bytesUploaded / fileLength;
             progressController.add(progress * 0.9); // 0-90% for upload
+            
+            // Log progress every 10%
+            final progressPercent = (progress * 100).round();
+            if (progressPercent >= lastProgressLog + 10) {
+              lastProgressLog = progressPercent;
+              Log.info('📊 Upload progress: $progressPercent% ($bytesUploaded / $fileLength bytes)',
+                  name: 'DirectUploadService', category: LogCategory.system);
+            }
+            
             sink.add(data);
           },
         ),
@@ -220,12 +238,47 @@ class DirectUploadService  {
 
       // Send request
       progressController.add(0.10); // 10% - Starting main upload
+      
+      Log.info('📤 Sending upload request to: $url',
+          name: 'DirectUploadService', category: LogCategory.system);
+      Log.debug('Request headers: ${request.headers}',
+          name: 'DirectUploadService', category: LogCategory.system);
+      Log.debug('Request fields: ${request.fields}',
+          name: 'DirectUploadService', category: LogCategory.system);
 
-      final streamedResponse = await request.send();
+      http.StreamedResponse streamedResponse;
+      try {
+        streamedResponse = await request.send().timeout(
+          const Duration(minutes: 5),
+          onTimeout: () {
+            throw TimeoutException('Upload timed out after 5 minutes');
+          },
+        );
+      } catch (e) {
+        if (e is SocketException) {
+          Log.error('🌐 Network error: ${e.message}',
+              name: 'DirectUploadService', category: LogCategory.system);
+          throw Exception('Network connection failed: ${e.message}');
+        } else if (e is TimeoutException) {
+          Log.error('⏱️ Upload timeout: ${e.message}',
+              name: 'DirectUploadService', category: LogCategory.system);
+          throw Exception('Upload timed out: ${e.message}');
+        } else {
+          Log.error('🚨 Request send error: $e',
+              name: 'DirectUploadService', category: LogCategory.system);
+          rethrow;
+        }
+      }
+      
+      Log.info('📡 Upload request sent, status: ${streamedResponse.statusCode}',
+          name: 'DirectUploadService', category: LogCategory.system);
 
       progressController.add(0.95); // Upload complete, processing response
 
       final response = await http.Response.fromStream(streamedResponse);
+      
+      Log.debug('📥 Response body: ${response.body}',
+          name: 'DirectUploadService', category: LogCategory.system);
 
       progressController.add(1); // Complete
 
@@ -257,18 +310,21 @@ class DirectUploadService  {
             }
           }
 
+          final thumbnailUrl = data['thumbnail_url'] ?? data['thumb_url'];
+          Log.info('📸 Thumbnail URL from backend: $thumbnailUrl',
+              name: 'DirectUploadService', category: LogCategory.system);
+          
           return DirectUploadResult.success(
             videoId: videoId ?? 'unknown',
             cdnUrl: cdnUrl,
-            thumbnailUrl: data['thumbnail_url'] ??
-                data['thumb_url'], // Get thumbnail URL from response
+            thumbnailUrl: thumbnailUrl, // Get thumbnail URL from response
             metadata: {
               'sha256': data['sha256'],
               'size': data['size'],
               'type': data['type'],
               'dimensions': data['dimensions'],
               'url': data['url'],
-              'thumbnail_url': data['thumbnail_url'] ?? data['thumb_url'],
+              'thumbnail_url': thumbnailUrl,
             },
           );
         } else {
@@ -294,9 +350,11 @@ class DirectUploadService  {
         }
       }
     } catch (e, stackTrace) {
-      Log.error('Upload error: $e',
+      Log.error('🚨 Upload error: $e',
           name: 'DirectUploadService', category: LogCategory.system);
-      Log.verbose('📱 Stack trace: $stackTrace',
+      Log.error('Error type: ${e.runtimeType}',
+          name: 'DirectUploadService', category: LogCategory.system);
+      Log.error('Stack trace: $stackTrace',
           name: 'DirectUploadService', category: LogCategory.system);
 
       // Clean up progress tracking on error
@@ -313,27 +371,37 @@ class DirectUploadService  {
 
   /// Get authorization headers for backend requests
   Future<Map<String, String>> _getAuthHeaders(String url) async {
+    Log.debug('🔐 Creating auth headers for URL: $url',
+        name: 'DirectUploadService', category: LogCategory.system);
+    
     final headers = <String, String>{
       'Accept': 'application/json',
     };
 
     // Add NIP-98 authentication if available
     if (_authService?.canCreateTokens == true) {
-      final authToken = await _authService!.createAuthToken(
-        url: url,
-        method: HttpMethod.post,
-      );
+      Log.debug('AuthService available, creating NIP-98 token...',
+          name: 'DirectUploadService', category: LogCategory.system);
+      try {
+        final authToken = await _authService!.createAuthToken(
+          url: url,
+          method: HttpMethod.post,
+        );
 
-      if (authToken != null) {
-        headers['Authorization'] = authToken.authorizationHeader;
-        Log.debug('📱 Added NIP-98 auth to upload request',
-            name: 'DirectUploadService', category: LogCategory.system);
-      } else {
-        Log.error('Failed to create NIP-98 auth token for upload',
+        if (authToken != null) {
+          headers['Authorization'] = authToken.authorizationHeader;
+          Log.debug('✅ Added NIP-98 auth to upload request',
+              name: 'DirectUploadService', category: LogCategory.system);
+        } else {
+          Log.error('❌ Failed to create NIP-98 auth token for upload',
+              name: 'DirectUploadService', category: LogCategory.system);
+        }
+      } catch (e) {
+        Log.error('❌ Error creating auth token: $e',
             name: 'DirectUploadService', category: LogCategory.system);
       }
     } else {
-      Log.warning('No authentication service available for upload',
+      Log.warning('⚠️ No authentication service available for upload',
           name: 'DirectUploadService', category: LogCategory.system);
     }
 
@@ -359,6 +427,36 @@ class DirectUploadService  {
 
   /// Check if an upload is currently in progress
   bool isUploading(String videoId) => _progressControllers.containsKey(videoId);
+
+  /// Check backend connectivity and health
+  static Future<bool> checkBackendHealth() async {
+    try {
+      final healthUrl = AppConfig.healthUrl;
+      Log.info('🏥 Checking backend health at: $healthUrl',
+          name: 'DirectUploadService', category: LogCategory.system);
+      
+      final response = await http.get(Uri.parse(healthUrl)).timeout(
+        const Duration(seconds: 10),
+        onTimeout: () {
+          throw TimeoutException('Health check timed out');
+        },
+      );
+      
+      if (response.statusCode == 200) {
+        Log.info('✅ Backend is healthy: ${response.body}',
+            name: 'DirectUploadService', category: LogCategory.system);
+        return true;
+      } else {
+        Log.error('❌ Backend health check failed: ${response.statusCode} - ${response.body}',
+            name: 'DirectUploadService', category: LogCategory.system);
+        return false;
+      }
+    } catch (e) {
+      Log.error('❌ Backend health check error: $e',
+          name: 'DirectUploadService', category: LogCategory.system);
+      return false;
+    }
+  }
 
   /// Upload a profile picture image directly to CF Workers
   Future<DirectUploadResult> uploadProfilePicture({
@@ -400,12 +498,22 @@ class DirectUploadService  {
 
       // Create a progress-tracking stream
       var bytesUploaded = 0;
+      var lastProgressLog = 0;
       final progressStream = stream.transform(
         StreamTransformer<List<int>, List<int>>.fromHandlers(
           handleData: (data, sink) {
             bytesUploaded += data.length;
             final progress = bytesUploaded / fileLength;
             progressController.add(progress * 0.9); // 0-90% for upload
+            
+            // Log progress every 10%
+            final progressPercent = (progress * 100).round();
+            if (progressPercent >= lastProgressLog + 10) {
+              lastProgressLog = progressPercent;
+              Log.info('📊 Upload progress: $progressPercent% ($bytesUploaded / $fileLength bytes)',
+                  name: 'DirectUploadService', category: LogCategory.system);
+            }
+            
             sink.add(data);
           },
         ),

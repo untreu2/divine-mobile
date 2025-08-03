@@ -76,7 +76,7 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(request.url);
   
   // Allow analytics POST requests to pass through
-  if (url.hostname === 'analytics.openvine.co') {
+  if (url.hostname === 'api.openvine.co' && url.pathname.startsWith('/analytics')) {
     // Don't intercept analytics requests - let them go straight to network
     return;
   }

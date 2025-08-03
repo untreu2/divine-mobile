@@ -293,23 +293,33 @@ void main() {
         expect(publisher.publishingStats['total_failed'], 1);
       });
 
-      test('should provide force check functionality', () async {
-        // Arrange
-        final newCompleter = Completer<List<ReadyEventData>>();
-        publisher = VideoEventPublisher(
-          uploadManager: mockUploadManager,
-          nostrService: mockNostrService,
-          authService: mockAuthService,
-          fetchReadyEvents: () => newCompleter.future,
-          cleanupRemoteEvent: (publicId) async {},
+      test('should handle direct upload publishing', () async {
+        // Arrange - create a test upload
+        final testUpload = PendingUpload(
+          id: 'test-upload-id',
+          videoId: 'test-video-id',
+          cdnUrl: 'https://example.com/test-video.mp4',
+          status: UploadStatus.readyToPublish,
+          createdAt: DateTime.now(),
+        );
+
+        // Mock successful Nostr publishing
+        when(() => mockNostrService.broadcastEvent(any())).thenAnswer(
+          (_) async => NostrBroadcastResult(
+            event: Event('pubkey', 22, [], 'content'),
+            successCount: 1,
+            totalRelays: 1,
+            results: {'relay1': true},
+            errors: {},
+          ),
         );
 
         // Act
-        final forceCheckFuture = publisher.forceCheck();
-        newCompleter.complete([]);
+        final result = await publisher.publishDirectUpload(testUpload);
 
-        // Assert - should complete without error
-        await expectLater(forceCheckFuture, completes);
+        // Assert - should succeed and update stats
+        expect(result, true);
+        expect(publisher.publishingStats['total_published'], 1);
       });
     });
 

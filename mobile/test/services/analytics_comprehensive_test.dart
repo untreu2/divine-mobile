@@ -53,7 +53,7 @@ void main() {
 
       // Check endpoint
       expect(request.url.toString(),
-          equals('https://analytics.openvine.co/analytics/view'));
+          equals('https://api.openvine.co/analytics/view'));
 
       // Check headers
       expect(request.headers['Content-Type'], equals('application/json'));
@@ -127,9 +127,8 @@ void main() {
     test('should handle network timeouts gracefully', () async {
       // Arrange
       mockClient = MockClient((request) async {
-        // Simulate timeout by delaying longer than the timeout duration
-        await Future.delayed(const Duration(seconds: 10));
-        return http.Response('{"success": true}', 200);
+        // Simulate timeout by throwing a timeout exception
+        throw Exception('Timeout');
       });
 
       analyticsService = AnalyticsService(client: mockClient);
@@ -311,7 +310,7 @@ void main() {
       var requestCount = 0;
       mockClient = MockClient((request) async {
         requestCount++;
-        await Future.delayed(const Duration(milliseconds: 50));
+        // Remove arbitrary delay - concurrent requests don't need artificial delays
         return http.Response('{"success": true}', 200);
       });
 

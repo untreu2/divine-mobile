@@ -95,9 +95,6 @@ void main() {
       videoEventPublisher = VideoEventPublisher(
         uploadManager: uploadManager,
         nostrService: mockNostrService,
-        fetchReadyEvents: () => apiService.getReadyEvents(),
-        cleanupRemoteEvent: (publicId) =>
-            apiService.cleanupRemoteEvent(publicId),
       );
 
       // Setup default mock behaviors
@@ -223,8 +220,11 @@ void main() {
         Log.debug('🧪 TEST: Starting background publisher...');
         await videoEventPublisher.initialize();
 
-        // Force an immediate check instead of waiting for polling interval
-        await videoEventPublisher.forceCheck();
+        // Trigger actual publishing event instead of force check
+        final testUpload = uploadManager.getUpload(upload.id);
+        if (testUpload != null) {
+          await videoEventPublisher.publishDirectUpload(testUpload);
+        }
 
         // Step 5: Verify the complete state transition
         await Future.delayed(const Duration(milliseconds: 200));
@@ -272,14 +272,23 @@ void main() {
         // ACT: Initialize publisher and force check
         await videoEventPublisher.initialize();
 
-        // Should not throw - should handle gracefully
-        expect(() => videoEventPublisher.forceCheck(), returnsNormally);
+        // Should handle errors gracefully when trying to publish
+        final testUpload = PendingUpload(
+          id: 'error-test-upload',
+          localVideoPath: '/tmp/test-video.mp4',
+          nostrPubkey: 'test-pubkey',
+          videoId: 'error-test-video',
+          cdnUrl: 'https://invalid-url-for-testing.com/video.mp4',
+          status: UploadStatus.readyToPublish,
+          createdAt: DateTime.now(),
+        );
+        
+        // This should handle the error gracefully and return false
+        final result = await videoEventPublisher.publishDirectUpload(testUpload);
+        expect(result, false);
 
-        // Wait for error handling
-        await Future.delayed(const Duration(milliseconds: 100));
-
-        // ASSERT: Publisher should still be active despite error
-        expect(videoEventPublisher.publishingStats['is_polling_active'], true);
+        // ASSERT: Publisher should track the failure
+        expect(videoEventPublisher.publishingStats['total_failed'], greaterThan(0));
       });
 
       test('pipeline should handle Nostr broadcasting failures gracefully',
@@ -313,11 +322,21 @@ void main() {
         when(() => mockHttpClient.get(any(), headers: any(named: 'headers')))
             .thenAnswer((_) async => readyEventResponse);
 
-        // ACT: Force check with Nostr failure
+        // ACT: Try to publish with Nostr failure
         await videoEventPublisher.initialize();
-        await videoEventPublisher.forceCheck();
-
-        await Future.delayed(const Duration(milliseconds: 100));
+        
+        final testUpload = PendingUpload(
+          id: 'nostr-failure-test',
+          localVideoPath: '/tmp/test-video.mp4',
+          nostrPubkey: 'test-pubkey',
+          videoId: 'nostr-test-video',
+          cdnUrl: 'https://example.com/test-video.mp4',
+          status: UploadStatus.readyToPublish,
+          createdAt: DateTime.now(),
+        );
+        
+        final result = await videoEventPublisher.publishDirectUpload(testUpload);
+        expect(result, false); // Should fail due to mock Nostr failure
 
         // ASSERT: Should track the failure
         expect(videoEventPublisher.publishingStats['total_failed'],
@@ -499,12 +518,21 @@ void main() {
         await videoEventPublisher.initialize();
 
         // Should handle malformed response gracefully
-        expect(() => videoEventPublisher.forceCheck(), returnsNormally);
+        final testUpload = PendingUpload(
+          id: 'malformed-test',
+          localVideoPath: '/tmp/test-video.mp4',
+          nostrPubkey: 'test-pubkey',
+          videoId: 'malformed-video',
+          cdnUrl: 'https://example.com/video.mp4',
+          status: UploadStatus.readyToPublish,
+          createdAt: DateTime.now(),
+        );
+        
+        final result = await videoEventPublisher.publishDirectUpload(testUpload);
+        expect(result, false); // Should fail due to malformed response
 
-        await Future.delayed(const Duration(milliseconds: 100));
-
-        // Publisher should still be active
-        expect(videoEventPublisher.publishingStats['is_polling_active'], true);
+        // Publisher should track the error
+        expect(videoEventPublisher.publishingStats['total_failed'], greaterThan(0));
       });
 
       test('pipeline should handle network timeouts', () async {
@@ -519,12 +547,21 @@ void main() {
         await videoEventPublisher.initialize();
 
         // Should handle timeout gracefully
-        expect(() => videoEventPublisher.forceCheck(), returnsNormally);
+        final testUpload = PendingUpload(
+          id: 'timeout-test',
+          localVideoPath: '/tmp/test-video.mp4',
+          nostrPubkey: 'test-pubkey',
+          videoId: 'timeout-video',
+          cdnUrl: 'https://example.com/video.mp4',
+          status: UploadStatus.readyToPublish,
+          createdAt: DateTime.now(),
+        );
+        
+        final result = await videoEventPublisher.publishDirectUpload(testUpload);
+        expect(result, false); // Should fail due to timeout
 
-        await Future.delayed(const Duration(milliseconds: 100));
-
-        // Should still be polling despite timeout
-        expect(videoEventPublisher.publishingStats['is_polling_active'], true);
+        // Should track timeout as failure
+        expect(videoEventPublisher.publishingStats['total_failed'], greaterThan(0));
       });
     });
   });

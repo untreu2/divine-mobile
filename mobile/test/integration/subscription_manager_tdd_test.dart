@@ -1,4 +1,4 @@
-// ABOUTME: TDD test for SubscriptionManager hitting real vine.hol.is relay - NO MOCKING
+// ABOUTME: TDD test for SubscriptionManager hitting real OpenVine relay - NO MOCKING
 // ABOUTME: This test will fail first, then we fix SubscriptionManager to make it pass
 
 import 'dart:async';
@@ -58,7 +58,7 @@ void main() {
       await keyManager.initialize();
       
       nostrService = NostrService(keyManager);
-      await nostrService.initialize(customRelays: ['wss://vine.hol.is']);
+      await nostrService.initialize(customRelays: ['wss://relay3.openvine.co']);
       
       // Wait for connection to stabilize
       await Future.delayed(Duration(seconds: 3));
@@ -71,8 +71,8 @@ void main() {
       nostrService.dispose();
     });
 
-    test('SubscriptionManager should receive kind 22 events from vine.hol.is relay', () async {
-      Log.debug('🔍 TDD TEST: Testing SubscriptionManager with real vine.hol.is relay...', name: 'SubscriptionManagerTDDIntegrationTest', category: LogCategory.system);
+    test('SubscriptionManager should receive kind 22 events from OpenVine relay', () async {
+      Log.debug('🔍 TDD TEST: Testing SubscriptionManager with real OpenVine relay...', name: 'SubscriptionManagerTDDIntegrationTest', category: LogCategory.system);
       
       // This test will FAIL initially - that's the point of TDD!
       final receivedEvents = <Event>[];
@@ -119,7 +119,7 @@ void main() {
       
       // This assertion will FAIL initially - proving SubscriptionManager is broken
       expect(receivedEvents.length, greaterThan(0), 
-        reason: 'SubscriptionManager should receive events from vine.hol.is relay (we know events exist from nak verification)');
+        reason: 'SubscriptionManager should receive events from OpenVine relay (we know events exist from nak verification)');
     });
     
     test('Direct subscription should work for comparison (proves relay has events)', () async {
