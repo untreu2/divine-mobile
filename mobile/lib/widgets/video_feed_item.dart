@@ -148,9 +148,20 @@ class _VideoFeedItemState extends ConsumerState<VideoFeedItem> {
               name: 'VideoFeedItem', category: LogCategory.ui);
 
           void checkAndPlay() {
+            // Check if video is still active (even if generation changed)
+            final stillActive = ref.read(isVideoActiveProvider(widget.video.id));
+
+            if (!stillActive) {
+              // Video no longer active, don't play
+              Log.debug('⏭️ Ignoring initialization callback for $videoIdDisplay... (no longer active)',
+                  name: 'VideoFeedItem', category: LogCategory.ui);
+              controller.removeListener(checkAndPlay);
+              return;
+            }
+
             if (gen != _playbackGeneration) {
-              // State changed, ignore this attempt
-              Log.debug('⏭️ Ignoring stale initialization callback for $videoIdDisplay...',
+              // Generation changed but video still active - this can happen if state toggled quickly
+              Log.debug('⏭️ Ignoring stale initialization callback for $videoIdDisplay... (generation mismatch)',
                   name: 'VideoFeedItem', category: LogCategory.ui);
               return;
             }
@@ -164,6 +175,7 @@ class _VideoFeedItemState extends ConsumerState<VideoFeedItem> {
                       name: 'VideoFeedItem', category: LogCategory.ui);
                 }
               });
+              controller.removeListener(checkAndPlay);
             }
           }
 
