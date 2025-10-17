@@ -305,6 +305,8 @@ class NostrService implements INostrService {
     final controller = StreamController<Event>.broadcast();
     // Per-subscription de-duplication to avoid duplicate EVENTs from multiple relays/filters
     final seenEventIds = <String>{};
+    // Track replaceable events (kind, pubkey) -> (eventId, timestamp) for deduplication
+    final replaceableEvents = <String, (String, int)>{};
     _subscriptions[id] = controller;
     Log.debug('Total active subscriptions: ${_subscriptions.length}',
         name: 'NostrService', category: LogCategory.relay);
@@ -343,7 +345,7 @@ class NostrService implements INostrService {
         // Convert embedded relay event to nostr_sdk event
         final event = _convertFromEmbeddedEvent(embeddedEvent);
 
-        // Drop duplicates for this subscription
+        // Drop exact duplicates (same event ID sent twice)
         if (seenEventIds.contains(event.id)) {
           // Use batched logging for duplicate events
           RelayEventLogBatcher.batchDuplicateEvent(
@@ -352,7 +354,56 @@ class NostrService implements INostrService {
           );
           return;
         }
-        seenEventIds.add(event.id);
+
+        // Handle replaceable events (NIP-01, NIP-16, NIP-33)
+        // Replaceable: kind 0, 3, 10000-19999
+        // Parameterized replaceable: kind 30000-39999
+        final isReplaceable = event.kind == 0 ||
+                             event.kind == 3 ||
+                             (event.kind >= 10000 && event.kind < 20000) ||
+                             (event.kind >= 30000 && event.kind < 40000);
+
+        if (isReplaceable) {
+          // Key for tracking: "kind:pubkey" (or "kind:pubkey:d-tag" for parameterized)
+          String replaceKey = '${event.kind}:${event.pubkey}';
+
+          // For parameterized replaceable events, include d-tag
+          if (event.kind >= 30000 && event.kind < 40000) {
+            final dTag = event.tags.firstWhere(
+              (tag) => tag.isNotEmpty && tag[0] == 'd',
+              orElse: () => [],
+            );
+            if (dTag.isNotEmpty && dTag.length > 1) {
+              replaceKey += ':${dTag[1]}';
+            }
+          }
+
+          // Check if we've seen this replaceable event before
+          if (replaceableEvents.containsKey(replaceKey)) {
+            final (oldEventId, oldTimestamp) = replaceableEvents[replaceKey]!;
+
+            if (event.createdAt > oldTimestamp) {
+              // New event is newer - replace the old one
+              Log.debug('Replacing old ${event.kind} event (ts:$oldTimestamp) with newer (ts:${event.createdAt})',
+                  name: 'NostrService', category: LogCategory.relay);
+              replaceableEvents[replaceKey] = (event.id, event.createdAt);
+              seenEventIds.remove(oldEventId); // Clean up old ID
+              seenEventIds.add(event.id);
+            } else {
+              // Old event is newer - drop this one
+              Log.debug('Dropping older ${event.kind} event (ts:${event.createdAt}) - already have newer (ts:$oldTimestamp)',
+                  name: 'NostrService', category: LogCategory.relay);
+              return;
+            }
+          } else {
+            // First time seeing this replaceable event
+            replaceableEvents[replaceKey] = (event.id, event.createdAt);
+            seenEventIds.add(event.id);
+          }
+        } else {
+          // Non-replaceable event - just track by ID
+          seenEventIds.add(event.id);
+        }
 
         // Note: We intentionally allow the same event to appear in different subscriptions
         // (e.g., search results and hashtag feeds) since they serve different contexts.
@@ -406,22 +457,38 @@ class NostrService implements INostrService {
     // Handle controller disposal
     controller.onCancel = () {
       Log.debug(
-          'Stream cancelled for subscription $id - closing embedded relay subscription',
+          'Stream cancelled for subscription $id - scheduling graceful shutdown in 2 seconds',
           name: 'NostrService',
           category: LogCategory.relay);
-      try {
-        subscription.close();
-        UnifiedLogger.info(
-            'Successfully closed embedded relay subscription $id',
-            name: 'NostrService');
-      } catch (e) {
-        UnifiedLogger.error('Error closing embedded relay subscription $id: $e',
-            name: 'NostrService');
-      }
+
+      // Remove from tracking immediately to prevent reuse during grace period
       _subscriptions.remove(id);
       UnifiedLogger.debug(
           'Active subscriptions after removal: ${_subscriptions.length}',
           name: 'NostrService');
+
+      // CRITICAL: Keep subscription AND controller alive for grace period
+      // This allows external relays (200-500ms latency) to finish sending events
+      // before we close the embedded relay's storage stream
+      Future.delayed(const Duration(seconds: 2), () async {
+        try {
+          // Close the embedded relay subscription first
+          subscription.close();
+          UnifiedLogger.info(
+              'Closed embedded relay subscription $id after grace period',
+              name: 'NostrService');
+
+          // Then close the controller
+          if (!controller.isClosed) {
+            await controller.close();
+            UnifiedLogger.debug('Closed stream controller for $id',
+                name: 'NostrService');
+          }
+        } catch (e) {
+          UnifiedLogger.error('Error during graceful shutdown of $id: $e',
+              name: 'NostrService');
+        }
+      });
     };
 
     return controller.stream;
