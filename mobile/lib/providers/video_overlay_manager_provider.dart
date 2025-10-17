@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/legacy.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:openvine/models/video_event.dart';
 import 'package:openvine/providers/individual_video_providers.dart';
+import 'package:openvine/providers/computed_active_video_provider.dart';
 import 'package:openvine/utils/unified_logger.dart';
 
 part 'video_overlay_manager_provider.g.dart';
@@ -36,8 +37,8 @@ class VideoOverlayManager {
         return;
       }
 
-      // Set as active video to trigger controller creation
-      _ref.read(activeVideoProvider.notifier).setActiveVideo(videoId);
+      // Set via manual page context for modal overlay
+      _ref.read(currentPageContextProvider.notifier).setContext('modal', 0, videoId);
 
       Log.info('VideoOverlayManager: Preloading video ${videoId.substring(0, 8)}...',
           name: 'VideoOverlayManager', category: LogCategory.system);
@@ -53,8 +54,8 @@ class VideoOverlayManager {
   /// Pause all videos (VideoOverlayModal expects this method)
   void pauseAllVideos() {
     try {
-      // Clear active video to pause current playback
-      _ref.read(activeVideoProvider.notifier).clearActiveVideo();
+      // Clear via manual page context
+      _ref.read(currentPageContextProvider.notifier).clear();
 
       Log.info('VideoOverlayManager: Paused all videos',
           name: 'VideoOverlayManager', category: LogCategory.system);
@@ -69,7 +70,7 @@ class VideoOverlayManager {
   void disposeAllControllers() {
     try {
       // First clear active video to stop playback
-      _ref.read(activeVideoProvider.notifier).clearActiveVideo();
+      _ref.read(currentPageContextProvider.notifier).clear();
 
       // Invalidate the video controller family to dispose all instances
       // This forces ALL controllers to dispose, even those kept alive by IndexedStack
@@ -86,16 +87,16 @@ class VideoOverlayManager {
   /// Toggle play/pause for specific video (VideoOverlayModal expects this method)
   void togglePlayPause(VideoEvent video) {
     try {
-      final currentActive = _ref.read(activeVideoProvider).currentVideoId;
+      final currentActive = _ref.read(activeVideoProvider);
 
       if (currentActive == video.id) {
         // Currently active - pause by clearing
-        _ref.read(activeVideoProvider.notifier).clearActiveVideo();
+        _ref.read(currentPageContextProvider.notifier).clear();
         Log.info('VideoOverlayManager: Paused video ${video.id.substring(0, 8)}...',
             name: 'VideoOverlayManager', category: LogCategory.system);
       } else {
         // Not active - set as active to play
-        _ref.read(activeVideoProvider.notifier).setActiveVideo(video.id);
+        _ref.read(currentPageContextProvider.notifier).setContext('modal', 0, video.id);
         Log.info('VideoOverlayManager: Playing video ${video.id.substring(0, 8)}...',
             name: 'VideoOverlayManager', category: LogCategory.system);
       }
@@ -109,7 +110,7 @@ class VideoOverlayManager {
   void toggleFullscreen(VideoEvent video) {
     try {
       // Set as active video and let VideoFeedItem handle fullscreen
-      _ref.read(activeVideoProvider.notifier).setActiveVideo(video.id);
+      _ref.read(currentPageContextProvider.notifier).setContext('modal', 0, video.id);
 
       Log.info('VideoOverlayManager: Toggled fullscreen for video ${video.id.substring(0, 8)}...',
           name: 'VideoOverlayManager', category: LogCategory.system);
@@ -121,19 +122,19 @@ class VideoOverlayManager {
 
   /// Set active video for page changes (VideoOverlayModal needs this)
   void setActiveVideo(String videoId) {
-    _ref.read(activeVideoProvider.notifier).setActiveVideo(videoId);
+    _ref.read(currentPageContextProvider.notifier).setContext('modal', 0, videoId);
   }
 
   /// Clear active video when modal closes (VideoOverlayModal needs this)
   void clearActiveVideo() {
-    _ref.read(activeVideoProvider.notifier).clearActiveVideo();
+    _ref.read(currentPageContextProvider.notifier).clear();
   }
 
   /// Get list of registered video IDs
   Set<String> get registeredVideos => Set.unmodifiable(_registeredVideos);
 
   /// Get currently active video ID
-  String? get activeVideoId => _ref.read(activeVideoProvider).currentVideoId;
+  String? get activeVideoId => _ref.read(activeVideoProvider);
 }
 
 /// Provider for VideoOverlayManager that VideoOverlayModal can use

@@ -4,10 +4,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openvine/providers/app_providers.dart';
-import 'package:openvine/providers/individual_video_providers.dart';
 import 'package:openvine/screens/pure/universal_camera_screen_pure.dart';
 import 'package:openvine/theme/vine_theme.dart';
-import 'package:openvine/utils/unified_logger.dart';
 import 'package:openvine/widgets/age_verification_dialog.dart';
 
 class CameraFAB extends ConsumerWidget {
@@ -19,10 +17,7 @@ class CameraFAB extends ConsumerWidget {
       onPressed: () async {
         final scaffoldContext = context;
 
-        // Clear active video before opening camera
-        ref.read(activeVideoProvider.notifier).clearActiveVideo();
-        Log.info('⏸️ Cleared current video before camera',
-            name: 'CameraFAB', category: LogCategory.system);
+        // Router-driven architecture: navigation automatically pauses videos
 
         // Check age verification
         final ageVerificationService = ref.read(ageVerificationServiceProvider);

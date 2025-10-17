@@ -117,6 +117,8 @@ class FeatureFlagService {
     'proofmode_verify': false,
     'proofmode_ui': false,
     'proofmode_production': false,
+    // NIP-46 bunker authentication (not yet fully implemented)
+    'enableNip46': false,
   };
 
   /// Check if a feature is enabled

@@ -32,6 +32,9 @@ class AnalyticsService implements BackgroundAwareService {
   bool _isInBackground = false;
   final List<Map<String, dynamic>> _pendingAnalytics = [];
 
+  // Track active retry operations to cancel on dispose
+  bool _isDisposed = false;
+
   /// Initialize the analytics service
   Future<void> initialize() async {
     if (_isInitialized) return;
@@ -251,8 +254,23 @@ class AnalyticsService implements BackgroundAwareService {
 
       // Retry with exponential backoff if we haven't reached max attempts
       if (attempt < maxAttempts) {
+        // Check if disposed before scheduling retry
+        if (_isDisposed) {
+          Log.debug('Analytics service disposed, skipping retry',
+              name: 'AnalyticsService', category: LogCategory.system);
+          return;
+        }
+
         final delay = Duration(milliseconds: 1000 * attempt); // 1s, 2s, 3s...
         await Future.delayed(delay);
+
+        // Check if disposed after delay
+        if (_isDisposed) {
+          Log.debug('Analytics service disposed during retry delay',
+              name: 'AnalyticsService', category: LogCategory.system);
+          return;
+        }
+
         await _trackDetailedVideoViewWithRetry(video, userId, source, eventType,
             watchDuration: watchDuration,
             totalDuration: totalDuration,
@@ -369,6 +387,7 @@ class AnalyticsService implements BackgroundAwareService {
   }
 
   void dispose() {
+    _isDisposed = true;
     _cleanupTimer?.cancel();
     _client.close();
   }

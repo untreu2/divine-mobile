@@ -1,14 +1,18 @@
 // ABOUTME: Video feed item using individual controller architecture
 // ABOUTME: Each video gets its own controller with automatic lifecycle management via Riverpod autoDispose
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:visibility_detector/visibility_detector.dart';
 import 'package:video_player/video_player.dart';
+import 'package:openvine/features/feature_flags/models/feature_flag.dart';
+import 'package:openvine/features/feature_flags/providers/feature_flag_providers.dart';
 import 'package:openvine/models/video_event.dart';
-import 'package:openvine/providers/individual_video_providers.dart' hide isVideoActiveProvider; // For individualVideoControllerProvider only
-import 'package:openvine/providers/active_video_provider.dart'; // For isVideoActiveProvider (derived)
+import 'package:openvine/providers/app_providers.dart';
+import 'package:openvine/providers/individual_video_providers.dart'; // For individualVideoControllerProvider only
+import 'package:openvine/providers/active_video_provider.dart'; // For isVideoActiveProvider (router-driven)
 import 'package:openvine/providers/social_providers.dart';
 import 'package:openvine/providers/user_profile_providers.dart';
 import 'package:openvine/router/page_context_provider.dart';
@@ -19,6 +23,7 @@ import 'package:openvine/ui/overlay_policy.dart';
 import 'package:openvine/widgets/video_thumbnail_widget.dart';
 import 'package:openvine/utils/unified_logger.dart';
 import 'package:openvine/widgets/share_video_menu.dart';
+import 'package:openvine/widgets/video_error_overlay.dart';
 import 'package:openvine/widgets/video_metrics_tracker.dart';
 import 'package:openvine/router/nav_extensions.dart';
 import 'package:openvine/utils/string_utils.dart';
@@ -52,31 +57,6 @@ class VideoFeedItem extends ConsumerStatefulWidget {
 class _VideoFeedItemState extends ConsumerState<VideoFeedItem> {
   int _playbackGeneration = 0; // Prevents race conditions with rapid state changes
   DateTime? _lastTapTime; // Debounce rapid taps to prevent phantom pauses
-
-  /// Translate error messages to user-friendly text
-  static String _getErrorMessage(String? errorDescription) {
-    if (errorDescription == null) return 'Video playback error';
-
-    final lowerError = errorDescription.toLowerCase();
-
-    if (lowerError.contains('404') || lowerError.contains('not found')) {
-      return 'Video not found';
-    }
-    if (lowerError.contains('network') || lowerError.contains('connection')) {
-      return 'Network error';
-    }
-    if (lowerError.contains('timeout')) {
-      return 'Loading timeout';
-    }
-    if (lowerError.contains('byte range') || lowerError.contains('coremediaerrordomain')) {
-      return 'Video format error\n(Try again or use different browser)';
-    }
-    if (lowerError.contains('format') || lowerError.contains('codec')) {
-      return 'Unsupported video format';
-    }
-
-    return 'Video playback error';
-  }
 
   @override
   void initState() {
@@ -366,99 +346,54 @@ class _VideoFeedItemState extends ConsumerState<VideoFeedItem> {
 
                         // Check for video error state
                         if (value.hasError) {
-                        final errorMessage = _getErrorMessage(value.errorDescription);
-                        return Stack(
-                          fit: StackFit.expand,
-                          children: [
-                            // Show thumbnail as background
-                            VideoThumbnailWidget(
-                              video: video,
-                              fit: BoxFit.cover,
-                              showPlayIcon: false,
-                            ),
-                            // Error overlay (only show on active video)
-                            if (isActive)
-                              Container(
-                                color: Colors.black54,
-                                child: Center(
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      const Icon(
-                                        Icons.error_outline,
-                                        color: Colors.white,
-                                        size: 48,
-                                      ),
-                                      const SizedBox(height: 16),
-                                      Text(
-                                        errorMessage,
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 14,
-                                        ),
-                                        textAlign: TextAlign.center,
-                                      ),
-                                      const SizedBox(height: 16),
-                                      ElevatedButton(
-                                        onPressed: () {
-                                          // Retry by invalidating and recreating the controller
-                                          ref.invalidate(
-                                            individualVideoControllerProvider(controllerParams),
-                                          );
-                                        },
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: Colors.white,
-                                          foregroundColor: Colors.black,
-                                        ),
-                                        child: const Text('Retry'),
-                                      ),
-                                    ],
+                          return VideoErrorOverlay(
+                            video: video,
+                            controllerParams: controllerParams,
+                            errorDescription: value.errorDescription ?? '',
+                            isActive: isActive,
+                          );
+                        }
+
+                        if (!value.isInitialized) {
+                          // Show thumbnail/blurhash while the video initializes
+                          return Stack(
+                            fit: StackFit.expand,
+                            children: [
+                              VideoThumbnailWidget(
+                                video: video,
+                                fit: BoxFit.cover,
+                                showPlayIcon: false,
+                              ),
+                              // Only show loading indicator on active video
+                              if (isActive)
+                                const Center(
+                                  child: SizedBox(
+                                    width: 28,
+                                    height: 28,
+                                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                                   ),
                                 ),
-                              ),
-                          ],
-                        );
-                      }
+                            ],
+                          );
+                        }
 
-                      if (!value.isInitialized) {
-                        // Show thumbnail/blurhash while the video initializes
-                        return Stack(
-                          fit: StackFit.expand,
-                          children: [
-                            VideoThumbnailWidget(
-                              video: video,
-                              fit: BoxFit.cover,
-                              showPlayIcon: false,
+                        // Use BoxFit.contain for square/landscape videos to avoid cropping
+                        // Use BoxFit.cover for portrait videos to fill the screen
+                        final aspectRatio = value.size.width / value.size.height;
+                        final isPortraitVideo = aspectRatio < 0.9; // Portrait if width < height (with 10% tolerance)
+
+
+                        return SizedBox.expand(
+                          child: FittedBox(
+                            fit: isPortraitVideo ? BoxFit.cover : BoxFit.contain,
+                            alignment: Alignment.topCenter,
+                            child: SizedBox(
+                              width: value.size.width == 0 ? 1 : value.size.width,
+                              height: value.size.height == 0 ? 1 : value.size.height,
+                              child: VideoPlayer(controller),
                             ),
-                            // Only show loading indicator on active video
-                            if (isActive)
-                              const Center(
-                                child: SizedBox(
-                                  width: 28,
-                                  height: 28,
-                                  child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-                                ),
-                              ),
-                          ],
-                        );
-                      }
-
-                      // Use BoxFit.contain for square/landscape videos to avoid cropping
-                      // Use BoxFit.cover for portrait videos to fill the screen
-                      final aspectRatio = value.size.width / value.size.height;
-                      final isPortraitVideo = aspectRatio < 0.9; // Portrait if width < height (with 10% tolerance)
-
-                      return SizedBox.expand(
-                        child: FittedBox(
-                          fit: isPortraitVideo ? BoxFit.cover : BoxFit.contain,
-                          alignment: Alignment.topCenter,
-                          child: SizedBox(
-                            width: value.size.width == 0 ? 1 : value.size.width,
-                            height: value.size.height == 0 ? 1 : value.size.height,
-                            child: VideoPlayer(controller),
                           ),
-                        ),
-                      );
+                        );
                       },
                     );
 
@@ -813,8 +748,77 @@ class VideoOverlayActions extends ConsumerWidget {
               size: 32,
             ),
           ),
+
+          // Edit button (only show for owned videos when feature is enabled)
+          _buildEditButton(context, ref, video),
               ],
             ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Build edit button if video is owned by current user and feature flag is enabled
+  Widget _buildEditButton(BuildContext context, WidgetRef ref, VideoEvent video) {
+    // Check feature flag
+    final featureFlagService = ref.watch(featureFlagServiceProvider);
+    final isEditorEnabled = featureFlagService.isEnabled(FeatureFlag.enableVideoEditorV1);
+
+    if (!isEditorEnabled) {
+      return const SizedBox.shrink();
+    }
+
+    // Check ownership
+    final authService = ref.watch(authServiceProvider);
+    final currentUserPubkey = authService.currentPublicKeyHex;
+    final isOwnVideo = currentUserPubkey != null && currentUserPubkey == video.pubkey;
+
+    if (!isOwnVideo) {
+      return const SizedBox.shrink();
+    }
+
+    // Show edit button
+    return Column(
+      children: [
+        const SizedBox(height: 16),
+        IconButton(
+          onPressed: () {
+            Log.info(
+              '✏️ Edit button tapped for ${video.id}',
+              name: 'VideoFeedItem',
+              category: LogCategory.ui,
+            );
+
+            // Platform guard: web shows modal, native navigates to editor
+            if (kIsWeb) {
+              // Show "not available on web" modal
+              showDialog<void>(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text('Editor Not Available'),
+                  content: const Text(
+                    'Video editing is not available on web yet. '
+                    'Please use the mobile app to edit your videos.',
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: const Text('OK'),
+                    ),
+                  ],
+                ),
+              );
+            } else {
+              // Navigate to video editor screen (route will be added next)
+              context.push('/edit-video', extra: video);
+            }
+          },
+          tooltip: 'Edit video',
+          icon: const Icon(
+            Icons.edit,
+            color: Colors.white,
+            size: 32,
           ),
         ),
       ],

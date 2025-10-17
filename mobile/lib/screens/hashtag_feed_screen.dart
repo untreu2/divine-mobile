@@ -8,8 +8,8 @@ import 'package:openvine/models/video_event.dart';
 import 'package:openvine/router/nav_extensions.dart';
 import 'package:openvine/services/video_event_service.dart';
 import 'package:openvine/theme/vine_theme.dart';
+import 'package:openvine/widgets/composable_video_grid.dart';
 import 'package:openvine/widgets/video_feed_item.dart';
-import 'package:openvine/widgets/video_thumbnail_widget.dart';
 
 class HashtagFeedScreen extends ConsumerStatefulWidget {
   const HashtagFeedScreen({required this.hashtag, this.embedded = false, this.onVideoTap, super.key});
@@ -22,101 +22,6 @@ class HashtagFeedScreen extends ConsumerStatefulWidget {
 }
 
 class _HashtagFeedScreenState extends ConsumerState<HashtagFeedScreen> {
-
-  Widget _buildVideoTile(VideoEvent video, int index, List<VideoEvent> videos, BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        // Navigate to hashtag feed mode using GoRouter
-        context.goHashtag(widget.hashtag, index);
-      },
-      child: Container(
-        decoration: BoxDecoration(
-          color: VineTheme.cardBackground,
-          borderRadius: BorderRadius.circular(0),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.3),
-              blurRadius: 4,
-              offset: const Offset(0, 1),
-            ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(0),
-          child: Column(
-            children: [
-              // Video thumbnail with play overlay
-              Expanded(
-                flex: 5,
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    Container(
-                      color: VineTheme.cardBackground,
-                      child: video.thumbnailUrl != null
-                          ? VideoThumbnailWidget(
-                              video: video,
-                              width: double.infinity,
-                              height: double.infinity,
-                            )
-                          : Container(
-                              color: VineTheme.cardBackground,
-                              child: Icon(
-                                Icons.videocam,
-                                size: 40,
-                                color: VineTheme.secondaryText,
-                              ),
-                            ),
-                    ),
-                    // Play button overlay
-                    Center(
-                      child: Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: VineTheme.darkOverlay,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          Icons.play_arrow,
-                          color: VineTheme.whiteText,
-                          size: 32,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              // Video info section
-              Expanded(
-                flex: 2,
-                child: Container(
-                  padding: const EdgeInsets.all(8),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        video.content.isNotEmpty ? video.content : video.title ?? 'Untitled',
-                        style: const TextStyle(
-                          color: VineTheme.primaryText,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-
   @override
   void initState() {
     super.initState();
@@ -219,18 +124,11 @@ class _HashtagFeedScreenState extends ConsumerState<HashtagFeedScreen> {
 
             // Use grid view when embedded (in explore), full-screen list when standalone
             if (widget.embedded) {
-              return GridView.builder(
-                padding: const EdgeInsets.all(12),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  childAspectRatio: 0.75,
-                  crossAxisSpacing: 12,
-                  mainAxisSpacing: 12,
-                ),
-                itemCount: videos.length,
-                itemBuilder: (context, index) {
-                  final video = videos[index];
-                  return _buildVideoTile(video, index, videos, context);
+              return ComposableVideoGrid(
+                videos: videos,
+                onVideoTap: widget.onVideoTap ?? (videos, index) {
+                  // Default behavior: navigate to hashtag feed mode using GoRouter
+                  context.goHashtag(widget.hashtag, index);
                 },
               );
             }

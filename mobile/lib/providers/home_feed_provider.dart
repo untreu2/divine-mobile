@@ -110,31 +110,16 @@ class HomeFeed extends _$HomeFeed {
     // Start timer immediately for first build
     startAutoRefresh();
 
-    // Listen for changes to following list and invalidate when it changes
-    ref.listen(social.socialProvider, (previous, next) {
-      final prevFollowing = previous?.followingPubkeys ?? [];
-      final nextFollowing = next.followingPubkeys;
+    Log.info('🏠 HomeFeed: BUILD #$buildId watching socialProvider...', name: 'HomeFeedProvider', category: LogCategory.video);
 
-      if (prevFollowing.length != nextFollowing.length) {
-        Log.info(
-          '🏠 HomeFeed: Following list changed from ${prevFollowing.length} to ${nextFollowing.length} - invalidating feed',
-          name: 'HomeFeedProvider',
-          category: LogCategory.video,
-        );
-        ref.invalidateSelf();
-      }
-    });
-
-    Log.info('🏠 HomeFeed: BUILD #$buildId watching socialProvider for current state...', name: 'HomeFeedProvider', category: LogCategory.video);
-
-    // Watch social provider to ensure we have initialized data
-    // This creates a dependency that will rebuild when social state changes
-    // Note: ref.listen() above handles invalidation when following list changes
+    // Watch social provider to get following list
+    // Eliminates double-watch anti-pattern - removed ref.listen() that was causing duplicate invalidations
+    // Now rebuilds ONCE per social state change instead of twice
     final socialData = ref.watch(social.socialProvider);
     final followingPubkeys = socialData.followingPubkeys;
 
     Log.info(
-      '🏠 HomeFeed: BUILD #$buildId - User is following ${followingPubkeys.length} people (social initialized: ${socialData.isInitialized})',
+      '🏠 HomeFeed: BUILD #$buildId - User is following ${followingPubkeys.length} people',
       name: 'HomeFeedProvider',
       category: LogCategory.video,
     );
@@ -196,6 +181,17 @@ class HomeFeed extends _$HomeFeed {
     videoEventService.removeListener(checkStability);
     stabilityTimer?.cancel();
 
+    // Check if provider is still mounted after async gap
+    if (!ref.mounted) {
+      return VideoFeedState(
+        videos: [],
+        hasMoreContent: false,
+        isLoadingMore: false,
+        error: null,
+        lastUpdated: null,
+      );
+    }
+
     // Get videos from the dedicated home feed list (server-side filtered to only following)
     final followingVideos =
         List<VideoEvent>.from(videoEventService.homeFeedVideos);
@@ -235,6 +231,17 @@ class HomeFeed extends _$HomeFeed {
 
     // Auto-fetch profiles for new videos and wait for completion
     await _scheduleBatchProfileFetch(reorderedVideos);
+
+    // Check if provider is still mounted after async gap
+    if (!ref.mounted) {
+      return VideoFeedState(
+        videos: [],
+        hasMoreContent: false,
+        isLoadingMore: false,
+        error: null,
+        lastUpdated: null,
+      );
+    }
 
     final feedState = VideoFeedState(
       videos: reorderedVideos,

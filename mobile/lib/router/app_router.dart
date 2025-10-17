@@ -25,7 +25,8 @@ final _exploreGridKey = GlobalKey<NavigatorState>(debugLabel: 'explore-grid');
 final _exploreFeedKey = GlobalKey<NavigatorState>(debugLabel: 'explore-feed');
 final _notificationsKey = GlobalKey<NavigatorState>(debugLabel: 'notifications');
 final _profileKey = GlobalKey<NavigatorState>(debugLabel: 'profile');
-final _searchKey = GlobalKey<NavigatorState>(debugLabel: 'search');
+final _searchGridKey = GlobalKey<NavigatorState>(debugLabel: 'search-grid');
+final _searchFeedKey = GlobalKey<NavigatorState>(debugLabel: 'search-feed');
 final _hashtagKey = GlobalKey<NavigatorState>(debugLabel: 'hashtag');
 
 /// Maps URL location to bottom nav tab index
@@ -52,28 +53,40 @@ int tabIndexFromLocation(String loc) {
 }
 
 final goRouterProvider = Provider<GoRouter>((ref) {
-  // Get auth service to resolve "me" placeholder
-  final authService = ref.watch(authServiceProvider);
-
   return GoRouter(
     navigatorKey: _rootKey,
     initialLocation: '/home/0',
     redirect: (context, state) {
       // Handle /profile/me/:index redirect
       final uri = state.uri;
+      print('[ROUTER] Redirect check: ${uri.path}');
+      print('[ROUTER] Path segments: ${uri.pathSegments}');
+
       if (uri.pathSegments.length >= 2 &&
           uri.pathSegments[0] == 'profile' &&
           uri.pathSegments[1] == 'me') {
+        print('[ROUTER] Detected /profile/me/* - attempting redirect');
+
+        // Get auth service dynamically from context
+        final container = ProviderScope.containerOf(context);
+        final authService = container.read(authServiceProvider);
+
+        print('[ROUTER] Auth state: ${authService.isAuthenticated}');
+        print('[ROUTER] Public key: ${authService.currentPublicKeyHex?.substring(0, 8)}...');
+
         // Check if user is authenticated
         if (!authService.isAuthenticated || authService.currentPublicKeyHex == null) {
           // Redirect to home if not authenticated
+          print('[ROUTER] Not authenticated, redirecting to /home/0');
           return '/home/0';
         }
 
         // Convert current user's hex to npub and redirect
         final userNpub = NostrEncoding.encodePublicKey(authService.currentPublicKeyHex!);
         final index = uri.pathSegments.length >= 3 ? uri.pathSegments[2] : '0';
-        return '/profile/$userNpub/$index';
+        final redirectTo = '/profile/$userNpub/$index';
+        print('[ROUTER] Redirecting to: $redirectTo');
+        return redirectTo;
       }
 
       // No redirect needed

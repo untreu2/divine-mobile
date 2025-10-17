@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:video_player/video_player.dart';
 import 'package:openvine/utils/unified_logger.dart';
 import 'package:openvine/providers/individual_video_providers.dart';
+import 'package:openvine/providers/active_video_provider.dart';
 
 /// Creates a video controller with fallback logic for CDN compatibility
 class VideoControllerWithFallback {
@@ -104,8 +105,8 @@ final videoControllerFallbackProvider = Provider.family<VideoPlayerController, V
     // Set up the controller
     controller.setLooping(true);
 
-    // Check if should autoplay
-    final isActive = ref.read(activeVideoProvider) == params.videoId;
+    // Check if should autoplay based on router-driven active video
+    final isActive = ref.read(activeVideoIdProvider) == params.videoId;
     if (isActive) {
       controller.play().catchError((e) {
         Log.error('Failed to autoplay: $e',

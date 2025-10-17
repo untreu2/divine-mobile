@@ -8,6 +8,7 @@ import 'package:nostr_sdk/event.dart';
 import 'package:nostr_sdk/filter.dart';
 import 'package:openvine/models/curation_set.dart';
 import 'package:openvine/models/video_event.dart';
+import 'package:openvine/services/auth_service.dart';
 import 'package:openvine/services/curation_service.dart';
 import 'package:openvine/services/nostr_service_interface.dart';
 import 'package:openvine/services/social_service.dart';
@@ -17,6 +18,7 @@ import 'package:openvine/services/video_event_service.dart';
   INostrService,
   VideoEventService,
   SocialService,
+  AuthService,
 ])
 import 'curation_service_trending_fetch_test.mocks.dart';
 
@@ -25,11 +27,13 @@ void main() {
   late MockINostrService mockNostrService;
   late MockVideoEventService mockVideoEventService;
   late MockSocialService mockSocialService;
+  late MockAuthService mockAuthService;
 
   setUp(() {
     mockNostrService = MockINostrService();
     mockVideoEventService = MockVideoEventService();
     mockSocialService = MockSocialService();
+    mockAuthService = MockAuthService();
 
     // Setup default mocks
     when(mockVideoEventService.videoEvents).thenReturn([]);
@@ -42,6 +46,7 @@ void main() {
       nostrService: mockNostrService,
       videoEventService: mockVideoEventService,
       socialService: mockSocialService,
+      authService: mockAuthService,
     );
   });
 

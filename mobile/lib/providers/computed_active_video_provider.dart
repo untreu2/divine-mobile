@@ -1,19 +1,21 @@
 // ABOUTME: Computed active video provider using reactive architecture
 // ABOUTME: Active video is derived from page context and app state, never set imperatively
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:openvine/models/video_event.dart';
 import 'package:openvine/providers/app_foreground_provider.dart';
-import 'package:openvine/providers/app_providers.dart';
+import 'package:openvine/utils/unified_logger.dart';
 
 /// Page context - which screen and page are currently showing
 class PageContext {
   final String screenId; // 'home', 'explore', 'profile:npub123', 'hashtag:funny'
   final int pageIndex;
+  final String videoId; // The actual video being displayed at this index
 
   const PageContext({
     required this.screenId,
     required this.pageIndex,
+    required this.videoId,
   });
 
   @override
@@ -22,23 +24,85 @@ class PageContext {
       other is PageContext &&
           runtimeType == other.runtimeType &&
           screenId == other.screenId &&
-          pageIndex == other.pageIndex;
+          pageIndex == other.pageIndex &&
+          videoId == other.videoId;
 
   @override
-  int get hashCode => screenId.hashCode ^ pageIndex.hashCode;
+  int get hashCode => screenId.hashCode ^ pageIndex.hashCode ^ videoId.hashCode;
 }
 
 /// Current page context notifier using Riverpod 2.0+ Notifier
 class CurrentPageContextNotifier extends Notifier<PageContext?> {
+  int _epoch = 0;
+  int _pendingEpoch = -1;
+  int get epoch => _epoch;
+
   @override
   PageContext? build() => null;
 
-  void setContext(String screenId, int pageIndex) {
-    state = PageContext(screenId: screenId, pageIndex: pageIndex);
+  void setContext(String screenId, int pageIndex, String videoId) {
+    state = PageContext(screenId: screenId, pageIndex: pageIndex, videoId: videoId);
   }
 
   void clear() {
     state = null;
+  }
+
+  /// Announce that a new claim with this epoch is incoming (no state write)
+  void announcePending(int claimEpoch, String screenId) {
+    if (claimEpoch > _pendingEpoch) {
+      _pendingEpoch = claimEpoch;
+      debugPrint('[CTX] pending claim=$claimEpoch screen=$screenId pending=$_pendingEpoch');
+      Log.info('CTX:pending'
+               ' claim=$claimEpoch'
+               ' screen=$screenId'
+               ' pending=$_pendingEpoch',
+               name: 'PageCtx', category: LogCategory.ui);
+    }
+  }
+
+  /// Check if a claim epoch is outdated compared to pending or current epoch
+  bool isOutdated(int claimEpoch) => claimEpoch < _pendingEpoch || claimEpoch < _epoch;
+
+  /// Only set if caller's epoch is >= current epoch
+  bool setIfNewer(String screenId, int pageIndex, String videoId, int claimEpoch) {
+    final oldEpoch = _epoch;
+    final accepted = claimEpoch >= _epoch;
+    if (accepted) {
+      _epoch = claimEpoch;
+      state = PageContext(screenId: screenId, pageIndex: pageIndex, videoId: videoId);
+    }
+    debugPrint('[CTX] setIfNewer claim=$claimEpoch old=$oldEpoch->${_epoch} accepted=$accepted screen=$screenId idx=$pageIndex videoId=$videoId state=${state?.screenId}:${state?.pageIndex}:${state?.videoId}');
+    Log.info('CTX:setIfNewer'
+             ' claim=$claimEpoch'
+             ' old=$oldEpoch->${_epoch}'
+             ' accepted=$accepted'
+             ' screen=$screenId idx=$pageIndex videoId=$videoId'
+             ' state=${state?.screenId}:${state?.pageIndex}:${state?.videoId}',
+             name: 'PageCtx', category: LogCategory.ui);
+    return accepted;
+  }
+
+  /// Clear only if the epoch still matches (owner)
+  bool clearIfOwner(int claimEpoch, String screenId) {
+    if (isOutdated(claimEpoch)) {
+      debugPrint('[CTX] clearIfOwner SKIP outdated claim=$claimEpoch epoch=$_epoch pending=$_pendingEpoch');
+      Log.info('CTX:clearIfOwner SKIP outdated'
+               ' claim=$claimEpoch epoch=$_epoch pending=$_pendingEpoch',
+               name: 'PageCtx', category: LogCategory.ui);
+      return false;
+    }
+    final isOwner = (_epoch == claimEpoch) && (state?.screenId == screenId);
+    if (isOwner) state = null;
+    debugPrint('[CTX] clearIfOwner claim=$claimEpoch epoch=$_epoch isOwner=$isOwner screen=$screenId state=${state?.screenId}:${state?.pageIndex}');
+    Log.info('CTX:clearIfOwner'
+             ' claim=$claimEpoch'
+             ' epoch=$_epoch'
+             ' isOwner=$isOwner'
+             ' screen=$screenId'
+             ' state=${state?.screenId}:${state?.pageIndex}',
+             name: 'PageCtx', category: LogCategory.ui);
+    return isOwner;
   }
 }
 
@@ -47,28 +111,6 @@ final currentPageContextProvider =
     NotifierProvider<CurrentPageContextNotifier, PageContext?>(
   CurrentPageContextNotifier.new,
 );
-
-/// Helper: Get videos for a given screen ID
-List<VideoEvent> _getVideosForScreen(Ref ref, String screenId) {
-  final videoEventService = ref.watch(videoEventServiceProvider);
-
-  if (screenId == 'home') {
-    return videoEventService.homeFeedVideos;
-  } else if (screenId == 'explore') {
-    return videoEventService.discoveryVideos;
-  } else if (screenId.startsWith('profile:')) {
-    final pubkey = screenId.substring(8);
-    return videoEventService.getVideosByAuthor(pubkey);
-  } else if (screenId.startsWith('hashtag:')) {
-    final tag = screenId.substring(8);
-    // For hashtags, filter discovery videos by the tag
-    return videoEventService.discoveryVideos
-        .where((v) => v.hashtags.contains(tag))
-        .toList();
-  }
-
-  return [];
-}
 
 /// Computed active video ID based on page context and app state
 final activeVideoProvider = Provider<String?>((ref) {
@@ -80,15 +122,9 @@ final activeVideoProvider = Provider<String?>((ref) {
   final pageContext = ref.watch(currentPageContextProvider);
   if (pageContext == null) return null;
 
-  // Look up videos for this screen
-  final videos = _getVideosForScreen(ref, pageContext.screenId);
-
-  // Return video ID at current page index
-  if (pageContext.pageIndex >= 0 && pageContext.pageIndex < videos.length) {
-    return videos[pageContext.pageIndex].id;
-  }
-
-  return null;
+  // Return the video ID directly from the page context
+  // PageView screens know exactly which video they're showing via page context
+  return pageContext.videoId;
 });
 
 /// Per-video active state (for efficient VideoFeedItem updates)

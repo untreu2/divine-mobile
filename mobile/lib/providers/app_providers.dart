@@ -33,6 +33,8 @@ import 'package:openvine/services/secure_key_storage_service.dart';
 import 'package:openvine/services/seen_videos_service.dart';
 import 'package:openvine/services/social_service.dart';
 import 'package:openvine/services/hashtag_cache_service.dart';
+import 'package:openvine/services/blossom_auth_service.dart';
+import 'package:openvine/services/media_auth_interceptor.dart';
 import 'package:openvine/services/blossom_upload_service.dart';
 import 'package:openvine/services/broken_video_tracker.dart';
 import 'package:openvine/services/subscription_manager.dart';
@@ -271,6 +273,11 @@ UserProfileService userProfileService(Ref ref) {
     hasProfileCached: service.hasProfile,
   );
 
+  // Ensure cleanup on disposal
+  ref.onDispose(() {
+    service.dispose();
+  });
+
   return service;
 }
 
@@ -350,8 +357,23 @@ Nip98AuthService nip98AuthService(Ref ref) {
   return Nip98AuthService(authService: authService);
 }
 
+/// Blossom BUD-01 authentication service for age-restricted content
+@riverpod
+BlossomAuthService blossomAuthService(Ref ref) {
+  final authService = ref.watch(authServiceProvider);
+  return BlossomAuthService(authService: authService);
+}
 
-
+/// Media authentication interceptor for handling 401 unauthorized responses
+@riverpod
+MediaAuthInterceptor mediaAuthInterceptor(Ref ref) {
+  final ageVerificationService = ref.watch(ageVerificationServiceProvider);
+  final blossomAuthService = ref.watch(blossomAuthServiceProvider);
+  return MediaAuthInterceptor(
+    ageVerificationService: ageVerificationService,
+    blossomAuthService: blossomAuthService,
+  );
+}
 
 /// Blossom upload service (uses user-configured Blossom server)
 /// Blossom upload service (uses user-configured Blossom server)
@@ -402,11 +424,13 @@ CurationService curationService(Ref ref) {
   final nostrService = ref.watch(nostrServiceProvider);
   final videoEventService = ref.watch(videoEventServiceProvider);
   final socialService = ref.watch(socialServiceProvider);
+  final authService = ref.watch(authServiceProvider);
 
   return CurationService(
     nostrService: nostrService,
     videoEventService: videoEventService,
     socialService: socialService,
+    authService: authService,
   );
 }
 

@@ -2,7 +2,6 @@
 // ABOUTME: Provides reactive tab switching and visibility state management for video lifecycle
 
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:openvine/providers/individual_video_providers.dart';
 
 part 'tab_visibility_provider.g.dart';
 
@@ -12,9 +11,8 @@ class TabVisibility extends _$TabVisibility {
   int build() => 0; // Current active tab index
 
   void setActiveTab(int index) {
-    // CRITICAL: Clear active video when switching tabs to prevent background playback
-    // This ensures videos are paused and controllers can be disposed when tabs become inactive
-    ref.read(activeVideoProvider.notifier).clearActiveVideo();
+    // Router-driven architecture: tab changes trigger route changes which automatically
+    // update activeVideoIdProvider - no manual state management needed
 
     // NOTE: With Riverpod-native lifecycle (onCancel/onResume + 30s timeout),
     // controllers autodispose automatically - no manual cleanup needed

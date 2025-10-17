@@ -2,14 +2,20 @@
 // ABOUTME: Each video gets its own controller with automatic lifecycle management via autoDispose
 
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:video_player/video_player.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:openvine/utils/unified_logger.dart';
 import 'package:openvine/services/video_cache_manager.dart';
+import 'package:openvine/services/broken_video_tracker.dart' show BrokenVideoTracker;
 import 'package:openvine/providers/app_providers.dart';
 
 part 'individual_video_providers.g.dart';
+
+/// Cache for pre-generated auth headers by video ID
+/// This allows synchronous header lookup during controller creation
+final authHeadersCacheProvider = StateProvider<Map<String, Map<String, String>>>((ref) => {});
 
 /// Parameters for video controller creation
 class VideoControllerParams {
@@ -116,32 +122,41 @@ VideoPlayerController individualVideoController(
   Log.info('🎬 Creating VideoPlayerController for video ${params.videoId.length > 8 ? params.videoId.substring(0, 8) : params.videoId}...',
       name: 'IndividualVideoController', category: LogCategory.system);
 
-  // Create controller - networkUrl automatically uses HTTP cache for fast reloads
-  final controller = VideoPlayerController.networkUrl(
-    Uri.parse(params.videoUrl),
-  );
-
-  // Cache video in background for future use (non-blocking)
-  // Use unawaited to explicitly mark as fire-and-forget
   final videoCache = openVineVideoCache;
-  unawaited(
-    ref.read(brokenVideoTrackerProvider.future).then((tracker) {
-      videoCache.cacheVideo(params.videoUrl, params.videoId, brokenVideoTracker: tracker).catchError((error) {
-        Log.warning('⚠️ Background video caching failed: $error',
-            name: 'IndividualVideoController', category: LogCategory.video);
-        return null; // Return null on error
-      });
-    }).catchError((trackerError) {
-      // Fallback without broken video tracker if it fails to load
-      videoCache.cacheVideo(params.videoUrl, params.videoId).catchError((error) {
-        Log.warning('⚠️ Background video caching failed: $error',
-            name: 'IndividualVideoController', category: LogCategory.video);
-        return null; // Return null on error
-      });
-    }),
-  );
 
-  // Initialize the controller
+  // Synchronous cache check - use getCachedVideoSync() which checks file existence without async
+  final cachedFile = videoCache.getCachedVideoSync(params.videoId);
+
+  final VideoPlayerController controller;
+  if (cachedFile != null && cachedFile.existsSync()) {
+    // Use cached file!
+    Log.info('✅ Using CACHED FILE for video ${params.videoId.length > 8 ? params.videoId.substring(0, 8) : params.videoId}...: ${cachedFile.path}',
+        name: 'IndividualVideoController', category: LogCategory.video);
+    controller = VideoPlayerController.file(cachedFile);
+  } else {
+    // Use network URL and start caching
+    Log.debug('📡 Using NETWORK URL for video ${params.videoId.length > 8 ? params.videoId.substring(0, 8) : params.videoId}...',
+        name: 'IndividualVideoController', category: LogCategory.video);
+
+    // Compute auth headers synchronously if possible
+    final authHeaders = _computeAuthHeadersSync(ref, params);
+
+    controller = VideoPlayerController.networkUrl(
+      Uri.parse(params.videoUrl),
+      httpHeaders: authHeaders ?? {},
+    );
+
+    // Start caching in background for future use
+    unawaited(
+      _cacheVideoWithAuth(ref, videoCache, params).catchError((error) {
+        Log.warning('⚠️ Background video caching failed: $error',
+            name: 'IndividualVideoController', category: LogCategory.video);
+        return null;
+      }),
+    );
+  }
+
+  // Initialize the controller (async in background)
   final initFuture = controller.initialize().timeout(
     const Duration(seconds: 15),
     onTimeout: () => throw TimeoutException('Video initialization timed out'),
@@ -189,6 +204,24 @@ VideoPlayerController individualVideoController(
 
     Log.error(logMessage, name: 'IndividualVideoController', category: LogCategory.system);
 
+    // Check for 401 Unauthorized - likely NSFW content requiring age verification
+    if (_is401Error(errorMessage)) {
+      Log.warning('🔐 Detected 401 Unauthorized for video $videoIdDisplay... - age verification may be required',
+          name: 'IndividualVideoController', category: LogCategory.video);
+
+      // Check if user has NOT verified adult content yet
+      final ageVerificationService = ref.read(ageVerificationServiceProvider);
+      if (!ageVerificationService.isAdultContentVerified) {
+        Log.info('🔐 User has not verified adult content - need to show verification dialog',
+            name: 'IndividualVideoController', category: LogCategory.video);
+        // Store this video ID in a provider so the widget can show the dialog
+        // For now, just log - we'll handle UI in the widget layer
+      } else {
+        Log.warning('🔐 User has verified but still getting 401 - may be auth header issue',
+            name: 'IndividualVideoController', category: LogCategory.video);
+      }
+    }
+
     // Check for corrupted cache file (OSStatus error -12848 or "media may be damaged")
     if (_isCacheCorruption(errorMessage)) {
       Log.warning('🗑️ Detected corrupted cache for video $videoIdDisplay... - removing and will retry',
@@ -227,7 +260,12 @@ VideoPlayerController individualVideoController(
     // Defer controller disposal to avoid triggering listener callbacks during lifecycle
     // This prevents "Cannot use Ref inside life-cycles" errors when listeners try to access providers
     Future.microtask(() {
-      controller.dispose();
+      // Only dispose if controller exists
+      try {
+        controller.dispose();
+      } catch (e) {
+        Log.warning('Failed to dispose controller: $e', name: 'IndividualVideoController', category: LogCategory.system);
+      }
     });
   });
 
@@ -236,6 +274,162 @@ VideoPlayerController individualVideoController(
   // This ensures videos can only play when widget is mounted and visible
 
   return controller;
+}
+
+/// Compute auth headers synchronously if possible (for VideoPlayerController)
+/// Returns cached headers if available, null otherwise
+Map<String, String>? _computeAuthHeadersSync(Ref ref, VideoControllerParams params) {
+  final ageVerificationService = ref.read(ageVerificationServiceProvider);
+  final blossomAuthService = ref.read(blossomAuthServiceProvider);
+
+  // If user hasn't verified adult content, don't add auth headers
+  // This will cause 401 for NSFW videos, triggering the error overlay
+  if (!ageVerificationService.isAdultContentVerified) {
+    return null;
+  }
+
+  // If user has verified but we can't create headers, return null
+  if (!blossomAuthService.canCreateHeaders || params.videoEvent == null) {
+    return null;
+  }
+
+  // Check if we have cached auth headers for this video
+  final cache = ref.read(authHeadersCacheProvider);
+  final cachedHeaders = cache[params.videoId];
+
+  if (cachedHeaders != null) {
+    Log.debug('✅ Using cached auth headers for video ${params.videoId.substring(0, 8)}',
+        name: 'IndividualVideoController', category: LogCategory.video);
+    return cachedHeaders;
+  }
+
+  // No cached headers - trigger async generation for next time
+  unawaited(_generateAuthHeadersAsync(ref, params));
+
+  // Return null for now - first load after verification will fail with 401
+  // but the error overlay retry will have cached headers available
+  return null;
+}
+
+/// Generate auth headers asynchronously and cache them for future use
+Future<void> _generateAuthHeadersAsync(Ref ref, VideoControllerParams params) async {
+  try {
+    final blossomAuthService = ref.read(blossomAuthServiceProvider);
+    final videoEvent = params.videoEvent as dynamic;
+    final sha256 = videoEvent.sha256 as String?;
+
+    if (sha256 == null || sha256.isEmpty) {
+      return;
+    }
+
+    // Extract server URL from video URL
+    String? serverUrl;
+    try {
+      final uri = Uri.parse(params.videoUrl);
+      serverUrl = '${uri.scheme}://${uri.host}';
+    } catch (e) {
+      Log.warning('Failed to parse video URL for server: $e',
+          name: 'IndividualVideoController', category: LogCategory.video);
+      return;
+    }
+
+    // Generate auth header
+    final authHeader = await blossomAuthService.createGetAuthHeader(
+      sha256Hash: sha256,
+      serverUrl: serverUrl,
+    );
+
+    if (authHeader != null) {
+      // Cache the header for future use
+      final cache = {...ref.read(authHeadersCacheProvider)};
+      cache[params.videoId] = {'Authorization': authHeader};
+      ref.read(authHeadersCacheProvider.notifier).state = cache;
+
+      Log.info('✅ Cached auth header for video ${params.videoId.substring(0, 8)}',
+          name: 'IndividualVideoController', category: LogCategory.video);
+    }
+  } catch (error) {
+    Log.debug('Failed to generate auth headers: $error',
+        name: 'IndividualVideoController', category: LogCategory.video);
+  }
+}
+
+/// Cache video with authentication if needed for NSFW content
+Future<File?> _cacheVideoWithAuth(
+  Ref ref,
+  VideoCacheManager videoCache,
+  VideoControllerParams params,
+) async {
+  // Get tracker for broken video handling
+  BrokenVideoTracker? tracker;
+  try {
+    tracker = await ref.read(brokenVideoTrackerProvider.future);
+  } catch (e) {
+    Log.warning('Failed to get BrokenVideoTracker: $e',
+        name: 'IndividualVideoController', category: LogCategory.video);
+  }
+
+  // Check if we should add auth headers for NSFW content
+  Map<String, String>? authHeaders;
+
+  final ageVerificationService = ref.read(ageVerificationServiceProvider);
+  final blossomAuthService = ref.read(blossomAuthServiceProvider);
+
+  Log.debug('🔐 Auth check: verified=${ageVerificationService.isAdultContentVerified}, canCreate=${blossomAuthService.canCreateHeaders}, hasEvent=${params.videoEvent != null}',
+      name: 'IndividualVideoController', category: LogCategory.video);
+
+  // If user has verified adult content AND video has sha256 hash, create auth header
+  if (ageVerificationService.isAdultContentVerified &&
+      blossomAuthService.canCreateHeaders &&
+      params.videoEvent != null) {
+    final videoEvent = params.videoEvent as dynamic;
+    final sha256 = videoEvent.sha256 as String?;
+
+    Log.debug('🔐 Video sha256: $sha256',
+        name: 'IndividualVideoController', category: LogCategory.video);
+
+    if (sha256 != null && sha256.isNotEmpty) {
+      Log.debug('🔐 Creating Blossom auth header for video cache request',
+          name: 'IndividualVideoController', category: LogCategory.video);
+
+      // Extract server URL from video URL for auth
+      String? serverUrl;
+      try {
+        final uri = Uri.parse(params.videoUrl);
+        serverUrl = '${uri.scheme}://${uri.host}';
+      } catch (e) {
+        Log.warning('Failed to parse video URL for server: $e',
+            name: 'IndividualVideoController', category: LogCategory.video);
+      }
+
+      final authHeader = await blossomAuthService.createGetAuthHeader(
+        sha256Hash: sha256,
+        serverUrl: serverUrl,
+      );
+
+      if (authHeader != null) {
+        authHeaders = {'Authorization': authHeader};
+        Log.info('✅ Added Blossom auth header for NSFW video cache',
+            name: 'IndividualVideoController', category: LogCategory.video);
+      }
+    }
+  }
+
+  // Cache video with optional auth headers
+  return videoCache.cacheVideo(
+    params.videoUrl,
+    params.videoId,
+    brokenVideoTracker: tracker,
+    authHeaders: authHeaders,
+  );
+}
+
+/// Check if error indicates a 401 Unauthorized (likely NSFW content)
+bool _is401Error(String errorMessage) {
+  final lowerError = errorMessage.toLowerCase();
+  return lowerError.contains('401') ||
+         lowerError.contains('unauthorized') ||
+         lowerError.contains('invalid statuscode: 401');
 }
 
 /// Check if error indicates a corrupted cache file
@@ -295,66 +489,5 @@ VideoLoadingState videoLoadingState(
   );
 }
 
-/// Active video state with previous video tracking for proper pause handling
-class ActiveVideoState {
-  const ActiveVideoState({this.currentVideoId, this.previousVideoId});
-
-  final String? currentVideoId;
-  final String? previousVideoId;
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is ActiveVideoState &&
-          currentVideoId == other.currentVideoId &&
-          previousVideoId == other.previousVideoId;
-
-  @override
-  int get hashCode => currentVideoId.hashCode ^ previousVideoId.hashCode;
-}
-
-/// Active video state notifier that tracks transitions
-/// @Deprecated Use active_video_provider.dart (pure derived). This notifier will be removed.
-@Deprecated('Use active_video_provider.dart (pure derived). This notifier will be removed.')
-class ActiveVideoNotifier extends StateNotifier<ActiveVideoState> {
-  ActiveVideoNotifier() : super(const ActiveVideoState()) {
-    assert(() {
-      // Loud at dev time if anything still constructs this
-      // ignore: avoid_print
-      print('⚠️  DEPRECATED: ActiveVideoNotifier constructed. Migrate to active_video_provider.dart');
-      return true;
-    }());
-  }
-
-  /// Get the current active video ID (null if no video is active)
-  String? get currentVideoId => state.currentVideoId;
-
-  void setActiveVideo(String videoId) {
-    // TEMPORARY: Tripwire disabled for gradual migration
-    // TODO: Re-enable after all files migrated to active_video_provider.dart
-    // No-op - derived provider handles active state
-  }
-
-  void clearActiveVideo() {
-    // TEMPORARY: Tripwire disabled for gradual migration
-    // TODO: Re-enable after all files migrated to active_video_provider.dart
-    // No-op - derived provider handles active state
-  }
-}
-
-/// Provider for tracking which video is currently active
-final activeVideoProvider = StateNotifierProvider<ActiveVideoNotifier, ActiveVideoState>((ref) {
-  return ActiveVideoNotifier();
-});
-
-/// Provider for checking if a specific video is currently active
-@riverpod
-bool isVideoActive(Ref ref, String videoId) {
-  final activeVideoState = ref.watch(activeVideoProvider);
-  final isActive = activeVideoState.currentVideoId == videoId;
-  Log.debug('🔍 isVideoActive: videoId=${videoId.length > 8 ? videoId.substring(0, 8) : videoId}..., activeVideoId=${activeVideoState.currentVideoId != null && activeVideoState.currentVideoId!.length > 8 ? activeVideoState.currentVideoId!.substring(0, 8) : activeVideoState.currentVideoId ?? 'null'}, isActive=$isActive',
-      name: 'IsVideoActive', category: LogCategory.system);
-  return isActive;
-}
-
 // NOTE: PrewarmManager removed - using Riverpod-native lifecycle (onCancel/onResume + 30s timeout)
+// NOTE: Active video state moved to active_video_provider.dart (route-reactive derived providers)

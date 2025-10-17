@@ -1,7 +1,7 @@
 // ABOUTME: Content blocklist service for filtering unwanted content from feeds
 // ABOUTME: Maintains internal blocklist while allowing explicit profile visits
 
-import 'package:openvine/utils/nostr_encoding.dart';
+import 'package:openvine/utils/public_identifier_normalizer.dart';
 import 'package:openvine/utils/unified_logger.dart';
 
 /// Service for managing content blocklist
@@ -48,16 +48,10 @@ class ContentBlocklistService {
     }
   }
 
-  /// Convert npub to hex format
-  String? _npubToHex(String npub) {
-    try {
-      // Use proper bech32 decoding
-      return NostrEncoding.decodePublicKey(npub);
-    } catch (e) {
-      Log.error('Failed to decode npub $npub: $e',
-          name: 'ContentBlocklistService', category: LogCategory.system);
-      return null;
-    }
+  /// Convert any public identifier (npub/nprofile/hex) to hex format
+  String? _npubToHex(String identifier) {
+    // Use universal normalizer to handle npub, nprofile, and hex formats
+    return normalizeToHex(identifier);
   }
 
   /// Check if a public key is blocked

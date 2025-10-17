@@ -6,6 +6,7 @@ import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:openvine/models/curation_set.dart';
 import 'package:openvine/models/video_event.dart';
+import 'package:openvine/services/auth_service.dart';
 import 'package:openvine/services/curation_service.dart';
 import 'package:openvine/services/nostr_service_interface.dart';
 import 'package:openvine/services/social_service.dart';
@@ -13,18 +14,20 @@ import 'package:openvine/services/video_event_service.dart';
 
 import 'curation_service_test.mocks.dart';
 
-@GenerateMocks([INostrService, VideoEventService, SocialService])
+@GenerateMocks([INostrService, VideoEventService, SocialService, AuthService])
 void main() {
   group('CurationService', () {
     late CurationService curationService;
     late MockINostrService mockNostrService;
     late MockVideoEventService mockVideoEventService;
     late MockSocialService mockSocialService;
+    late MockAuthService mockAuthService;
 
     setUp(() {
       mockNostrService = MockINostrService();
       mockVideoEventService = MockVideoEventService();
       mockSocialService = MockSocialService();
+      mockAuthService = MockAuthService();
 
       // Mock video events for testing
       when(mockVideoEventService.videoEvents).thenReturn([
@@ -41,6 +44,7 @@ void main() {
         nostrService: mockNostrService,
         videoEventService: mockVideoEventService,
         socialService: mockSocialService,
+        authService: mockAuthService,
       );
     });
 
@@ -88,6 +92,7 @@ void main() {
         nostrService: mockNostrService,
         videoEventService: mockVideoEventService,
         socialService: mockSocialService,
+        authService: mockAuthService,
       );
 
       // When: Getting trending videos

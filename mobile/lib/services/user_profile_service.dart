@@ -699,6 +699,9 @@ class UserProfileService {
     }
     _activeSubscriptionIds.clear();
 
+    // Dispose connection service to cancel its timer
+    _connectionService.dispose();
+
     // Clean up remaining state
     _pendingRequests.clear();
     _profileCache.clear();

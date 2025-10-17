@@ -1,6 +1,8 @@
 // ABOUTME: Route parsing and building utilities
 // ABOUTME: Converts between URLs and structured route context
 
+import 'package:openvine/utils/unified_logger.dart';
+
 /// Route types supported by the app
 enum RouteType {
   home,
@@ -8,6 +10,7 @@ enum RouteType {
   notifications,
   profile,
   hashtag, // Still supported as push route within explore
+  search,
   camera,
   settings,
 }
@@ -30,6 +33,7 @@ class RouteContext {
 /// Parse a URL path into a structured RouteContext
 /// Normalizes negative indices to 0 and decodes URL-encoded parameters
 RouteContext parseRoute(String path) {
+  Log.info('ROUTE parse: $path', name: 'Route', category: LogCategory.ui);
   final segments = path.split('/').where((s) => s.isNotEmpty).toList();
 
   if (segments.isEmpty) {
@@ -45,8 +49,10 @@ RouteContext parseRoute(String path) {
       return RouteContext(type: RouteType.home, videoIndex: index);
 
     case 'explore':
-      final rawIndex = segments.length > 1 ? int.tryParse(segments[1]) ?? 0 : 0;
-      final index = rawIndex < 0 ? 0 : rawIndex; // Normalize negative indices
+      // No index segment = grid mode (null videoIndex)
+      // With index segment = feed mode (videoIndex set)
+      final rawIndex = segments.length > 1 ? int.tryParse(segments[1]) : null;
+      final index = rawIndex != null && rawIndex < 0 ? 0 : rawIndex; // Normalize negative indices
       return RouteContext(type: RouteType.explore, videoIndex: index);
 
     case 'profile':
@@ -72,13 +78,18 @@ RouteContext parseRoute(String path) {
         return const RouteContext(type: RouteType.home, videoIndex: 0);
       }
       final tag = Uri.decodeComponent(segments[1]); // Decode URL encoding
-      final rawIndex = segments.length > 2 ? int.tryParse(segments[2]) ?? 0 : 0;
-      final index = rawIndex < 0 ? 0 : rawIndex; // Normalize negative indices
+      // No index segment = grid mode (null videoIndex)
+      // With index segment = feed mode (videoIndex set)
+      final rawIndex = segments.length > 2 ? int.tryParse(segments[2]) : null;
+      final index = rawIndex != null && rawIndex < 0 ? 0 : rawIndex; // Normalize negative indices
       return RouteContext(
         type: RouteType.hashtag,
         hashtag: tag,
         videoIndex: index,
       );
+
+    case 'search':
+      return const RouteContext(type: RouteType.search);
 
     case 'camera':
       return const RouteContext(type: RouteType.camera);
@@ -101,7 +112,10 @@ String buildRoute(RouteContext context) {
       return '/home/$index';
 
     case RouteType.explore:
-      final rawIndex = context.videoIndex ?? 0;
+      // Grid mode (null videoIndex) returns '/explore'
+      // Feed mode (videoIndex set) returns '/explore/{index}'
+      if (context.videoIndex == null) return '/explore';
+      final rawIndex = context.videoIndex!;
       final index = rawIndex < 0 ? 0 : rawIndex; // Normalize negative indices
       return '/explore/$index';
 
@@ -118,9 +132,15 @@ String buildRoute(RouteContext context) {
 
     case RouteType.hashtag:
       final hashtag = Uri.encodeComponent(context.hashtag ?? ''); // Encode URL
-      final rawIndex = context.videoIndex ?? 0;
+      // Grid mode (null videoIndex) returns '/hashtag/{tag}'
+      // Feed mode (videoIndex set) returns '/hashtag/{tag}/{index}'
+      if (context.videoIndex == null) return '/hashtag/$hashtag';
+      final rawIndex = context.videoIndex!;
       final index = rawIndex < 0 ? 0 : rawIndex; // Normalize negative indices
       return '/hashtag/$hashtag/$index';
+
+    case RouteType.search:
+      return '/search';
 
     case RouteType.camera:
       return '/camera';

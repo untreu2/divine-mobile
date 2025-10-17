@@ -97,12 +97,13 @@ void main() {
             limit: any(named: 'limit'),
           )).thenAnswer((_) async {});
 
-      // Mock hashtagVideos getter to return expected videos
-      when(() => mockVideoService.hashtagVideos).thenReturn(expectedVideos);
+      // Mock getVideos method to return expected videos
+      when(() => mockVideoService.getVideos(SubscriptionType.hashtag))
+          .thenReturn(expectedVideos);
 
       // Act
       await mockVideoService.subscribeToHashtagVideos(testHashtags, limit: 100);
-      final videos = mockVideoService.hashtagVideos;
+      final videos = mockVideoService.getVideos(SubscriptionType.hashtag);
 
       // Assert
       // Verify subscription was called with correct parameters
@@ -131,7 +132,6 @@ void main() {
             limit: any(named: 'limit'),
           )).thenAnswer((_) async {});
 
-      when(() => mockVideoService.hashtagVideos).thenReturn(expectedVideos);
       when(() => mockVideoService.getVideos(SubscriptionType.hashtag))
           .thenReturn(expectedVideos);
 

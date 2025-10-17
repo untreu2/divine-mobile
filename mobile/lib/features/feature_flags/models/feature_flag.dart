@@ -12,7 +12,9 @@ enum FeatureFlag {
       'Livestreaming Beta', 'Live video streaming feature (beta)'),
   debugTools('Debug Tools', 'Developer debugging utilities and diagnostics'),
   routerDrivenHome('Router-Driven Home Screen',
-      'New router-driven home screen architecture (eliminates lifecycle bugs)');
+      'New router-driven home screen architecture (eliminates lifecycle bugs)'),
+  enableVideoEditorV1('Video Editor V1',
+      'Enable video editing functionality (disabled on web, enabled on native platforms)');
 
   const FeatureFlag(this.displayName, this.description);
 

@@ -8,8 +8,10 @@ import 'package:openvine/models/video_event.dart';
 import 'package:openvine/providers/app_providers.dart';
 import 'package:openvine/providers/video_events_providers.dart';
 import 'package:openvine/router/nav_extensions.dart';
+import 'package:openvine/screens/hashtag_screen_router.dart';
+import 'package:openvine/screens/pure/explore_video_screen_pure.dart';
 import 'package:openvine/theme/vine_theme.dart';
-import 'package:openvine/widgets/pure/video_grid_widget.dart';
+import 'package:openvine/widgets/composable_video_grid.dart';
 import 'package:openvine/utils/unified_logger.dart';
 
 /// Pure search screen using revolutionary single-controller Riverpod architecture
@@ -131,6 +133,9 @@ class _SearchScreenPureState extends ConsumerState<SearchScreenPure>
             users.add(video.pubkey);
           }
 
+          // Sort local results before showing
+          filteredVideos.sort(VideoEvent.compareByLoopsThenTime);
+
           // Show local results immediately
           if (mounted) {
             setState(() {
@@ -167,6 +172,9 @@ class _SearchScreenPureState extends ConsumerState<SearchScreenPure>
         seenIds.add(video.id);
         return true;
       }).toList();
+
+      // Sort: new vines (no loops) chronologically, then original vines by loop count
+      uniqueVideos.sort(VideoEvent.compareByLoopsThenTime);
 
       // Extract all unique hashtags and users from combined results
       final allHashtags = <String>{};
@@ -320,11 +328,51 @@ class _SearchScreenPureState extends ConsumerState<SearchScreenPure>
       );
     }
 
-    return VideoGridWidget(
+    return ComposableVideoGrid(
       key: const Key('search-videos-grid'),
       videos: _videoResults,
-      crossAxisCount: 2,
-      emptyMessage: 'No videos found for "$_currentQuery"',
+      onVideoTap: (videos, index) {
+        Log.info('🔍 SearchScreenPure: Tapped video at index $index',
+            category: LogCategory.video);
+        // Navigate to full-screen video player
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => Scaffold(
+              backgroundColor: Colors.black,
+              appBar: AppBar(
+                backgroundColor: VineTheme.vineGreen,
+                leading: IconButton(
+                  icon: const Icon(Icons.arrow_back, color: VineTheme.whiteText),
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+                title: Text(
+                  'Search: $_currentQuery',
+                  style: const TextStyle(color: VineTheme.whiteText),
+                ),
+              ),
+              body: ExploreVideoScreenPure(
+                startingVideo: videos[index],
+                videoList: videos,
+                contextTitle: '',
+                startingIndex: index,
+              ),
+            ),
+          ),
+        );
+      },
+      emptyBuilder: () => Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.video_library, size: 64, color: VineTheme.secondaryText),
+            const SizedBox(height: 16),
+            Text(
+              'No videos found for "$_currentQuery"',
+              style: TextStyle(color: VineTheme.primaryText, fontSize: 18),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -472,7 +520,26 @@ class _SearchScreenPureState extends ConsumerState<SearchScreenPure>
             ),
             onTap: () {
               Log.info('🔍 SearchScreenPure: Tapped hashtag: $hashtag', category: LogCategory.video);
-              context.goHashtag(hashtag);
+              // Push hashtag screen to keep search in navigation stack
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => Scaffold(
+                    backgroundColor: VineTheme.backgroundColor,
+                    appBar: AppBar(
+                      backgroundColor: VineTheme.vineGreen,
+                      leading: IconButton(
+                        icon: const Icon(Icons.arrow_back, color: VineTheme.whiteText),
+                        onPressed: () => Navigator.of(context).pop(),
+                      ),
+                      title: Text(
+                        '#$hashtag',
+                        style: const TextStyle(color: VineTheme.whiteText),
+                      ),
+                    ),
+                    body: HashtagScreenRouter(),
+                  ),
+                ),
+              );
             },
           ),
         );

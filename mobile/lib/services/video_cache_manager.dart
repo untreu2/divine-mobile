@@ -48,7 +48,7 @@ class VideoCacheManager extends CacheManager {
   }
 
   /// Download and cache a video for offline use
-  Future<File?> cacheVideo(String videoUrl, String videoId, {BrokenVideoTracker? brokenVideoTracker}) async {
+  Future<File?> cacheVideo(String videoUrl, String videoId, {BrokenVideoTracker? brokenVideoTracker, Map<String, String>? authHeaders}) async {
     try {
       // Check if already cached first - avoid redundant downloads
       final cachedFile = await getCachedVideo(videoId);
@@ -58,13 +58,13 @@ class VideoCacheManager extends CacheManager {
         return cachedFile;
       }
 
-      Log.info('🎬 Caching video ${videoId.substring(0, 8)}... from $videoUrl',
+      Log.info('🎬 Caching video ${videoId.substring(0, 8)}... from $videoUrl${authHeaders != null && authHeaders.isNotEmpty ? " (with auth)" : ""}',
           name: 'VideoCacheManager', category: LogCategory.video);
 
       final fileInfo = await downloadFile(
         videoUrl,
         key: videoId, // Use video ID as cache key
-        authHeaders: {},
+        authHeaders: authHeaders ?? {},
       );
 
       Log.info('✅ Video ${videoId.substring(0, 8)}... cached successfully',
@@ -114,7 +114,7 @@ class VideoCacheManager extends CacheManager {
     }
   }
 
-  /// Get cached video file if available
+  /// Get cached video file if available (async version)
   Future<File?> getCachedVideo(String videoId) async {
     try {
       final fileInfo = await getFileFromCache(videoId);
@@ -127,6 +127,16 @@ class VideoCacheManager extends CacheManager {
       Log.warning('⚠️ Error retrieving cached video ${videoId.substring(0, 8)}...: $error',
           name: 'VideoCacheManager', category: LogCategory.video);
     }
+    return null;
+  }
+
+  /// SYNCHRONOUS cache check - checks if file exists without async overhead
+  /// Returns null always for now - async cache check will be used in background
+  /// This method exists as a placeholder for future optimization
+  File? getCachedVideoSync(String videoId) {
+    // TODO: Implement true synchronous cache check using file path construction
+    // For now, always return null - the async background check will invalidate
+    // the provider if cache is found, which will recreate with cached file
     return null;
   }
 

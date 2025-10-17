@@ -12,6 +12,8 @@ import 'package:openvine/utils/unified_logger.dart';
 /// Route-aware profile feed (reactive, no lifecycle writes).
 final videosForProfileRouteProvider = Provider<AsyncValue<VideoFeedState>>((ref) {
   final ctx = ref.watch(pageContextProvider).asData?.value;
+  Log.info('PROFILE_FEED enter: ctx.npub=${ctx?.npub}',
+      name: 'Provider', category: LogCategory.system);
   if (ctx == null || ctx.type != RouteType.profile) {
     return AsyncValue.data(VideoFeedState(
       videos: const [],
@@ -41,6 +43,8 @@ final videosForProfileRouteProvider = Provider<AsyncValue<VideoFeedState>>((ref)
   final items = ref.watch(
     videoEventServiceProvider.select((s) => s.authorVideos(hex)),
   );
+  Log.info('PROFILE_FEED selected items=${items.length}',
+      name: 'Provider', category: LogCategory.system);
 
   return AsyncValue.data(
     VideoFeedState(

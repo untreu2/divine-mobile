@@ -7,6 +7,7 @@ import 'package:mockito/mockito.dart';
 import 'package:openvine/constants/app_constants.dart';
 import 'package:openvine/models/curation_set.dart';
 import 'package:openvine/models/video_event.dart';
+import 'package:openvine/services/auth_service.dart';
 import 'package:openvine/services/curation_service.dart';
 import 'package:openvine/services/nostr_service_interface.dart';
 import 'package:openvine/services/social_service.dart';
@@ -14,17 +15,19 @@ import 'package:openvine/services/video_event_service.dart';
 
 import 'curation_service_test.mocks.dart';
 
-@GenerateMocks([INostrService, VideoEventService, SocialService])
+@GenerateMocks([INostrService, VideoEventService, SocialService, AuthService])
 void main() {
   group("CurationService Editor's Picks", () {
     late MockINostrService mockNostrService;
     late MockVideoEventService mockVideoEventService;
     late MockSocialService mockSocialService;
+    late MockAuthService mockAuthService;
 
     setUp(() {
       mockNostrService = MockINostrService();
       mockVideoEventService = MockVideoEventService();
       mockSocialService = MockSocialService();
+      mockAuthService = MockAuthService();
 
       // Mock the getCachedLikeCount method to return 0 for all videos
       when(mockSocialService.getCachedLikeCount(any)).thenReturn(0);
@@ -67,6 +70,7 @@ void main() {
         nostrService: mockNostrService,
         videoEventService: mockVideoEventService,
         socialService: mockSocialService,
+        authService: mockAuthService,
       );
 
       // When: Getting Editor's Picks
@@ -110,6 +114,7 @@ void main() {
           nostrService: mockNostrService,
           videoEventService: mockVideoEventService,
           socialService: mockSocialService,
+          authService: mockAuthService,
         );
 
         final editorsPicks =
@@ -159,6 +164,7 @@ void main() {
         nostrService: mockNostrService,
         videoEventService: mockVideoEventService,
         socialService: mockSocialService,
+        authService: mockAuthService,
       );
 
       // When: Getting Editor's Picks
@@ -180,6 +186,7 @@ void main() {
         nostrService: mockNostrService,
         videoEventService: mockVideoEventService,
         socialService: mockSocialService,
+        authService: mockAuthService,
       );
 
       // When: Getting Editor's Picks

@@ -1,7 +1,6 @@
 // ABOUTME: Tests for derived page context provider
 // ABOUTME: Verifies route location is parsed into structured context
 
-import 'package:async/async.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -25,13 +24,12 @@ void main() {
         ),
       );
 
-      // Access the stream and use StreamQueue
-      final stream = container.read(pageContextStreamProvider);
-      final queue = StreamQueue(stream);
-      addTearDown(() async => queue.cancel());
+      // Wait for initial render
+      await tester.pumpAndSettle();
 
-      // Router starts at /home/0, so context should reflect that
-      final context = await queue.next;
+      // Access the context via AsyncValue
+      final contextAsync = container.read(pageContextProvider);
+      final context = contextAsync.value!;
 
       expect(context.type, RouteType.home);
       expect(context.videoIndex, 0);
@@ -51,34 +49,31 @@ void main() {
         ),
       );
 
-      // Access the stream and use StreamQueue
-      final stream = container.read(pageContextStreamProvider);
-      final queue = StreamQueue(stream);
-      addTearDown(() async => queue.cancel());
-
       // Initial state - home
-      final initial = await queue.next;
-      expect(initial.type, RouteType.home);
-      expect(initial.videoIndex, 0);
+      await tester.pumpAndSettle();
+      var contextAsync = container.read(pageContextProvider);
+      expect(contextAsync.hasValue, true);
+      expect(contextAsync.value!.type, RouteType.home);
+      expect(contextAsync.value!.videoIndex, 0);
 
       // Navigate to explore
       container.read(goRouterProvider).go('/explore/3');
-      await tester.pump();
+      await tester.pumpAndSettle();
 
       // Context should update
-      final afterExplore = await queue.next;
-      expect(afterExplore.type, RouteType.explore);
-      expect(afterExplore.videoIndex, 3);
+      contextAsync = container.read(pageContextProvider);
+      expect(contextAsync.value!.type, RouteType.explore);
+      expect(contextAsync.value!.videoIndex, 3);
 
       // Navigate to profile
       container.read(goRouterProvider).go('/profile/npub1test/7');
-      await tester.pump();
+      await tester.pumpAndSettle();
 
       // Context should update again
-      final afterProfile = await queue.next;
-      expect(afterProfile.type, RouteType.profile);
-      expect(afterProfile.npub, 'npub1test');
-      expect(afterProfile.videoIndex, 7);
+      contextAsync = container.read(pageContextProvider);
+      expect(contextAsync.value!.type, RouteType.profile);
+      expect(contextAsync.value!.npub, 'npub1test');
+      expect(contextAsync.value!.videoIndex, 7);
     });
 
     testWidgets('parses hashtag route correctly', (tester) async {
@@ -94,18 +89,12 @@ void main() {
         ),
       );
 
-      final stream = container.read(pageContextStreamProvider);
-      final queue = StreamQueue(stream);
-      addTearDown(() async => queue.cancel());
-
-      // Skip initial /home/0
-      await queue.next;
-
       // Navigate to hashtag
       container.read(goRouterProvider).go('/hashtag/bitcoin/2');
-      await tester.pump();
+      await tester.pumpAndSettle();
 
-      final context = await queue.next;
+      final contextAsync = container.read(pageContextProvider);
+      final context = contextAsync.value!;
       expect(context.type, RouteType.hashtag);
       expect(context.hashtag, 'bitcoin');
       expect(context.videoIndex, 2);
@@ -124,18 +113,12 @@ void main() {
         ),
       );
 
-      final stream = container.read(pageContextStreamProvider);
-      final queue = StreamQueue(stream);
-      addTearDown(() async => queue.cancel());
-
-      // Skip initial /home/0
-      await queue.next;
-
       // Navigate to camera
       container.read(goRouterProvider).go('/camera');
-      await tester.pump();
+      await tester.pumpAndSettle();
 
-      final context = await queue.next;
+      final contextAsync = container.read(pageContextProvider);
+      final context = contextAsync.value!;
       expect(context.type, RouteType.camera);
       expect(context.videoIndex, isNull);
     });
@@ -153,18 +136,12 @@ void main() {
         ),
       );
 
-      final stream = container.read(pageContextStreamProvider);
-      final queue = StreamQueue(stream);
-      addTearDown(() async => queue.cancel());
-
-      // Skip initial /home/0
-      await queue.next;
-
       // Navigate to settings
       container.read(goRouterProvider).go('/settings');
-      await tester.pump();
+      await tester.pumpAndSettle();
 
-      final context = await queue.next;
+      final contextAsync = container.read(pageContextProvider);
+      final context = contextAsync.value!;
       expect(context.type, RouteType.settings);
       expect(context.videoIndex, isNull);
     });

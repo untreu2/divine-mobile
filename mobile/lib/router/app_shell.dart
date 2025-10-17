@@ -35,6 +35,8 @@ class AppShell extends ConsumerWidget {
       case RouteType.profile:
         final npub = ctx?.npub ?? '';
         return (npub == 'me') ? 'My Profile' : 'Profile';
+      case RouteType.search:
+        return 'Search';
       default:
         return '';
     }
@@ -73,10 +75,11 @@ class AppShell extends ConsumerWidget {
         context.goNotifications(lastIndex);
         break;
       case 3:
-        // For profile, need current npub - default to 'me'
+        // For profile, use 'me' special identifier for current user
+        // Navigation system will resolve 'me' to actual npub
         final ctx = ref.read(pageContextProvider).asData?.value;
-        final npub = ctx?.npub ?? 'me';
-        context.goProfile(npub, lastIndex);
+        final identifier = ctx?.npub ?? 'me';
+        context.goProfile(identifier, lastIndex);
         break;
     }
   }
@@ -88,7 +91,6 @@ class AppShell extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         elevation: 0,
-        centerTitle: false,
         title: Text(
           title,
           // Pacifico font, with sane fallbacks if font isn't available yet.
@@ -104,6 +106,11 @@ class AppShell extends ConsumerWidget {
         ),
         actions: [
           IconButton(
+            tooltip: 'Search',
+            icon: const Icon(Icons.search),
+            onPressed: () => context.goSearch(),
+          ),
+          IconButton(
             tooltip: 'Open camera',
             icon: const Icon(Icons.photo_camera_outlined),
             onPressed: () => context.pushCamera(),
@@ -111,9 +118,11 @@ class AppShell extends ConsumerWidget {
         ],
       ),
       body: child,
+      // Bottom nav visible for all shell routes (search, tabs, etc.)
+      // For search (currentIndex=-1), no tab is highlighted
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
-        currentIndex: currentIndex,
+        currentIndex: currentIndex.clamp(0, 3),
         onTap: (index) => _handleTabTap(context, ref, index),
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home),          label: 'Home'),

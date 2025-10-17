@@ -243,15 +243,23 @@ class VideoEventService extends ChangeNotifier {
   List<VideoEvent> hashtagVideos(String tag) => _hashtagBuckets[tag] ?? const [];
 
   /// Get videos for a specific author (keyed for route-aware feeds)
+  /// Always returns videos sorted in reverse chronological order (newest first)
   List<VideoEvent> authorVideos(String pubkeyHex) {
     final cached = _authorBuckets[pubkeyHex] ?? const [];
     Log.info('SVC authorVideos: hex=$pubkeyHex cached=${cached.length}',
         name: 'Service', category: LogCategory.video);
-    if (cached.isNotEmpty) {
-      Log.info('SVC authorVideos: return cached=${cached.length}',
-          name: 'Service', category: LogCategory.video);
+    if (cached.isEmpty) {
+      return cached;
     }
-    return cached;
+
+    // Always sort by newest first before returning to ensure consistent ordering
+    // This is critical for profile grids to display newest videos at the top
+    final sorted = List<VideoEvent>.from(cached);
+    sorted.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+    Log.info('SVC authorVideos: return sorted=${sorted.length} (newest first)',
+        name: 'Service', category: LogCategory.video);
+    return sorted;
   }
 
   /// Get search results
@@ -1169,11 +1177,125 @@ class VideoEventService extends ChangeNotifier {
   /// Subscribe to specific user's video events
   Future<void> subscribeToUserVideos(String pubkey, {int limit = 50}) async {
     Log.info('SVC subscribeToUser: hex=$pubkey', name: 'Service', category: LogCategory.video);
+
+    // Backfill _authorBuckets with videos by this author that already exist in other subscription types
+    // This handles the case where the user's videos were already loaded in discovery/home feeds
+    final bucket = _authorBuckets.putIfAbsent(pubkey, () => []);
+    for (final eventList in _eventLists.values) {
+      for (final video in eventList) {
+        if (video.pubkey == pubkey && !bucket.any((e) => e.id == video.id)) {
+          bucket.add(video);
+        }
+      }
+    }
+    // Sort backfilled videos by newest first
+    if (bucket.isNotEmpty) {
+      bucket.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      Log.info('SVC subscribeToUser: backfilled ${bucket.length} existing videos for $pubkey',
+          name: 'Service', category: LogCategory.video);
+    }
+
     return subscribeToVideoFeed(
       subscriptionType: SubscriptionType.profile,
       authors: [pubkey],
       limit: limit,
     );
+  }
+
+  /// Query historical videos for a specific user (for pagination)
+  /// This is used by profile feed provider to load older videos beyond the initial subscription
+  Future<void> queryHistoricalUserVideos(String pubkey, {int? until, int limit = 50}) async {
+    if (!_nostrService.isInitialized) {
+      Log.warning('Cannot query historical user videos - Nostr service not initialized',
+          name: 'VideoEventService', category: LogCategory.video);
+      return;
+    }
+
+    Log.info(
+      'Querying historical videos for user=${pubkey.substring(0, 8)}... until=${until != null ? DateTime.fromMillisecondsSinceEpoch(until * 1000) : 'none'} limit=$limit',
+      name: 'VideoEventService',
+      category: LogCategory.video,
+    );
+
+    // Create filter for this specific user's videos
+    final filter = Filter(
+      kinds: NIP71VideoKinds.getAllVideoKinds(),
+      authors: [pubkey],
+      until: until,
+      limit: limit,
+    );
+
+    final completer = Completer<void>();
+    int receivedCount = 0;
+
+    try {
+      // Stream events from NostrService
+      final eventStream = _nostrService.subscribeToEvents(filters: [filter]);
+      late StreamSubscription<Event> streamSubscription;
+
+      // Set timeout for receiving events
+      final timeoutTimer = Timer(const Duration(seconds: 5), () {
+        Log.info(
+          'Historical query timeout for user=${pubkey.substring(0, 8)}... - received $receivedCount events',
+          name: 'VideoEventService',
+          category: LogCategory.video,
+        );
+        if (!completer.isCompleted) {
+          streamSubscription.cancel();
+          completer.complete();
+        }
+      });
+
+      streamSubscription = eventStream.listen(
+        (event) {
+          receivedCount++;
+          // Process event and add to author bucket using existing handler
+          _handleNewVideoEvent(event, SubscriptionType.profile);
+        },
+        onDone: () {
+          timeoutTimer.cancel();
+          if (!completer.isCompleted) {
+            Log.info(
+              'Historical query stream completed for user=${pubkey.substring(0, 8)}... - received $receivedCount events',
+              name: 'VideoEventService',
+              category: LogCategory.video,
+            );
+            completer.complete();
+          }
+        },
+        onError: (error) {
+          timeoutTimer.cancel();
+          if (!completer.isCompleted) {
+            Log.error(
+              'Historical query stream error for user=${pubkey.substring(0, 8)}...: $error',
+              name: 'VideoEventService',
+              category: LogCategory.video,
+            );
+            completer.completeError(error);
+          }
+        },
+        cancelOnError: false,
+      );
+
+      await completer.future;
+      await streamSubscription.cancel();
+
+      Log.info(
+        'Historical user videos query completed - received $receivedCount events for user=${pubkey.substring(0, 8)}...',
+        name: 'VideoEventService',
+        category: LogCategory.video,
+      );
+
+      // Notify listeners to update UI
+      notifyListeners();
+    } catch (e) {
+      Log.error(
+        'Failed to query historical user videos for user=${pubkey.substring(0, 8)}...: $e',
+        name: 'VideoEventService',
+        category: LogCategory.video,
+      );
+      rethrow;
+    }
   }
 
   /// Subscribe to videos with specific hashtags
@@ -2173,7 +2295,7 @@ class VideoEventService extends ChangeNotifier {
     }
 
     // REMOVED: Eager caching here was causing 100+ simultaneous downloads
-    // Instead, let VideoPageView's prewarming system handle caching strategically
+    // Instead, video caching is handled on-demand by individual video controllers
     // This prevents bandwidth saturation that slows first video load
 
     // Different insertion strategies based on subscription type and event context
@@ -2459,6 +2581,12 @@ class VideoEventService extends ChangeNotifier {
     if (subscriptionType == SubscriptionType.editorial ||
         subscriptionType == SubscriptionType.popularNow ||
         subscriptionType == SubscriptionType.trending) {
+      return;
+    }
+
+    // Profile feeds: sort by newest first (reverse chronological)
+    if (subscriptionType == SubscriptionType.profile) {
+      eventList.sort((a, b) => b.createdAt.compareTo(a.createdAt));
       return;
     }
 

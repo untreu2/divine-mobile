@@ -14,9 +14,13 @@ import 'package:openvine/services/video_event_service.dart';
 import 'package:openvine/services/nostr_service_interface.dart';
 import 'package:openvine/services/subscription_manager.dart';
 import 'package:openvine/utils/npub_hex.dart';
-import 'package:openvine/screens/profile_screen_router.dart';
 import 'package:openvine/services/video_prewarmer.dart';
 import 'package:openvine/services/visibility_tracker.dart';
+import 'package:openvine/services/analytics_service.dart';
+import 'package:openvine/services/connection_status_service.dart';
+import 'package:openvine/providers/analytics_providers.dart';
+import 'package:openvine/features/feature_flags/providers/feature_flag_providers.dart' as ff;
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// Helper to wait for a condition to become true
 Future<void> waitFor<T>(
@@ -54,6 +58,10 @@ void main() {
       authorVideos: {testHex: [testVideo]},
     );
 
+    // Setup fake SharedPreferences
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+
     final container = ProviderContainer(
       overrides: [
         videoEventServiceProvider.overrideWithValue(fakeService),
@@ -61,9 +69,11 @@ void main() {
         overlayPolicyProvider.overrideWithValue(OverlayPolicy.alwaysOn), // Force overlays visible in tests
         videoPrewarmerProvider.overrideWithValue(NoopPrewarmer()), // Prevent timer leaks from video prewarming
         visibilityTrackerProvider.overrideWithValue(NoopVisibilityTracker()), // Prevent timer leaks from visibility tracking
+        analyticsServiceProvider.overrideWithValue(NoopAnalyticsService()), // Prevent timer leaks from analytics retry delays
+        ff.sharedPreferencesProvider.overrideWithValue(prefs), // Override feature flag shared prefs provider
       ],
     );
-    addTearDown(container.dispose);
+    // NOTE: container.dispose() is called explicitly before test ends, not in tearDown
 
     await tester.pumpWidget(
       UncontrolledProviderScope(
@@ -98,13 +108,16 @@ void main() {
     expect(find.byWidgetPredicate((w) => w.runtimeType.toString() == 'VideoOverlayActions'), findsOneWidget,
         reason: 'VideoFeedItem should render VideoOverlayActions');
 
-    // NOTE: This test has timer leaks from UserProfileService and AnalyticsService.
-    // VideoPrewarmer and VisibilityTracker leaks have been fixed via NoOp overrides.
-    // UserProfileService uses 100ms batch debounce timer for profile fetching.
-    // AnalyticsService uses 1s retry delays for analytics tracking.
-    // All functional assertions above pass - this is a test infrastructure cleanup issue.
-    // SKIP: Timer leaks need NoOp provider overrides for UserProfileService and AnalyticsService.
-  }, skip: true);
+    // CRITICAL: Dispose services BEFORE test ends to cancel pending timers
+    fakeService.dispose(); // Dispose fake service to cancel ConnectionStatusService timer
+    container.dispose(); // Dispose provider container
+
+    // NOTE: Timer leaks previously fixed:
+    // - VideoPrewarmer: NoOp override prevents timer leaks
+    // - VisibilityTracker: NoOp override prevents timer leaks
+    // - UserProfileService: dispose() wired into provider lifecycle
+    // - AnalyticsService: dispose() already wired into provider lifecycle
+  });
 }
 
 /// Fake VideoEventService for testing
@@ -144,4 +157,44 @@ class _FakeNostrService implements INostrService {
 
 class _FakeSubscriptionManager extends SubscriptionManager {
   _FakeSubscriptionManager() : super(_FakeNostrService());
+}
+
+/// NoOp AnalyticsService that prevents network calls and timer leaks
+class NoopAnalyticsService extends AnalyticsService {
+  @override
+  Future<void> trackVideoView(video, {String source = 'mobile'}) async {
+    // No-op - prevent network calls in tests
+  }
+
+  @override
+  Future<void> trackVideoViewWithUser(video, {required userId, String source = 'mobile'}) async {
+    // No-op - prevent network calls in tests
+  }
+
+  @override
+  Future<void> trackDetailedVideoView(
+    video, {
+    required String source,
+    required String eventType,
+    watchDuration,
+    totalDuration,
+    loopCount,
+    completedVideo,
+  }) async {
+    // No-op - prevent network calls in tests
+  }
+
+  @override
+  Future<void> trackDetailedVideoViewWithUser(
+    video, {
+    required userId,
+    required String source,
+    required String eventType,
+    watchDuration,
+    totalDuration,
+    loopCount,
+    completedVideo,
+  }) async {
+    // No-op - prevent network calls in tests
+  }
 }

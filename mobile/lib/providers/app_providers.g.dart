@@ -1068,7 +1068,7 @@ final class UserProfileServiceProvider
 }
 
 String _$userProfileServiceHash() =>
-    r'646ddf84acd01426edca789d545dbad06cf7e403';
+    r'abc2ef09d33c40550c1bdaf52206aa650c5e97b5';
 
 /// Social service depends on Nostr service, Auth service, and SubscriptionManager
 
@@ -1220,6 +1220,112 @@ final class Nip98AuthServiceProvider
 }
 
 String _$nip98AuthServiceHash() => r'cfc2e0a65e1dbd9c559886929257fa66a7afb1c6';
+
+/// Blossom BUD-01 authentication service for age-restricted content
+
+@ProviderFor(blossomAuthService)
+const blossomAuthServiceProvider = BlossomAuthServiceProvider._();
+
+/// Blossom BUD-01 authentication service for age-restricted content
+
+final class BlossomAuthServiceProvider
+    extends
+        $FunctionalProvider<
+          BlossomAuthService,
+          BlossomAuthService,
+          BlossomAuthService
+        >
+    with $Provider<BlossomAuthService> {
+  /// Blossom BUD-01 authentication service for age-restricted content
+  const BlossomAuthServiceProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'blossomAuthServiceProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$blossomAuthServiceHash();
+
+  @$internal
+  @override
+  $ProviderElement<BlossomAuthService> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  BlossomAuthService create(Ref ref) {
+    return blossomAuthService(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(BlossomAuthService value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<BlossomAuthService>(value),
+    );
+  }
+}
+
+String _$blossomAuthServiceHash() =>
+    r'e64f2eebfd131f289245c69c1c7dd4f0575bf85d';
+
+/// Media authentication interceptor for handling 401 unauthorized responses
+
+@ProviderFor(mediaAuthInterceptor)
+const mediaAuthInterceptorProvider = MediaAuthInterceptorProvider._();
+
+/// Media authentication interceptor for handling 401 unauthorized responses
+
+final class MediaAuthInterceptorProvider
+    extends
+        $FunctionalProvider<
+          MediaAuthInterceptor,
+          MediaAuthInterceptor,
+          MediaAuthInterceptor
+        >
+    with $Provider<MediaAuthInterceptor> {
+  /// Media authentication interceptor for handling 401 unauthorized responses
+  const MediaAuthInterceptorProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'mediaAuthInterceptorProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$mediaAuthInterceptorHash();
+
+  @$internal
+  @override
+  $ProviderElement<MediaAuthInterceptor> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  MediaAuthInterceptor create(Ref ref) {
+    return mediaAuthInterceptor(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(MediaAuthInterceptor value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<MediaAuthInterceptor>(value),
+    );
+  }
+}
+
+String _$mediaAuthInterceptorHash() =>
+    r'adae18db875674843f6ced55608bb65a5ef7f445';
 
 /// Blossom upload service (uses user-configured Blossom server)
 /// Blossom upload service (uses user-configured Blossom server)
@@ -1467,7 +1573,7 @@ final class CurationServiceProvider
   }
 }
 
-String _$curationServiceHash() => r'f7fefab5b82aa0fbacd66b8c940f99bd679d09d5';
+String _$curationServiceHash() => r'890fd0efd8c105c46fa828ae679b1c6ff58964a5';
 
 /// Content reporting service for NIP-56 compliance
 

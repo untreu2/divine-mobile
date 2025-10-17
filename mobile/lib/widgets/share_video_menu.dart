@@ -6,13 +6,14 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openvine/models/video_event.dart';
 import 'package:openvine/providers/app_providers.dart';
+import 'package:openvine/services/bookmark_service.dart';
 import 'package:openvine/services/content_deletion_service.dart';
 import 'package:openvine/services/content_moderation_service.dart';
 import 'package:openvine/services/curated_list_service.dart';
 import 'package:openvine/services/social_service.dart';
 import 'package:openvine/services/video_sharing_service.dart';
 import 'package:openvine/theme/vine_theme.dart';
-import 'package:openvine/utils/nostr_encoding.dart';
+import 'package:openvine/utils/public_identifier_normalizer.dart';
 import 'package:openvine/utils/unified_logger.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:openvine/widgets/user_avatar.dart';
@@ -533,14 +534,10 @@ class _ShareVideoMenuState extends ConsumerState<ShareVideoMenu> {
   }
 
   void _showBookmarkSetsDialog() {
-    // TODO: Implement bookmark sets dialog
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Bookmark sets feature coming soon!'),
-        duration: Duration(seconds: 2),
-      ),
+    showDialog(
+      context: context,
+      builder: (context) => _SelectBookmarkSetDialog(video: widget.video),
     );
-    Navigator.of(context).pop();
   }
 
   // === FOLLOW SET ACTIONS ===
@@ -1129,22 +1126,10 @@ class _SendToUserDialogState extends ConsumerState<_SendToUserDialog> {
 
       String? pubkeyToSearch;
 
-      // Handle different search formats
-      if (query.startsWith('npub1')) {
-        // Convert npub to hex pubkey using bech32 decoding
-        try {
-          pubkeyToSearch = NostrEncoding.decodePublicKey(query);
-        } catch (e) {
-          Log.error('Failed to decode npub: $e',
-              name: 'ShareVideoMenu', category: LogCategory.ui);
-          // Invalid npub format - skip search
-          pubkeyToSearch = null;
-        }
-      } else if (query.length == 64 &&
-          RegExp(r'^[0-9a-fA-F]+$').hasMatch(query)) {
-        // Looks like a hex pubkey
-        pubkeyToSearch = query.toLowerCase();
-      } else {
+      // Try to normalize the query as a public identifier (npub/nprofile/hex)
+      pubkeyToSearch = normalizeToHex(query);
+
+      if (pubkeyToSearch == null) {
         // Search by display name - check contacts first
         for (final contact in _contacts) {
           if (contact.displayName != null &&
@@ -2012,6 +1997,310 @@ class _EditVideoDialogState extends ConsumerState<_EditVideoDialog> {
     _titleController.dispose();
     _descriptionController.dispose();
     _hashtagsController.dispose();
+    super.dispose();
+  }
+}
+
+/// Dialog for selecting bookmark set or creating new one
+class _SelectBookmarkSetDialog extends StatelessWidget {
+  const _SelectBookmarkSetDialog({required this.video});
+  final VideoEvent video;
+
+  @override
+  Widget build(BuildContext context) => Consumer(
+        builder: (context, ref, child) {
+          final bookmarkServiceAsync = ref.watch(bookmarkServiceProvider);
+
+          return bookmarkServiceAsync.when(
+            data: (bookmarkService) {
+              final bookmarkSets = bookmarkService.bookmarkSets;
+
+              return AlertDialog(
+                backgroundColor: VineTheme.cardBackground,
+                title: const Text('Add to Bookmark Set',
+                    style: TextStyle(color: VineTheme.whiteText)),
+                content: SizedBox(
+                  width: double.maxFinite,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Create New Set button at top
+                      ListTile(
+                        leading: Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: VineTheme.vineGreen.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Icon(
+                            Icons.add,
+                            color: VineTheme.vineGreen,
+                          ),
+                        ),
+                        title: const Text(
+                          'Create New Set',
+                          style: TextStyle(
+                            color: VineTheme.whiteText,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        subtitle: const Text(
+                          'Start a new bookmark collection',
+                          style: TextStyle(color: VineTheme.secondaryText),
+                        ),
+                        onTap: () {
+                          Navigator.of(context).pop();
+                          _showCreateBookmarkSetDialog(context, ref, video);
+                        },
+                      ),
+
+                      // Divider if there are existing sets
+                      if (bookmarkSets.isNotEmpty) ...[
+                        const SizedBox(height: 8),
+                        Divider(color: Colors.grey.shade700),
+                        const SizedBox(height: 8),
+                      ],
+
+                      // List of existing bookmark sets
+                      if (bookmarkSets.isEmpty)
+                        const Padding(
+                          padding: EdgeInsets.all(16.0),
+                          child: Text(
+                            'No bookmark sets yet. Create your first one!',
+                            style: TextStyle(color: VineTheme.secondaryText),
+                            textAlign: TextAlign.center,
+                          ),
+                        )
+                      else
+                        SizedBox(
+                          height: 300,
+                          child: ListView.builder(
+                            shrinkWrap: true,
+                            itemCount: bookmarkSets.length,
+                            itemBuilder: (context, index) {
+                              final set = bookmarkSets[index];
+                              final isInSet = bookmarkService.isInBookmarkSet(
+                                  set.id, video.id, 'e');
+
+                              return ListTile(
+                                leading: Icon(
+                                  isInSet
+                                      ? Icons.check_circle
+                                      : Icons.bookmark_border,
+                                  color: isInSet
+                                      ? VineTheme.vineGreen
+                                      : VineTheme.whiteText,
+                                ),
+                                title: Text(
+                                  set.name,
+                                  style:
+                                      const TextStyle(color: VineTheme.whiteText),
+                                ),
+                                subtitle: Text(
+                                  '${set.items.length} videos${set.description != null ? ' • ${set.description}' : ''}',
+                                  style: const TextStyle(
+                                      color: VineTheme.secondaryText),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                onTap: () => _toggleVideoInBookmarkSet(
+                                  context,
+                                  ref,
+                                  bookmarkService,
+                                  set,
+                                  video,
+                                  isInSet,
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('Done'),
+                  ),
+                ],
+              );
+            },
+            loading: () => const AlertDialog(
+              backgroundColor: VineTheme.cardBackground,
+              content: Center(
+                child: CircularProgressIndicator(color: VineTheme.vineGreen),
+              ),
+            ),
+            error: (_, __) => const AlertDialog(
+              backgroundColor: VineTheme.cardBackground,
+              title: Text('Error',
+                  style: TextStyle(color: VineTheme.whiteText)),
+              content: Text('Failed to load bookmark sets',
+                  style: TextStyle(color: VineTheme.whiteText)),
+            ),
+          );
+        },
+      );
+
+  static void _showCreateBookmarkSetDialog(
+    BuildContext context,
+    WidgetRef ref,
+    VideoEvent video,
+  ) {
+    showDialog(
+      context: context,
+      builder: (context) => _CreateBookmarkSetDialog(video: video),
+    );
+  }
+
+  static Future<void> _toggleVideoInBookmarkSet(
+    BuildContext context,
+    WidgetRef ref,
+    BookmarkService bookmarkService,
+    BookmarkSet set,
+    VideoEvent video,
+    bool isCurrentlyInSet,
+  ) async {
+    try {
+      bool success;
+      final bookmarkItem = BookmarkItem(type: 'e', id: video.id);
+
+      if (isCurrentlyInSet) {
+        success =
+            await bookmarkService.removeFromBookmarkSet(set.id, bookmarkItem);
+      } else {
+        success =
+            await bookmarkService.addToBookmarkSet(set.id, bookmarkItem);
+      }
+
+      if (success && context.mounted) {
+        final message = isCurrentlyInSet
+            ? 'Removed from "${set.name}"'
+            : 'Added to "${set.name}"';
+
+        // Close the bookmark sets dialog
+        Navigator.of(context).pop();
+
+        // Close the share menu
+        Navigator.of(context).pop();
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text(message), duration: const Duration(seconds: 2)),
+        );
+      }
+    } catch (e) {
+      Log.error('Failed to toggle video in bookmark set: $e',
+          name: 'ShareVideoMenu', category: LogCategory.ui);
+    }
+  }
+}
+
+/// Dialog for creating new bookmark set
+class _CreateBookmarkSetDialog extends ConsumerStatefulWidget {
+  const _CreateBookmarkSetDialog({required this.video});
+  final VideoEvent video;
+
+  @override
+  ConsumerState<_CreateBookmarkSetDialog> createState() =>
+      _CreateBookmarkSetDialogState();
+}
+
+class _CreateBookmarkSetDialogState
+    extends ConsumerState<_CreateBookmarkSetDialog> {
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _descriptionController = TextEditingController();
+
+  @override
+  Widget build(BuildContext context) => AlertDialog(
+        backgroundColor: VineTheme.cardBackground,
+        title: const Text('Create Bookmark Set',
+            style: TextStyle(color: VineTheme.whiteText)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: _nameController,
+              enableInteractiveSelection: true,
+              autofocus: true,
+              style: const TextStyle(color: VineTheme.whiteText),
+              decoration: const InputDecoration(
+                labelText: 'Set Name',
+                labelStyle: TextStyle(color: VineTheme.secondaryText),
+                hintText: 'e.g., Favorites, Watch Later, etc.',
+                hintStyle: TextStyle(color: VineTheme.secondaryText),
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _descriptionController,
+              enableInteractiveSelection: true,
+              style: const TextStyle(color: VineTheme.whiteText),
+              decoration: const InputDecoration(
+                labelText: 'Description (optional)',
+                labelStyle: TextStyle(color: VineTheme.secondaryText),
+              ),
+              maxLines: 2,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: _createBookmarkSet,
+            child: const Text('Create'),
+          ),
+        ],
+      );
+
+  Future<void> _createBookmarkSet() async {
+    final name = _nameController.text.trim();
+    if (name.isEmpty) {
+      // Don't close dialog - name is required
+      return;
+    }
+
+    try {
+      final bookmarkService = await ref.read(bookmarkServiceProvider.future);
+      final newSet = await bookmarkService.createBookmarkSet(
+        name: name,
+        description: _descriptionController.text.trim().isEmpty
+            ? null
+            : _descriptionController.text.trim(),
+      );
+
+      if (newSet != null && mounted) {
+        // Add the video to the new set
+        final bookmarkItem = BookmarkItem(type: 'e', id: widget.video.id);
+        await bookmarkService.addToBookmarkSet(newSet.id, bookmarkItem);
+
+        if (mounted) {
+          Navigator.of(context).pop(); // Close create dialog
+          Navigator.of(context).pop(); // Close share menu
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Created "$name" and added video'),
+              duration: const Duration(seconds: 2),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      Log.error('Failed to create bookmark set: $e',
+          name: 'ShareVideoMenu', category: LogCategory.ui);
+    }
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _descriptionController.dispose();
     super.dispose();
   }
 }

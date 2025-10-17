@@ -7,9 +7,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openvine/models/video_event.dart';
 import 'package:openvine/providers/individual_video_providers.dart';
 import 'package:openvine/providers/computed_active_video_provider.dart';
-import 'package:openvine/providers/tab_visibility_provider.dart';
 import 'package:openvine/providers/app_foreground_provider.dart';
-import 'package:openvine/providers/video_prewarmer_provider.dart';
+import 'package:openvine/services/video_prewarmer.dart';
 import 'package:openvine/widgets/video_feed_item.dart';
 import 'package:openvine/utils/unified_logger.dart';
 
@@ -32,7 +31,6 @@ class VideoPageView extends ConsumerStatefulWidget {
     this.enablePrewarming = true,
     this.enablePreloading = false,
     this.enableLifecycleManagement = true,
-    this.tabIndex,
     this.screenId, // Screen ID for reactive context (e.g., 'home', 'explore', 'profile:npub123')
     this.contextTitle,
     this.onPageChanged,
@@ -47,7 +45,6 @@ class VideoPageView extends ConsumerStatefulWidget {
   final bool enablePrewarming;
   final bool enablePreloading;
   final bool enableLifecycleManagement;
-  final int? tabIndex; // Tab index this VideoPageView belongs to (for tab visibility checking)
   final String? screenId; // Screen ID for reactive page context management
   final String? contextTitle; // Optional context title to display (e.g., "#funny")
   final void Function(int index, VideoEvent video)? onPageChanged;
@@ -60,23 +57,44 @@ class VideoPageView extends ConsumerStatefulWidget {
 
 class _VideoPageViewState extends ConsumerState<VideoPageView> {
   late PageController _pageController;
+  late VideoPrewarmer _prewarmer;
+  CurrentPageContextNotifier? _contextNotifier; // Captured in initState for safe dispose access
+  bool _isAppForeground = true; // Cached app foreground state
   int _currentIndex = 0;
-
-  /// Check if this VideoPageView's tab is currently visible
-  bool get _isTabVisible {
-    // If no tab index specified, assume always visible (e.g., standalone screens like ExploreVideoScreenPure)
-    if (widget.tabIndex == null) return true;
-
-    // Check if our tab is the active tab
-    final activeTab = ref.read(tabVisibilityProvider);
-    return activeTab == widget.tabIndex;
-  }
+  late int _claimEpoch; // Unique epoch for context ownership
 
   @override
   void initState() {
     super.initState();
+    Log.debug('🎬 VideoPageView.initState: screenId=${widget.screenId}, enableLifecycle=${widget.enableLifecycleManagement}, initialIndex=${widget.initialIndex}',
+        name: 'VideoPageView', category: LogCategory.video);
+
     _currentIndex = widget.initialIndex;
     _pageController = widget.controller ?? PageController(initialPage: widget.initialIndex);
+    _prewarmer = ref.read(videoPrewarmerProvider);
+
+    // Claim unique epoch for context ownership (microseconds ensures uniqueness)
+    _claimEpoch = DateTime.now().microsecondsSinceEpoch;
+    Log.debug('🎯 VideoPageView claimed epoch: $_claimEpoch for screenId=${widget.screenId}',
+        name: 'VideoPageView', category: LogCategory.video);
+
+    // Capture notifier and initial state values while widget is mounted
+    if (widget.enableLifecycleManagement && widget.screenId != null) {
+      _contextNotifier = ref.read(currentPageContextProvider.notifier);
+      // Announce this widget's pending claim
+      Log.debug('📢 VideoPageView announcing pending claim: epoch=$_claimEpoch, screenId=${widget.screenId}',
+          name: 'VideoPageView', category: LogCategory.video);
+      _contextNotifier!.announcePending(_claimEpoch, widget.screenId!);
+    } else {
+      Log.debug('⏭️ VideoPageView skipping context claim: enableLifecycle=${widget.enableLifecycleManagement}, screenId=${widget.screenId}',
+          name: 'VideoPageView', category: LogCategory.video);
+    }
+    _isAppForeground = ref.read(appForegroundProvider);
+
+    // Listen to app foreground state changes and update cached value
+    ref.listenManual(appForegroundProvider, (prev, next) {
+      _isAppForeground = next;
+    });
 
     // Set initial page context if screenId is provided
     // Use Future.microtask to avoid modifying provider during build
@@ -84,11 +102,17 @@ class _VideoPageViewState extends ConsumerState<VideoPageView> {
       Future.microtask(() {
         if (!mounted) return;
 
-        final isAppForeground = ref.read(appForegroundProvider);
-        Log.debug('🔍 VideoPageView initState check: isAppForeground=$isAppForeground, _isTabVisible=$_isTabVisible, index=$_currentIndex',
+        Log.debug('🔍 VideoPageView initState check: isAppForeground=$_isAppForeground, index=$_currentIndex',
             name: 'VideoPageView', category: LogCategory.video);
-        if (isAppForeground && _isTabVisible && _currentIndex >= 0 && _currentIndex < widget.videos.length) {
-          ref.read(currentPageContextProvider.notifier).setContext(widget.screenId!, _currentIndex);
+        if (_isAppForeground && _currentIndex >= 0 && _currentIndex < widget.videos.length) {
+          final accepted = _contextNotifier?.setIfNewer(
+            widget.screenId!,
+            _currentIndex,
+            widget.videos[_currentIndex].id,
+            _claimEpoch,
+          );
+          Log.debug('🎯 VideoPageView claimed context: epoch=$_claimEpoch accepted=$accepted',
+              name: 'VideoPageView', category: LogCategory.video);
 
           // Schedule prewarming
           if (widget.enablePrewarming) {
@@ -100,34 +124,46 @@ class _VideoPageViewState extends ConsumerState<VideoPageView> {
         }
       });
     }
+  }
 
-    // Listen for tab visibility changes to rebuild VideoFeedItems when tab becomes visible
-    if (widget.tabIndex != null) {
-      ref.listenManual(tabVisibilityProvider, (prev, next) {
-        final wasVisible = prev == widget.tabIndex;
-        final isVisibleNow = next == widget.tabIndex;
+  @override
+  void didUpdateWidget(VideoPageView oldWidget) {
+    super.didUpdateWidget(oldWidget);
 
-        // Rebuild when visibility changes
-        if (wasVisible != isVisibleNow) {
-          Log.debug('🔄 Tab visibility changed for tab ${widget.tabIndex}: $wasVisible -> $isVisibleNow',
+    // Handle initialIndex changes
+    if (widget.initialIndex != oldWidget.initialIndex) {
+      _currentIndex = widget.initialIndex;
+      // Note: PageController's initialPage can't be changed after creation,
+      // but we update our tracking and context will update accordingly
+      Log.debug('🔄 VideoPageView.didUpdateWidget: initialIndex changed from ${oldWidget.initialIndex} to ${widget.initialIndex}',
+          name: 'VideoPageView', category: LogCategory.video);
+    }
+
+    // Handle screenId changes - claim new context if screenId changed
+    if (widget.screenId != oldWidget.screenId && widget.enableLifecycleManagement && widget.screenId != null) {
+      // Claim new epoch for the new screenId
+      _claimEpoch = DateTime.now().microsecondsSinceEpoch;
+      _contextNotifier = ref.read(currentPageContextProvider.notifier);
+
+      Log.debug('🔄 VideoPageView.didUpdateWidget: screenId changed from ${oldWidget.screenId} to ${widget.screenId}, claiming new epoch=$_claimEpoch',
+          name: 'VideoPageView', category: LogCategory.video);
+
+      // Announce new claim
+      _contextNotifier!.announcePending(_claimEpoch, widget.screenId!);
+
+      // Update context immediately with current index
+      Future.microtask(() {
+        if (!mounted) return;
+
+        if (_isAppForeground && _currentIndex >= 0 && _currentIndex < widget.videos.length) {
+          final accepted = _contextNotifier?.setIfNewer(
+            widget.screenId!,
+            _currentIndex,
+            widget.videos[_currentIndex].id,
+            _claimEpoch,
+          );
+          Log.debug('🎯 VideoPageView claimed context after screenId change: epoch=$_claimEpoch index=$_currentIndex accepted=$accepted',
               name: 'VideoPageView', category: LogCategory.video);
-
-          if (mounted) {
-            setState(() {
-              // Trigger rebuild to switch between placeholders and VideoFeedItems
-            });
-
-            // If tab became visible, set page context (only if app is in foreground and screenId provided)
-            if (isVisibleNow && widget.enableLifecycleManagement && widget.screenId != null) {
-              Future.microtask(() {
-                if (!mounted) return;
-                final isAppForeground = ref.read(appForegroundProvider);
-                if (isAppForeground && _currentIndex >= 0 && _currentIndex < widget.videos.length) {
-                  ref.read(currentPageContextProvider.notifier).setContext(widget.screenId!, _currentIndex);
-                }
-              });
-            }
-          }
         }
       });
     }
@@ -135,14 +171,29 @@ class _VideoPageViewState extends ConsumerState<VideoPageView> {
 
   @override
   void dispose() {
-    // Clear page context if this VideoPageView owns it
-    if (widget.enableLifecycleManagement && widget.screenId != null) {
-      try {
-        ref.read(currentPageContextProvider.notifier).clear();
-      } catch (e) {
-        Log.error('Error clearing page context on dispose: $e',
-            name: 'VideoPageView', category: LogCategory.video);
-      }
+    // Clear context if this widget still owns it (epoch-based ownership)
+    // Defer to avoid modifying provider during dispose lifecycle
+    if (_contextNotifier != null && widget.screenId != null) {
+      final notifier = _contextNotifier!;
+      final screenId = widget.screenId!;
+      final claimEpoch = _claimEpoch;
+
+      // Schedule for next frame to avoid modifying provider during build
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        try {
+          final cleared = notifier.clearIfOwner(claimEpoch, screenId);
+          if (cleared) {
+            Log.debug('🧹 VideoPageView cleared context: epoch=$claimEpoch screenId=$screenId',
+                name: 'VideoPageView', category: LogCategory.video);
+          } else {
+            Log.debug('⏭️ VideoPageView skipped clear (outdated): epoch=$claimEpoch screenId=$screenId',
+                name: 'VideoPageView', category: LogCategory.video);
+          }
+        } catch (e) {
+          // Suppress errors - context may have been claimed by another widget
+          debugPrint('[OWNERSHIP] suppressed error during deferred context clear: $e');
+        }
+      });
     }
 
     // Only dispose controller if we created it
@@ -177,7 +228,7 @@ class _VideoPageViewState extends ConsumerState<VideoPageView> {
 
     if (params.isNotEmpty) {
       try {
-        ref.read(videoPrewarmerProvider.notifier).prewarmVideos(params);
+        _prewarmer.prewarmVideos(params);
       } catch (e) {
         Log.error('Error prewarming neighbors: $e',
             name: 'VideoPageView', category: LogCategory.video);
@@ -186,19 +237,18 @@ class _VideoPageViewState extends ConsumerState<VideoPageView> {
   }
 
   void _handlePageChanged(int index) {
-    Log.debug('📄 VideoPageView: Page changed to index $index (tabVisible: $_isTabVisible)',
+    Log.debug('📄 VideoPageView: Page changed to index $index',
         name: 'VideoPageView', category: LogCategory.video);
     setState(() => _currentIndex = index);
 
     if (index >= 0 && index < widget.videos.length) {
       final video = widget.videos[index];
 
-      // Update page context ONLY if this tab is visible AND app is in foreground AND screenId is provided
-      if (widget.enableLifecycleManagement && _isTabVisible && widget.screenId != null) {
-        final isAppForeground = ref.read(appForegroundProvider);
-        if (isAppForeground) {
+      // Update page context if app is in foreground and screenId is provided
+      if (widget.enableLifecycleManagement && widget.screenId != null) {
+        if (_isAppForeground) {
           try {
-            ref.read(currentPageContextProvider.notifier).setContext(widget.screenId!, index);
+            _contextNotifier?.setIfNewer(widget.screenId!, index, video.id, _claimEpoch);
           } catch (e) {
             Log.error('Error setting page context: $e',
                 name: 'VideoPageView', category: LogCategory.video);
@@ -207,9 +257,6 @@ class _VideoPageViewState extends ConsumerState<VideoPageView> {
           Log.debug('⏭️ Skipping setContext - app is backgrounded',
               name: 'VideoPageView', category: LogCategory.video);
         }
-      } else if (!_isTabVisible) {
-        Log.debug('⏭️ Skipping setContext - tab not visible (tab ${widget.tabIndex} vs active ${ref.read(tabVisibilityProvider)})',
-            name: 'VideoPageView', category: LogCategory.video);
       }
 
       // Prewarm neighbors
@@ -232,8 +279,7 @@ class _VideoPageViewState extends ConsumerState<VideoPageView> {
         'hasClients=${_pageController.hasClients}, '
         'position=${_pageController.hasClients ? _pageController.position.pixels : "no position"}, '
         'videoCount=${widget.videos.length}, '
-        'hasBottomNav=${widget.hasBottomNavigation}, '
-        'tabVisible=$_isTabVisible',
+        'hasBottomNav=${widget.hasBottomNavigation}',
         name: 'VideoPageView', category: LogCategory.video);
 
     return PageView.builder(
@@ -244,18 +290,6 @@ class _VideoPageViewState extends ConsumerState<VideoPageView> {
           pageSnapping: true,
           itemBuilder: (context, index) {
             if (index >= widget.videos.length) return const SizedBox.shrink();
-
-            // CRITICAL: Only build VideoFeedItem (which creates controllers) when tab is visible
-            // When tab is not visible, build lightweight placeholder to prevent controller creation
-            if (!_isTabVisible) {
-              return Container(
-                key: ValueKey('placeholder-${widget.videos[index].id}'),
-                color: Colors.black,
-                child: const Center(
-                  child: SizedBox.shrink(), // Empty placeholder when tab not visible
-                ),
-              );
-            }
 
             return VideoFeedItem(
               key: ValueKey('video-${widget.videos[index].id}'),

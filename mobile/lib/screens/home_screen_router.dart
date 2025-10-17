@@ -9,7 +9,8 @@ import 'package:openvine/providers/route_feed_providers.dart';
 import 'package:openvine/providers/user_profile_providers.dart';
 import 'package:openvine/router/page_context_provider.dart';
 import 'package:openvine/router/route_utils.dart';
-import 'package:openvine/widgets/video_page_view.dart';
+import 'package:openvine/widgets/video_feed_item.dart';
+import 'package:openvine/utils/unified_logger.dart';
 
 /// Router-driven HomeScreen - PageView syncs with URL bidirectionally
 class HomeScreenRouter extends ConsumerStatefulWidget {
@@ -124,18 +125,12 @@ class _HomeScreenRouterState extends ConsumerState<HomeScreenRouter> {
 
             return RefreshIndicator(
               onRefresh: () => ref.read(homeRefreshControllerProvider).refresh(),
-              child: VideoPageView(
+              child: PageView.builder(
                 key: const Key('home-video-page-view'),
-                videos: videos,
+                itemCount: videos.length,
                 controller: _controller,
-                initialIndex: _lastUrlIndex ?? 0,
-                hasBottomNavigation: true,
-                enablePrewarming: true,
-                enablePreloading: true,
-                enableLifecycleManagement: true,
-                tabIndex: 0, // Home feed is tab 0
-                screenId: 'home',
-                onPageChanged: (newIndex, video) {
+                scrollDirection: Axis.vertical,
+                onPageChanged: (newIndex) {
                   // Guard: only navigate if URL doesn't match
                   if (newIndex != urlIndex) {
                     context.go(buildRoute(
@@ -147,8 +142,19 @@ class _HomeScreenRouterState extends ConsumerState<HomeScreenRouter> {
                   if (newIndex >= itemCount - 2) {
                     ref.read(homePaginationControllerProvider).maybeLoadMore();
                   }
+
+                  Log.debug('📄 Page changed to index $newIndex (${videos[newIndex].id.substring(0, 8)}...)',
+                      name: 'HomeScreenRouter', category: LogCategory.video);
                 },
-                onRefresh: () => ref.read(homeRefreshControllerProvider).refresh(),
+                itemBuilder: (context, index) {
+                  return VideoFeedItem(
+                    key: ValueKey('video-${videos[index].id}'),
+                    video: videos[index],
+                    index: index,
+                    hasBottomNavigation: true,
+                    contextTitle: '', // Home feed has no context title
+                  );
+                },
               ),
             );
           },

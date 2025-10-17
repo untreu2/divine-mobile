@@ -194,8 +194,8 @@ class VineRecordingNotifier extends StateNotifier<VineRecordingUIState> {
     try {
       final draftStorage = await _ref.read(draftStorageServiceProvider.future);
 
-      // Copy video file to permanent draft location
-      final appDir = await getApplicationDocumentsDirectory();
+      // Copy video file to permanent draft location using app support directory (sandboxed)
+      final appDir = await getApplicationSupportDirectory();
       final draftsDir = Directory(path.join(appDir.path, 'drafts'));
       if (!draftsDir.existsSync()) {
         draftsDir.createSync(recursive: true);

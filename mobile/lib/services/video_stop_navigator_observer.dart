@@ -3,7 +3,6 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:openvine/providers/individual_video_providers.dart';
 import 'package:openvine/providers/video_overlay_manager_provider.dart';
 import 'package:openvine/utils/unified_logger.dart';
 
@@ -35,17 +34,17 @@ class VideoStopNavigatorObserver extends NavigatorObserver {
                 name: 'VideoStopNavigatorObserver',
                 category: LogCategory.system);
           } else {
-            // For other routes, just clear active video to pause playback
-            container.read(activeVideoProvider.notifier).clearActiveVideo();
+            // Router-driven architecture: route changes automatically pause videos via activeVideoIdProvider
+            // No manual state management needed
             Log.info(
-                '📱 Navigation $action to route: ${routeName ?? 'unnamed'} - cleared active video',
+                '📱 Navigation $action to route: ${routeName ?? 'unnamed'} - videos will pause automatically via router',
                 name: 'VideoStopNavigatorObserver',
                 category: LogCategory.system);
           }
         });
       }
     } catch (e) {
-      Log.error('Failed to stop videos on navigation: $e',
+      Log.error('Failed to handle navigation: $e',
           name: 'VideoStopNavigatorObserver', category: LogCategory.system);
     }
   }

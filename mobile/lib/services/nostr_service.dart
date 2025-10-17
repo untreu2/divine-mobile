@@ -3,7 +3,6 @@
 
 import 'dart:async';
 import 'dart:convert';
-import 'dart:collection';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_embedded_nostr_relay/flutter_embedded_nostr_relay.dart'
@@ -34,11 +33,6 @@ class NostrService implements INostrService {
   final Map<String, StreamController<Event>> _subscriptions = {};
   final Map<String, bool> _relayAuthStates = {};
   final _authStateController = StreamController<Map<String, bool>>.broadcast();
-
-  // Global recent event dedupe across all active subscriptions
-  final Queue<String> _recentEventQueue = Queue<String>();
-  final Set<String> _recentEventSet = <String>{};
-  static const int _recentEventMax = 5000;
 
   // Embedded relay (handles external connections automatically)
   embedded.EmbeddedNostrRelay? _embeddedRelay;
@@ -360,14 +354,10 @@ class NostrService implements INostrService {
         }
         seenEventIds.add(event.id);
 
-        // Global dedupe: if this event was already delivered via another subscription, drop it
-        if (!_rememberGlobalEvent(event.id)) {
-          Log.debug(
-              'Dropping globally-duplicate event ${event.id.substring(0, 8)}',
-              name: 'NostrService',
-              category: LogCategory.relay);
-          return;
-        }
+        // Note: We intentionally allow the same event to appear in different subscriptions
+        // (e.g., search results and hashtag feeds) since they serve different contexts.
+        // Per-subscription deduplication (seenEventIds above) prevents duplicates within
+        // the same subscription.
 
         if (!controller.isClosed) {
           // Debug log for home feed events
@@ -435,18 +425,6 @@ class NostrService implements INostrService {
     };
 
     return controller.stream;
-  }
-
-  // Remember event id across all subscriptions. Returns true if first time seen.
-  bool _rememberGlobalEvent(String eventId) {
-    if (_recentEventSet.contains(eventId)) return false;
-    _recentEventSet.add(eventId);
-    _recentEventQueue.addLast(eventId);
-    if (_recentEventQueue.length > _recentEventMax) {
-      final removed = _recentEventQueue.removeFirst();
-      _recentEventSet.remove(removed);
-    }
-    return true;
   }
 
   @override

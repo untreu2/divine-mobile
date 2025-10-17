@@ -715,7 +715,20 @@ class SecureKeyStorageService {
       if (pubkey != null) {
         // Create a special container for bunker-based keys
         // This won't have the private key but will have the public key
-        _cachedKeyContainer = _createBunkerKeyContainer(pubkey);
+        final bunkerContainer = _createBunkerKeyContainer(pubkey);
+
+        if (bunkerContainer == null) {
+          // Feature not yet implemented - return false to indicate failure
+          Log.error(
+              'Cannot create bunker key container - feature not yet implemented',
+              name: 'SecureKeyStorageService',
+              category: LogCategory.auth);
+          _bunkerClient = null;
+          _usingBunker = false;
+          return false;
+        }
+
+        _cachedKeyContainer = bunkerContainer;
         _cacheTimestamp = DateTime.now();
       }
 
@@ -733,17 +746,23 @@ class SecureKeyStorageService {
   }
 
   /// Create a special key container for bunker-based keys
-  SecureKeyContainer _createBunkerKeyContainer(String publicKey) {
+  SecureKeyContainer? _createBunkerKeyContainer(String publicKey) {
     // For bunker, we create a container with only the public key
     // The private key remains on the bunker server
     // This is a special case where signing happens remotely
 
     // Note: This requires updating SecureKeyContainer to support
     // public-key-only mode for bunker scenarios
-    // For now, return a placeholder
+    // For now, return null to indicate feature is not yet implemented
 
-    // TODO: Implement proper bunker key container
-    throw UnimplementedError('Bunker key container not yet implemented');
+    Log.warning(
+        'NIP-46 bunker key container feature is not yet implemented. '
+        'Bunker authentication will not function until this feature is completed.',
+        name: 'SecureKeyStorageService',
+        category: LogCategory.auth);
+
+    // Return null instead of throwing to prevent app crashes
+    return null;
   }
 
   /// Sign an event using bunker (for web platform)

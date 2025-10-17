@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:video_player_media_kit/video_player_media_kit.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:openvine/providers/app_providers.dart';
 import 'package:openvine/providers/social_providers.dart' as social_providers;
 import 'package:openvine/screens/web_auth_screen.dart';
@@ -20,6 +21,7 @@ import 'package:openvine/utils/unified_logger.dart';
 import 'package:openvine/utils/log_message_batcher.dart';
 import 'package:openvine/widgets/app_lifecycle_handler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:openvine/features/feature_flags/providers/feature_flag_providers.dart';
 import 'dart:io' if (dart.library.html) 'package:openvine/utils/platform_io_web.dart' as io;
 import 'package:openvine/network/vine_cdn_http_overrides.dart' if (dart.library.html) 'package:openvine/utils/platform_io_web.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
@@ -136,7 +138,7 @@ Future<void> _startOpenVineApp() async {
       // RELAY category temporarily enabled for web debugging
       UnifiedLogger.setLogLevel(LogLevel.debug);
       UnifiedLogger.enableCategories(
-          {LogCategory.system, LogCategory.auth, LogCategory.video, LogCategory.relay});
+          {LogCategory.system, LogCategory.auth, LogCategory.video, LogCategory.relay, LogCategory.ui});
     } else {
       // Release builds: minimal logging to reduce performance impact
       UnifiedLogger.setLogLevel(LogLevel.warning);
@@ -221,12 +223,24 @@ Future<void> _startOpenVineApp() async {
   await Hive.initFlutter();
   StartupPerformanceService.instance.completePhase('hive_storage');
 
+  // Initialize SharedPreferences for feature flags
+  StartupPerformanceService.instance.startPhase('shared_preferences');
+  final sharedPreferences = await SharedPreferences.getInstance();
+  StartupPerformanceService.instance.completePhase('shared_preferences');
+
   StartupPerformanceService.instance.checkpoint('pre_app_launch');
 
   Log.info('divine starting...', name: 'Main');
   Log.info('Log level: ${UnifiedLogger.currentLevel.name}', name: 'Main');
 
-  runApp(const ProviderScope(child: DivineApp()));
+  runApp(
+    ProviderScope(
+      overrides: [
+        sharedPreferencesProvider.overrideWithValue(sharedPreferences),
+      ],
+      child: const DivineApp(),
+    ),
+  );
 }
 
 void main() {
@@ -487,14 +501,10 @@ class _AppInitializerState extends ConsumerState<AppInitializer> {
       CrashReportingService.instance.logInitializationStep(
           '✓ SeenVideosService initialized in ${seenDuration}ms');
 
-      if (!mounted) return;
-      setState(() => _initializationStatus = 'Initializing upload manager...');
-      CrashReportingService.instance.logInitializationStep('Starting UploadManager');
-      final uploadStart = DateTime.now();
-      await ref.read(uploadManagerProvider).initialize();
-      final uploadDuration = DateTime.now().difference(uploadStart).inMilliseconds;
-      CrashReportingService.instance.logInitializationStep(
-          '✓ UploadManager initialized in ${uploadDuration}ms');
+      // SKIP UploadManager initialization during critical startup
+      // It will be initialized in background after UI is ready (deferred below)
+      Log.info('⏭️  Skipping UploadManager during critical startup (will init in background)',
+          name: 'AppInitializer', category: LogCategory.system);
 
       if (!mounted) return;
       setState(
@@ -586,6 +596,43 @@ class _AppInitializerState extends ConsumerState<AppInitializer> {
           // Continue anyway - social features will work with cached following list
         }
       }, taskName: 'social_provider_init');
+
+      // DEFER UploadManager initialization - not needed for first frame
+      StartupPerformanceService.instance.deferUntilUIReady(() async {
+        if (!mounted) return;
+        try {
+          final uploadStart = DateTime.now();
+          Log.info(
+            '📤 [LIFECYCLE] UploadManager: Starting background initialization at ${uploadStart.millisecondsSinceEpoch}ms',
+            name: 'Main',
+            category: LogCategory.system,
+          );
+
+          await StartupPerformanceService.instance.measureWork(
+            'upload_manager',
+            () async {
+              CrashReportingService.instance.logInitializationStep('Starting UploadManager (background)');
+              await ref.read(uploadManagerProvider).initialize();
+              CrashReportingService.instance.logInitializationStep('✓ UploadManager initialized (background)');
+            }
+          );
+
+          final uploadDuration = DateTime.now().difference(uploadStart).inMilliseconds;
+          Log.info(
+            '✅ [LIFECYCLE] UploadManager: Background initialization COMPLETE in ${uploadDuration}ms',
+            name: 'Main',
+            category: LogCategory.system,
+          );
+        } catch (e) {
+          CrashReportingService.instance.logInitializationStep('✗ UploadManager failed: $e');
+          Log.warning(
+            '⚠️ [LIFECYCLE] UploadManager initialization failed (non-critical): $e',
+            name: 'Main',
+            category: LogCategory.system,
+          );
+          // Continue anyway - uploads will work once initialization succeeds on retry
+        }
+      }, taskName: 'upload_manager_init');
 
       // DEFER curated lists fetch - very low priority background sync
       StartupPerformanceService.instance.deferUntilUIReady(() async {

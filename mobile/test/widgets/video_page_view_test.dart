@@ -12,6 +12,7 @@ import '../builders/test_video_event_builder.dart';
 void main() {
   group('VideoPageView Widget Tests', () {
     late List<VideoEvent> testVideos;
+    late WidgetTester? currentTester;
 
     setUp(() {
       // Create test video events
@@ -28,6 +29,14 @@ void main() {
           createdAt: (now.millisecondsSinceEpoch ~/ 1000) - (i * 3600),
         ),
       );
+      currentTester = null;
+    });
+
+    tearDown(() async {
+      // Flush video controller cache timers (30s timeout)
+      if (currentTester != null) {
+        await currentTester!.pump(const Duration(seconds: 31));
+      }
     });
 
     Widget buildTestWidget({
@@ -65,6 +74,9 @@ void main() {
       await tester.pump();
 
       expect(find.byType(PageView), findsOneWidget);
+
+      // Flush video controller cache timers
+      await tester.pump(const Duration(seconds: 31));
     });
 
     testWidgets('starts at specified initial index', (WidgetTester tester) async {
@@ -80,6 +92,9 @@ void main() {
       // Verify PageView controller is at correct position
       final pageView = tester.widget<PageView>(find.byType(PageView));
       expect(pageView.controller?.initialPage, startIndex);
+
+      // Flush video controller cache timers
+      await tester.pump(const Duration(seconds: 31));
     });
 
     testWidgets('calls onPageChanged when scrolling', (WidgetTester tester) async {
@@ -103,6 +118,9 @@ void main() {
 
       expect(changedIndex, 1);
       expect(changedVideo?.id, testVideos[1].id);
+
+      // Flush video controller cache timers
+      await tester.pump(const Duration(seconds: 31));
     });
 
     testWidgets('calls onLoadMore when near end of list', (WidgetTester tester) async {
@@ -126,6 +144,9 @@ void main() {
       await tester.pump();
 
       expect(loadMoreCalled, true);
+
+      // Flush video controller cache timers
+      await tester.pump(const Duration(seconds: 31));
     });
 
     testWidgets('does not use RefreshIndicator to avoid scroll conflicts',
@@ -140,6 +161,9 @@ void main() {
 
       // RefreshIndicator not used because it conflicts with vertical PageView scrolling
       expect(find.byType(RefreshIndicator), findsNothing);
+
+      // Flush video controller cache timers
+      await tester.pump(const Duration(seconds: 31));
     });
 
     testWidgets('updates active video provider on page change',
@@ -179,6 +203,9 @@ void main() {
         container.read(activeVideoProvider),
         testVideos[1].id,
       );
+
+      // Flush video controller cache timers
+      await tester.pump(const Duration(seconds: 31));
     });
 
     testWidgets('prewarms neighbor controllers when enabled',
@@ -209,6 +236,9 @@ void main() {
       // Controllers are created but can autodispose after 30s of no listeners
       // Just verify the widget builds without errors
       expect(find.byType(VideoPageView), findsOneWidget);
+
+      // Flush video controller cache timers
+      await tester.pump(const Duration(seconds: 31));
     });
 
     testWidgets('does not prewarm when disabled', (WidgetTester tester) async {
@@ -235,6 +265,9 @@ void main() {
       // NOTE: With Riverpod-native lifecycle, disabling prewarming prevents VideoPrewarmer calls
       // Just verify the widget builds correctly
       expect(find.byType(VideoPageView), findsOneWidget);
+
+      // Flush video controller cache timers
+      await tester.pump(const Duration(seconds: 31));
     });
 
     testWidgets('handles empty video list gracefully', (WidgetTester tester) async {
@@ -243,6 +276,9 @@ void main() {
 
       // Should show empty state or handle gracefully
       expect(find.byType(PageView), findsOneWidget);
+
+      // Flush video controller cache timers
+      await tester.pump(const Duration(seconds: 31));
     });
 
     testWidgets('handles single video in list', (WidgetTester tester) async {
@@ -256,6 +292,9 @@ void main() {
       // Should not crash when trying to scroll
       await tester.drag(find.byType(PageView), const Offset(0, -400));
       await tester.pump();
+
+      // Flush video controller cache timers
+      await tester.pump(const Duration(seconds: 31));
     });
 
     testWidgets('disposes cleanly without errors', (WidgetTester tester) async {
@@ -267,6 +306,9 @@ void main() {
       await tester.pump();
 
       // Should not throw errors
+
+      // Flush video controller cache timers
+      await tester.pump(const Duration(seconds: 31));
     });
 
     testWidgets('handles rapid page changes without errors',
@@ -282,6 +324,9 @@ void main() {
 
       // Should not crash
       expect(find.byType(PageView), findsOneWidget);
+
+      // Flush video controller cache timers
+      await tester.pump(const Duration(seconds: 31));
     });
 
     testWidgets('respects hasBottomNavigation parameter',
@@ -297,6 +342,9 @@ void main() {
       // PageView should exist
       final pageView = tester.widget<PageView>(find.byType(PageView));
       expect(pageView, isNotNull);
+
+      // Flush video controller cache timers
+      await tester.pump(const Duration(seconds: 31));
     });
 
     testWidgets('handles updated video list', (WidgetTester tester) async {
@@ -318,6 +366,9 @@ void main() {
       await tester.pump();
 
       expect(find.byType(PageView), findsOneWidget);
+
+      // Flush video controller cache timers
+      await tester.pump(const Duration(seconds: 31));
     });
 
     testWidgets('vertical scroll direction is set correctly',
@@ -327,6 +378,9 @@ void main() {
 
       final pageView = tester.widget<PageView>(find.byType(PageView));
       expect(pageView.scrollDirection, Axis.vertical);
+
+      // Flush video controller cache timers
+      await tester.pump(const Duration(seconds: 31));
     });
 
     testWidgets('enables mouse and trackpad drag via ScrollConfiguration',
@@ -342,6 +396,9 @@ void main() {
 
       // Verify drag devices are enabled (this tests the implementation)
       expect(find.byType(PageView), findsOneWidget);
+
+      // Flush video controller cache timers
+      await tester.pump(const Duration(seconds: 31));
     });
   });
 
@@ -379,6 +436,9 @@ void main() {
 
       // Should handle gracefully
       expect(find.byType(PageView), findsOneWidget);
+
+      // Flush video controller cache timers
+      await tester.pump(const Duration(seconds: 31));
     });
 
     testWidgets('handles very large video list', (WidgetTester tester) async {
@@ -407,6 +467,9 @@ void main() {
       await tester.pump();
 
       expect(find.byType(PageView), findsOneWidget);
+
+      // Flush video controller cache timers
+      await tester.pump(const Duration(seconds: 31));
     });
 
     testWidgets('onLoadMore triggered at correct threshold', (WidgetTester tester) async {
@@ -452,6 +515,9 @@ void main() {
 
       // Still should be 1 (though it may be called again in real implementation)
       expect(loadMoreCount, greaterThanOrEqualTo(1));
+
+      // Flush video controller cache timers
+      await tester.pump(const Duration(seconds: 31));
     });
 
     testWidgets('sets active video on mount when lifecycle enabled',
@@ -485,6 +551,9 @@ void main() {
       // Active video should be set by lifecycle management
       final activeVideo = container.read(activeVideoProvider);
       expect(activeVideo, 'video-1');
+
+      // Flush video controller cache timers
+      await tester.pump(const Duration(seconds: 31));
     });
 
     testWidgets('does not manage active video when lifecycle disabled',
@@ -517,6 +586,9 @@ void main() {
 
       // Active video should not be managed
       expect(container.read(activeVideoProvider), isNull);
+
+      // Flush video controller cache timers
+      await tester.pump(const Duration(seconds: 31));
     });
   });
 
@@ -576,6 +648,9 @@ void main() {
       expect(pageContext, isNotNull, reason: 'Page context should be set');
       expect(pageContext!.screenId, equals('explore'));
       expect(pageContext.pageIndex, equals(0));
+
+      // Flush video controller cache timers
+      await tester.pump(const Duration(seconds: 31));
     });
 
     testWidgets('VideoPageView updates context when page changes', (tester) async {
@@ -626,6 +701,9 @@ void main() {
       pageContext = container.read(currentPageContextProvider);
       expect(pageContext?.screenId, equals('explore'));
       expect(pageContext?.pageIndex, equals(2));
+
+      // Flush video controller cache timers
+      await tester.pump(const Duration(seconds: 31));
     });
 
     testWidgets('VideoPageView clears context on dispose', (tester) async {
@@ -671,6 +749,9 @@ void main() {
       // VERIFY: Context was cleared
       pageContext = container.read(currentPageContextProvider);
       expect(pageContext, isNull, reason: 'Context should be cleared on dispose');
+
+      // Flush video controller cache timers
+      await tester.pump(const Duration(seconds: 31));
     });
 
     testWidgets('VideoPageView with different screenIds have separate contexts', (tester) async {
@@ -727,6 +808,9 @@ void main() {
       pageContext = container.read(currentPageContextProvider);
       expect(pageContext?.screenId, equals('explore'));
       expect(pageContext?.pageIndex, equals(2));
+
+      // Flush video controller cache timers
+      await tester.pump(const Duration(seconds: 31));
     });
   });
 }

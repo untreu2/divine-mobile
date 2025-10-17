@@ -217,6 +217,21 @@ class MockVideoEventService extends _i1.Mock implements _i4.VideoEventService {
           as List<_i5.VideoEvent>);
 
   @override
+  void removeVideoFromAuthorList(String? authorPubkey, String? videoId) =>
+      super.noSuchMethod(
+        Invocation.method(#removeVideoFromAuthorList, [authorPubkey, videoId]),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  bool isVideoLocallyDeleted(String? videoId) =>
+      (super.noSuchMethod(
+            Invocation.method(#isVideoLocallyDeleted, [videoId]),
+            returnValue: false,
+          )
+          as bool);
+
+  @override
   _i8.Future<void> subscribeToVideoFeed({
     required _i4.SubscriptionType? subscriptionType,
     List<String>? authors,
@@ -252,6 +267,23 @@ class MockVideoEventService extends _i1.Mock implements _i4.VideoEventService {
               #subscribeToUserVideos,
               [pubkey],
               {#limit: limit},
+            ),
+            returnValue: _i8.Future<void>.value(),
+            returnValueForMissingStub: _i8.Future<void>.value(),
+          )
+          as _i8.Future<void>);
+
+  @override
+  _i8.Future<void> queryHistoricalUserVideos(
+    String? pubkey, {
+    int? until,
+    int? limit = 50,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(
+              #queryHistoricalUserVideos,
+              [pubkey],
+              {#until: until, #limit: limit},
             ),
             returnValue: _i8.Future<void>.value(),
             returnValueForMissingStub: _i8.Future<void>.value(),

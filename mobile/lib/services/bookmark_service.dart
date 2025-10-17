@@ -489,6 +489,25 @@ class BookmarkService with NostrListServiceMixin {
 
   // === NOSTR PUBLISHING ===
 
+  /// Public method to publish a bookmark set to Nostr (for background sync)
+  Future<bool> publishBookmarkSetToNostr(String setId) async {
+    try {
+      final set = getBookmarkSetById(setId);
+      if (set == null) {
+        Log.warning('Cannot publish bookmark set - not found: $setId',
+            name: 'BookmarkService', category: LogCategory.system);
+        return false;
+      }
+
+      await _publishBookmarkSetToNostr(set);
+      return true;
+    } catch (e) {
+      Log.error('Failed to publish bookmark set $setId: $e',
+          name: 'BookmarkService', category: LogCategory.system);
+      return false;
+    }
+  }
+
   /// Publish global bookmarks to Nostr as NIP-51 kind 10003 event
   Future<void> _publishGlobalBookmarksToNostr() async {
     try {

@@ -2,23 +2,45 @@
 // ABOUTME: Handles transient failures, corrupted storage, and provides exponential backoff
 
 import 'dart:async';
+import 'dart:io';
 import 'dart:math';
 import 'package:hive_ce_flutter/hive_flutter.dart';
 import 'package:openvine/models/pending_upload.dart';
 import 'package:openvine/utils/unified_logger.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as p;
 
 /// Robust initialization helper for UploadManager
 class UploadInitializationHelper {
   static const String _uploadsBoxName = 'pending_uploads';
-  static const int _maxRetries = 5;
-  static const Duration _baseDelay = Duration(milliseconds: 500);
-  static const Duration _maxDelay = Duration(seconds: 30);
+  static const int _maxRetries = 3; // Reduced from 5 since we fail fast on permanent errors
+  static const Duration _baseDelay = Duration(milliseconds: 250);
+  static const Duration _maxDelay = Duration(seconds: 5); // Reduced from 30s
 
   // Track initialization state
   static bool _isInitializing = false;
   static int _failureCount = 0;
   static DateTime? _lastFailureTime;
   static Box<PendingUpload>? _cachedBox;
+
+  /// Get app-specific storage directory (sandboxed, always writable)
+  static Future<Directory> _getAppStorageDir() async {
+    final base = await getApplicationSupportDirectory();
+    final appDir = Directory(p.join(base.path, 'openvine'));
+    if (!await appDir.exists()) {
+      await appDir.create(recursive: true);
+    }
+    return appDir;
+  }
+
+  /// Check if error is a permanent permission error (don't retry these)
+  static bool _isPermanentPermissionError(dynamic error) {
+    if (error is! FileSystemException) return false;
+    final code = error.osError?.errorCode;
+    // macOS/iOS: EPERM=1, EACCES=13
+    // These are permanent - no amount of retrying will help
+    return code == 1 || code == 13;
+  }
 
   /// Robustly initialize the uploads box with retry logic
   static Future<Box<PendingUpload>> initializeUploadsBox({
@@ -82,9 +104,21 @@ class UploadInitializationHelper {
   static Future<Box<PendingUpload>> _initializeWithRetries() async {
     Exception? lastError;
 
+    // Initialize Hive with proper app container directory FIRST
+    try {
+      final storageDir = await _getAppStorageDir();
+      Hive.init(storageDir.path);
+      Log.info('Hive initialized with app storage: ${storageDir.path}',
+          name: 'UploadInitHelper', category: LogCategory.video);
+    } catch (e) {
+      Log.error('Failed to get app storage directory: $e',
+          name: 'UploadInitHelper', category: LogCategory.video);
+      throw Exception('Cannot access app storage directory: $e');
+    }
+
     for (int attempt = 0; attempt <= _maxRetries; attempt++) {
       try {
-        Log.info('Initialization attempt ${attempt + 1}/$_maxRetries',
+        Log.info('Initialization attempt ${attempt + 1}/${_maxRetries + 1}',
             name: 'UploadInitHelper', category: LogCategory.video);
 
         // Register adapters if needed
@@ -103,6 +137,14 @@ class UploadInitializationHelper {
           box = await Hive.openBox<PendingUpload>(_uploadsBoxName)
               .timeout(const Duration(seconds: 10));
         } catch (e) {
+          // Check for permanent permission errors FIRST
+          if (_isPermanentPermissionError(e)) {
+            Log.error('❌ Permanent permission error - cannot retry: $e',
+                name: 'UploadInitHelper', category: LogCategory.video);
+            throw Exception('Permission denied: Cannot access storage. '
+                'This is a permanent error that cannot be fixed by retrying.');
+          }
+
           Log.warning('Normal open failed: $e, trying recovery...',
               name: 'UploadInitHelper', category: LogCategory.video);
 
@@ -126,6 +168,13 @@ class UploadInitializationHelper {
 
         return box;
       } catch (e) {
+        // Check for permanent errors - don't retry these
+        if (_isPermanentPermissionError(e)) {
+          Log.error('❌ Permanent permission error detected - failing immediately',
+              name: 'UploadInitHelper', category: LogCategory.video);
+          throw Exception('Permanent permission error: $e');
+        }
+
         lastError = e as Exception;
 
         if (attempt < _maxRetries) {
@@ -141,7 +190,7 @@ class UploadInitializationHelper {
     }
 
     throw lastError ??
-        Exception('Failed to initialize after $_maxRetries attempts');
+        Exception('Failed to initialize after ${_maxRetries + 1} attempts');
   }
 
   /// Calculate exponential backoff delay

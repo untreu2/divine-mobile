@@ -4,22 +4,12 @@
 import 'package:riverpod/riverpod.dart';
 import 'package:openvine/router/router_location_provider.dart';
 import 'package:openvine/router/route_utils.dart';
-
-/// Provider that exposes the raw page context stream
-///
-/// For testing, access this directly: `container.read(pageContextStreamProvider)`
-final pageContextStreamProvider = Provider<Stream<RouteContext>>((ref) {
-  // Watch the router location stream
-  final locationStream = ref.watch(routerLocationStreamProvider);
-
-  // Map each location to parsed context
-  return locationStream.map((location) => parseRoute(location));
-});
+import 'package:openvine/utils/unified_logger.dart';
 
 /// StreamProvider that derives structured page context from router location
 ///
-/// This is the primary way for widgets to know "what page am I on?"
-/// Automatically updates when router location changes.
+/// Uses async* to emit immediately when the raw location stream has a value.
+/// This ensures tests using Stream.value() get synchronous first emission.
 ///
 /// Example:
 /// ```dart
@@ -34,6 +24,16 @@ final pageContextStreamProvider = Provider<Stream<RouteContext>>((ref) {
 ///   error: (e, s) => ErrorWidget(e),
 /// );
 /// ```
-final pageContextProvider = StreamProvider<RouteContext>((ref) {
-  return ref.watch(pageContextStreamProvider);
+final pageContextProvider = StreamProvider<RouteContext>((ref) async* {
+  // Get the raw location stream (overridable in tests)
+  final locations = ref.watch(routerLocationStreamProvider);
+
+  // Emit a context immediately if the stream is a single-value Stream.value(...)
+  // (In tests we often use Stream.value('/profile/npub...'))
+  await for (final loc in locations) {
+    final ctx = parseRoute(loc);
+    Log.info('CTX derive: type=${ctx.type} npub=${ctx.npub} index=${ctx.videoIndex}',
+        name: 'Route', category: LogCategory.system);
+    yield ctx;
+  }
 });

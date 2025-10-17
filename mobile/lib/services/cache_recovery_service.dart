@@ -22,8 +22,8 @@ class CacheRecoveryService {
       // 1. Clear all Hive boxes
       clearedItems += await _clearHiveBoxes();
 
-      // 2. Clear app documents directory
-      clearedItems += await _clearDocumentsDirectory();
+      // 2. Clear app support directory (sandboxed, safe)
+      clearedItems += await _clearAppSupportDirectory();
 
       // 3. Clear temporary files
       clearedItems += await _clearTempDirectory();
@@ -95,14 +95,14 @@ class CacheRecoveryService {
     return cleared;
   }
 
-  /// Clear app documents directory
-  static Future<int> _clearDocumentsDirectory() async {
+  /// Clear app support directory (NOT Documents - that's sandboxed on macOS)
+  static Future<int> _clearAppSupportDirectory() async {
     int cleared = 0;
 
     try {
-      final documentsDir = await getApplicationDocumentsDirectory();
-      if (await documentsDir.exists()) {
-        final files = documentsDir.listSync();
+      final appSupportDir = await getApplicationSupportDirectory();
+      if (await appSupportDir.exists()) {
+        final files = appSupportDir.listSync();
         for (final file in files) {
           try {
             await file.delete(recursive: true);
@@ -114,7 +114,7 @@ class CacheRecoveryService {
         }
       }
     } catch (e) {
-      Log.warning('Error clearing documents directory: $e',
+      Log.warning('Error clearing app support directory: $e',
           name: _logName, category: LogCategory.system);
     }
 
@@ -179,7 +179,7 @@ class CacheRecoveryService {
       int totalSize = 0;
 
       final dirs = [
-        await getApplicationDocumentsDirectory(),
+        await getApplicationSupportDirectory(),
         await getTemporaryDirectory(),
         await getApplicationCacheDirectory(),
       ];

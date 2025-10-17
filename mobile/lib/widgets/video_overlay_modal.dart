@@ -227,7 +227,6 @@ class _VideoOverlayModalState extends ConsumerState<VideoOverlayModal> {
             ),
           ],
         ),
-        centerTitle: false,
         systemOverlayStyle: const SystemUiOverlayStyle(
           statusBarColor: Colors.transparent,
           statusBarIconBrightness: Brightness.light,

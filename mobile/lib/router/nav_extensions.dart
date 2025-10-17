@@ -2,8 +2,10 @@
 // ABOUTME: Provides goHome/goExplore/goNotifications/goProfile/pushCamera/pushSettings (hashtag available via goHashtag)
 
 import 'package:flutter/widgets.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:openvine/utils/nostr_encoding.dart';
+import 'package:openvine/providers/app_providers.dart';
+import 'package:openvine/utils/public_identifier_normalizer.dart';
 import 'route_utils.dart';
 
 extension NavX on BuildContext {
@@ -28,10 +30,24 @@ extension NavX on BuildContext {
         ),
       ));
 
-  void goProfile(String npubOrHex, [int index = 0]) {
-    final npub = npubOrHex.startsWith('npub')
-        ? npubOrHex
-        : NostrEncoding.encodePublicKey(npubOrHex); // hex -> npub
+  void goProfile(String identifier, [int index = 0]) {
+    // Handle 'me' special case - need to get current user's hex
+    String? currentUserHex;
+    if (identifier == 'me') {
+      // Access container to get auth service
+      final container = ProviderScope.containerOf(this, listen: false);
+      final authService = container.read(authServiceProvider);
+      currentUserHex = authService.currentPublicKeyHex;
+    }
+
+    // Normalize any format (npub/nprofile/hex/me) to npub for URL
+    final npub = normalizeToNpub(identifier, currentUserHex: currentUserHex);
+    if (npub == null) {
+      // Invalid identifier - log warning and don't navigate
+      debugPrint('⚠️ Invalid public identifier: $identifier');
+      return;
+    }
+
     go(buildRoute(
       RouteContext(
         type: RouteType.profile,
@@ -41,10 +57,24 @@ extension NavX on BuildContext {
     ));
   }
 
-  void pushProfile(String npubOrHex, [int index = 0]) {
-    final npub = npubOrHex.startsWith('npub')
-        ? npubOrHex
-        : NostrEncoding.encodePublicKey(npubOrHex);
+  void pushProfile(String identifier, [int index = 0]) {
+    // Handle 'me' special case - need to get current user's hex
+    String? currentUserHex;
+    if (identifier == 'me') {
+      // Access container to get auth service
+      final container = ProviderScope.containerOf(this, listen: false);
+      final authService = container.read(authServiceProvider);
+      currentUserHex = authService.currentPublicKeyHex;
+    }
+
+    // Normalize any format (npub/nprofile/hex/me) to npub for URL
+    final npub = normalizeToNpub(identifier, currentUserHex: currentUserHex);
+    if (npub == null) {
+      // Invalid identifier - log warning and don't push
+      debugPrint('⚠️ Invalid public identifier: $identifier');
+      return;
+    }
+
     push(buildRoute(
       RouteContext(
         type: RouteType.profile,
@@ -57,4 +87,7 @@ extension NavX on BuildContext {
   // Optional pushes (non-tab routes)
   Future<void> pushCamera() => push('/camera');
   Future<void> pushSettings() => push('/settings');
+
+  // Search uses go() for normal navigation instead of modal push
+  void goSearch() => go('/search');
 }

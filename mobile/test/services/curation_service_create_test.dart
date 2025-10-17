@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:nostr_sdk/event.dart';
+import 'package:openvine/services/auth_service.dart';
 import 'package:openvine/services/curation_service.dart';
 import 'package:openvine/services/nostr_key_manager.dart';
 import 'package:openvine/services/nostr_service_interface.dart';
@@ -13,13 +14,14 @@ import 'package:openvine/services/video_event_service.dart';
 
 import 'curation_service_create_test.mocks.dart';
 
-@GenerateMocks([INostrService, VideoEventService, SocialService, NostrKeyManager])
+@GenerateMocks([INostrService, VideoEventService, SocialService, NostrKeyManager, AuthService])
 void main() {
   group('CurationService.createCurationSet()', () {
     late MockINostrService mockNostrService;
     late MockVideoEventService mockVideoEventService;
     late MockSocialService mockSocialService;
     late MockNostrKeyManager mockKeyManager;
+    late MockAuthService mockAuthService;
     late CurationService curationService;
     late Keychain testKeychain;
 
@@ -28,6 +30,7 @@ void main() {
       mockVideoEventService = MockVideoEventService();
       mockSocialService = MockSocialService();
       mockKeyManager = MockNostrKeyManager();
+      mockAuthService = MockAuthService();
 
       // Setup default mock behaviors
       when(mockVideoEventService.videoEvents).thenReturn([]);
@@ -42,6 +45,7 @@ void main() {
         nostrService: mockNostrService,
         videoEventService: mockVideoEventService,
         socialService: mockSocialService,
+        authService: mockAuthService,
       );
     });
 

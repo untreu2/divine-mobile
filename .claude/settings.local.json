@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(flutter test:*)",
+      "mcp__private-journal__search_journal",
+      "mcp__private-journal__process_thoughts"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

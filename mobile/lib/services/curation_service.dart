@@ -9,8 +9,10 @@ import 'package:http/http.dart' as http;
 import 'package:nostr_sdk/event.dart';
 import 'package:nostr_sdk/filter.dart';
 import 'package:openvine/constants/app_constants.dart';
+import 'package:openvine/models/curation_publish_status.dart';
 import 'package:openvine/models/curation_set.dart';
 import 'package:openvine/models/video_event.dart';
+import 'package:openvine/services/auth_service.dart';
 import 'package:openvine/services/nostr_service_interface.dart';
 import 'package:openvine/services/social_service.dart';
 import 'package:openvine/services/video_event_service.dart';
@@ -22,9 +24,11 @@ class CurationService {
     required INostrService nostrService,
     required VideoEventService videoEventService,
     required SocialService socialService,
+    required AuthService authService,
   })  : _nostrService = nostrService,
         _videoEventService = videoEventService,
-        _socialService = socialService {
+        _socialService = socialService,
+        _authService = authService {
     _initializeWithSampleData();
 
     // Listen for video updates and refresh curation data
@@ -33,6 +37,7 @@ class CurationService {
   final INostrService _nostrService;
   final VideoEventService _videoEventService;
   final SocialService _socialService;
+  final AuthService _authService;
 
   final Map<String, CurationSet> _curationSets = {};
   final Map<String, List<VideoEvent>> _setVideoCache = {};
@@ -720,7 +725,276 @@ class CurationService {
         category: LogCategory.system);
   }
 
-  /// Create a new curation set (for future implementation)
+  /// Publish status for a curation
+  final Map<String, CurationPublishStatus> _publishStatuses = {};
+
+  /// Currently publishing curations to prevent duplicate publishes
+  final Set<String> _currentlyPublishing = {};
+
+  /// Build a Nostr kind 30005 event for a curation set
+  Future<Event?> buildCurationEvent({
+    required String id,
+    required String title,
+    required List<String> videoIds,
+    String? description,
+    String? imageUrl,
+  }) async {
+    final tags = <List<String>>[
+      ['d', id], // Replaceable event identifier
+      ['title', title],
+      ['client', 'openvine'], // Attribution
+    ];
+
+    if (description != null) {
+      tags.add(['description', description]);
+    }
+
+    if (imageUrl != null) {
+      tags.add(['image', imageUrl]);
+    }
+
+    // Add video references as 'e' tags
+    for (final videoId in videoIds) {
+      tags.add(['e', videoId]);
+    }
+
+    // Create and sign event via AuthService
+    final event = await _authService.createAndSignEvent(
+      kind: 30005, // NIP-51 curation set kind
+      content: description ?? title,
+      tags: tags,
+    );
+
+    return event;
+  }
+
+  /// Publish a curation set to Nostr
+  Future<CurationPublishResult> publishCuration({
+    required String id,
+    required String title,
+    required List<String> videoIds,
+    String? description,
+    String? imageUrl,
+  }) async {
+    // Prevent duplicate concurrent publishes
+    if (_currentlyPublishing.contains(id)) {
+      Log.debug('Curation $id already being published, skipping duplicate',
+          name: 'CurationService', category: LogCategory.system);
+      return CurationPublishResult(
+        success: false,
+        successCount: 0,
+        totalRelays: 0,
+        errors: {'duplicate': 'Already publishing'},
+      );
+    }
+
+    _currentlyPublishing.add(id);
+
+    // Mark as publishing
+    _publishStatuses[id] = CurationPublishStatus(
+      curationId: id,
+      isPublishing: true,
+      isPublished: false,
+      lastAttemptAt: DateTime.now(),
+    );
+
+    try {
+      // Build the event
+      final event = await buildCurationEvent(
+        id: id,
+        title: title,
+        videoIds: videoIds,
+        description: description,
+        imageUrl: imageUrl,
+      );
+
+      if (event == null) {
+        Log.error('Failed to create and sign curation event',
+            name: 'CurationService', category: LogCategory.system);
+
+        _publishStatuses[id] = CurationPublishStatus(
+          curationId: id,
+          isPublishing: false,
+          isPublished: false,
+          failedAttempts: (_publishStatuses[id]?.failedAttempts ?? 0) + 1,
+          lastAttemptAt: DateTime.now(),
+          lastFailureReason: 'Failed to create and sign event',
+        );
+
+        return CurationPublishResult(
+          success: false,
+          successCount: 0,
+          totalRelays: 0,
+          errors: {'signing': 'Failed to create and sign event'},
+        );
+      }
+
+      // Publish with timeout
+      final broadcastFuture = _nostrService.broadcastEvent(event);
+      final timeoutDuration = const Duration(seconds: 5);
+
+      NostrBroadcastResult? broadcastResult;
+
+      try {
+        broadcastResult = await broadcastFuture.timeout(timeoutDuration);
+      } on TimeoutException {
+        Log.warning('Curation publish timed out after 5s: $id',
+            name: 'CurationService', category: LogCategory.system);
+
+        _publishStatuses[id] = CurationPublishStatus(
+          curationId: id,
+          isPublishing: false,
+          isPublished: false,
+          failedAttempts: (_publishStatuses[id]?.failedAttempts ?? 0) + 1,
+          lastAttemptAt: DateTime.now(),
+          lastFailureReason: 'Timeout after 5 seconds',
+        );
+
+        return CurationPublishResult(
+          success: false,
+          successCount: 0,
+          totalRelays: 0,
+          errors: {'timeout': 'Publish timed out after 5 seconds'},
+        );
+      }
+
+      final successCount = broadcastResult.successCount;
+      final totalRelays = broadcastResult.totalRelays;
+      final isSuccess = successCount > 0;
+
+      if (isSuccess) {
+        // Mark as successfully published
+        _publishStatuses[id] = CurationPublishStatus(
+          curationId: id,
+          isPublishing: false,
+          isPublished: true,
+          lastPublishedAt: DateTime.now(),
+          publishedEventId: broadcastResult.event.id,
+          successfulRelays: broadcastResult.results.entries
+              .where((e) => e.value == true)
+              .map((e) => e.key)
+              .toList(),
+          lastAttemptAt: DateTime.now(),
+        );
+
+        Log.info('✅ Published curation "$title" to $successCount/$totalRelays relays',
+            name: 'CurationService', category: LogCategory.system);
+      } else {
+        // Mark as failed
+        _publishStatuses[id] = CurationPublishStatus(
+          curationId: id,
+          isPublishing: false,
+          isPublished: false,
+          failedAttempts: (_publishStatuses[id]?.failedAttempts ?? 0) + 1,
+          lastAttemptAt: DateTime.now(),
+          lastFailureReason: broadcastResult.errors.values.join('; '),
+        );
+
+        Log.warning('❌ Failed to publish curation "$title": 0/$totalRelays relays succeeded',
+            name: 'CurationService', category: LogCategory.system);
+      }
+
+      // Build result
+      final failedRelays = broadcastResult.results.entries
+          .where((e) => e.value == false)
+          .map((e) => e.key)
+          .toList();
+
+      return CurationPublishResult(
+        success: isSuccess,
+        successCount: successCount,
+        totalRelays: totalRelays,
+        eventId: isSuccess ? broadcastResult.event.id : null,
+        errors: broadcastResult.errors,
+        failedRelays: failedRelays,
+      );
+    } catch (e) {
+      Log.error('Error publishing curation: $e',
+          name: 'CurationService', category: LogCategory.system);
+
+      _publishStatuses[id] = CurationPublishStatus(
+        curationId: id,
+        isPublishing: false,
+        isPublished: false,
+        failedAttempts: (_publishStatuses[id]?.failedAttempts ?? 0) + 1,
+        lastAttemptAt: DateTime.now(),
+        lastFailureReason: e.toString(),
+      );
+
+      return CurationPublishResult(
+        success: false,
+        successCount: 0,
+        totalRelays: 0,
+        errors: {'exception': e.toString()},
+      );
+    } finally {
+      _currentlyPublishing.remove(id);
+    }
+  }
+
+  /// Get publish status for a curation
+  CurationPublishStatus getCurationPublishStatus(String curationId) {
+    return _publishStatuses[curationId] ??
+        CurationPublishStatus(
+          curationId: curationId,
+          isPublishing: false,
+          isPublished: false,
+        );
+  }
+
+  /// Retry all unpublished curations with exponential backoff
+  Future<void> retryUnpublishedCurations() async {
+    final now = DateTime.now();
+
+    for (final entry in _publishStatuses.entries) {
+      final curationId = entry.key;
+      final status = entry.value;
+
+      // Skip if already published or currently publishing
+      if (status.isPublished || status.isPublishing) continue;
+
+      // Skip if max retries reached
+      if (!status.shouldRetry) {
+        Log.debug('Skipping retry for $curationId: max attempts reached',
+            name: 'CurationService', category: LogCategory.system);
+        continue;
+      }
+
+      // Calculate next retry time with exponential backoff
+      final retryDelay = getRetryDelay(status.failedAttempts);
+      final nextRetryTime = status.lastAttemptAt?.add(retryDelay);
+
+      if (nextRetryTime == null || now.isBefore(nextRetryTime)) {
+        Log.debug('Skipping retry for $curationId: backoff not elapsed',
+            name: 'CurationService', category: LogCategory.system);
+        continue;
+      }
+
+      Log.info('🔄 Retrying publish for curation $curationId (attempt ${status.failedAttempts + 1})',
+          name: 'CurationService', category: LogCategory.system);
+
+      // Get curation details to retry
+      final curation = _curationSets[curationId];
+      if (curation != null) {
+        await publishCuration(
+          id: curation.id,
+          title: curation.title ?? 'Untitled',
+          videoIds: curation.videoIds,
+          description: curation.description,
+          imageUrl: curation.imageUrl,
+        );
+      }
+    }
+  }
+
+  /// Get retry delay based on attempt count (exponential backoff)
+  Duration getRetryDelay(int attemptCount) {
+    // Exponential backoff: 2^n seconds
+    final seconds = 1 << attemptCount.clamp(0, 10); // Max ~17 minutes
+    return Duration(seconds: seconds);
+  }
+
+  /// Create a new curation set and publish to Nostr
   Future<bool> createCurationSet({
     required String id,
     required String title,
@@ -729,10 +1003,19 @@ class CurationService {
     String? imageUrl,
   }) async {
     try {
-      // TODO: Implement actual creation and publishing to Nostr
       Log.debug('Creating curation set: $title',
           name: 'CurationService', category: LogCategory.system);
-      return true;
+
+      // Publish to Nostr
+      final result = await publishCuration(
+        id: id,
+        title: title,
+        videoIds: videoIds,
+        description: description,
+        imageUrl: imageUrl,
+      );
+
+      return result.success;
     } catch (e) {
       Log.error('Error creating curation set: $e',
           name: 'CurationService', category: LogCategory.system);

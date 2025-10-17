@@ -68,7 +68,7 @@ void main() {
 
     test('activeVideoProvider returns null when app backgrounded', () {
       // SETUP: Set page context to explore screen, page 0
-      container.read(currentPageContextProvider.notifier).setContext('explore', 0);
+      container.read(currentPageContextProvider.notifier).setContext('explore', 0, '1111111111111111111111111111111111111111111111111111111111111111');
 
       // VERIFY: Initially returns video 1 (app is foreground by default)
       expect(container.read(activeVideoProvider), equals('1111111111111111111111111111111111111111111111111111111111111111'));
@@ -87,43 +87,46 @@ void main() {
           reason: 'Should be null with no context');
 
       // ACT: Set context to explore screen, page 0
-      container.read(currentPageContextProvider.notifier).setContext('explore', 0);
+      container.read(currentPageContextProvider.notifier).setContext('explore', 0, '1111111111111111111111111111111111111111111111111111111111111111');
 
       // VERIFY: Returns video 1
       expect(container.read(activeVideoProvider), equals('1111111111111111111111111111111111111111111111111111111111111111'));
 
       // ACT: Change to page 1
-      container.read(currentPageContextProvider.notifier).setContext('explore', 1);
+      container.read(currentPageContextProvider.notifier).setContext('explore', 1, '2222222222222222222222222222222222222222222222222222222222222222');
 
       // VERIFY: Returns video 2
       expect(container.read(activeVideoProvider), equals('2222222222222222222222222222222222222222222222222222222222222222'));
 
       // ACT: Change to page 2
-      container.read(currentPageContextProvider.notifier).setContext('explore', 2);
+      container.read(currentPageContextProvider.notifier).setContext('explore', 2, '3333333333333333333333333333333333333333333333333333333333333333');
 
       // VERIFY: Returns video 3
       expect(container.read(activeVideoProvider), equals('3333333333333333333333333333333333333333333333333333333333333333'));
     });
 
-    test('activeVideoProvider returns null when page index out of bounds', () {
-      // ACT: Set context with negative page index
-      container.read(currentPageContextProvider.notifier).setContext('explore', -1);
+    test('activeVideoProvider returns videoId directly from context', () {
+      // With new architecture, activeVideoProvider simply returns pageContext.videoId
+      // Validation of page indexes is VideoPageView's responsibility, not activeVideoProvider's
 
-      // VERIFY: Returns null
-      expect(container.read(activeVideoProvider), isNull,
-          reason: 'Should return null for negative page index');
+      // ACT: Set context with any page index and videoId
+      container.read(currentPageContextProvider.notifier).setContext('explore', -1, 'video-at-negative-index');
 
-      // ACT: Set context with page index beyond list length
-      container.read(currentPageContextProvider.notifier).setContext('explore', 999);
+      // VERIFY: Returns the videoId that was set, regardless of page index validity
+      expect(container.read(activeVideoProvider), equals('video-at-negative-index'),
+          reason: 'activeVideoProvider returns videoId directly from context, no index validation');
 
-      // VERIFY: Returns null
-      expect(container.read(activeVideoProvider), isNull,
-          reason: 'Should return null for page index beyond list length');
+      // ACT: Set context with high page index
+      container.read(currentPageContextProvider.notifier).setContext('explore', 999, 'video-at-high-index');
+
+      // VERIFY: Returns the videoId that was set
+      expect(container.read(activeVideoProvider), equals('video-at-high-index'),
+          reason: 'activeVideoProvider returns videoId directly, no bounds checking');
     });
 
     test('activeVideoProvider returns null when context is cleared', () {
       // SETUP: Set context
-      container.read(currentPageContextProvider.notifier).setContext('explore', 0);
+      container.read(currentPageContextProvider.notifier).setContext('explore', 0, '1111111111111111111111111111111111111111111111111111111111111111');
       expect(container.read(activeVideoProvider), equals('1111111111111111111111111111111111111111111111111111111111111111'));
 
       // ACT: Clear context
@@ -136,7 +139,7 @@ void main() {
 
     test('isVideoActiveProvider only true for active video', () {
       // SETUP: Set context to page 1 (video 2)
-      container.read(currentPageContextProvider.notifier).setContext('explore', 1);
+      container.read(currentPageContextProvider.notifier).setContext('explore', 1, '2222222222222222222222222222222222222222222222222222222222222222');
 
       // VERIFY: Only video 2 is active
       expect(container.read(isVideoActiveProvider('1111111111111111111111111111111111111111111111111111111111111111')), isFalse);
@@ -144,7 +147,7 @@ void main() {
       expect(container.read(isVideoActiveProvider('3333333333333333333333333333333333333333333333333333333333333333')), isFalse);
 
       // ACT: Change to page 0
-      container.read(currentPageContextProvider.notifier).setContext('explore', 0);
+      container.read(currentPageContextProvider.notifier).setContext('explore', 0, '1111111111111111111111111111111111111111111111111111111111111111');
 
       // VERIFY: Only video 1 is active
       expect(container.read(isVideoActiveProvider('1111111111111111111111111111111111111111111111111111111111111111')), isTrue);
@@ -152,13 +155,16 @@ void main() {
       expect(container.read(isVideoActiveProvider('3333333333333333333333333333333333333333333333333333333333333333')), isFalse);
     });
 
-    test('activeVideoProvider handles unknown screenId gracefully', () {
-      // ACT: Set context with unknown screenId
-      container.read(currentPageContextProvider.notifier).setContext('unknown_screen', 0);
+    test('activeVideoProvider returns videoId regardless of screenId', () {
+      // With new architecture, activeVideoProvider doesn't validate screenId
+      // It simply returns the videoId from pageContext
 
-      // VERIFY: Returns null (no videos for unknown screen)
-      expect(container.read(activeVideoProvider), isNull,
-          reason: 'Should return null for unknown screenId');
+      // ACT: Set context with unknown screenId
+      container.read(currentPageContextProvider.notifier).setContext('unknown_screen', 0, 'video-from-unknown-screen');
+
+      // VERIFY: Returns the videoId that was set, regardless of screenId validity
+      expect(container.read(activeVideoProvider), equals('video-from-unknown-screen'),
+          reason: 'activeVideoProvider returns videoId directly, no screenId validation');
     });
 
     test('activeVideoProvider notifies listeners when context changes', () {
@@ -174,13 +180,13 @@ void main() {
       );
 
       // ACT: Set context to page 0
-      container.read(currentPageContextProvider.notifier).setContext('explore', 0);
+      container.read(currentPageContextProvider.notifier).setContext('explore', 0, '1111111111111111111111111111111111111111111111111111111111111111');
 
       // Force provider to rebuild
       container.read(activeVideoProvider);
 
       // ACT: Change to page 1
-      container.read(currentPageContextProvider.notifier).setContext('explore', 1);
+      container.read(currentPageContextProvider.notifier).setContext('explore', 1, '2222222222222222222222222222222222222222222222222222222222222222');
 
       // Force provider to rebuild
       container.read(activeVideoProvider);

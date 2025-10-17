@@ -41,6 +41,7 @@ final activeVideoIdProvider = Provider<String?>((ref) {
       videosAsync = ref.watch(videosForExploreRouteProvider);
       break;
     case RouteType.notifications:
+    case RouteType.search:
     case RouteType.camera:
     case RouteType.settings:
       // Non-video routes - return null

@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:openvine/models/video_event.dart';
-import 'package:openvine/providers/app_providers.dart';
 import 'package:openvine/providers/video_events_providers.dart';
 import 'package:openvine/providers/tab_visibility_provider.dart';
 import 'package:openvine/router/nav_extensions.dart';
@@ -14,7 +13,7 @@ import 'package:openvine/screens/hashtag_feed_screen.dart';
 import 'package:openvine/services/top_hashtags_service.dart';
 import 'package:openvine/theme/vine_theme.dart';
 import 'package:openvine/utils/unified_logger.dart';
-import 'package:openvine/widgets/video_thumbnail_widget.dart';
+import 'package:openvine/widgets/composable_video_grid.dart';
 
 /// Pure ExploreScreen using revolutionary Riverpod architecture
 class ExploreScreen extends ConsumerStatefulWidget {
@@ -477,8 +476,14 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen>
   }
 
   Widget _buildVideoGrid(List<VideoEvent> videos, String tabName) {
-    if (videos.isEmpty) {
-      return Center(
+    return ComposableVideoGrid(
+      videos: videos,
+      onVideoTap: (videos, index) {
+        Log.info('🎯 ExploreScreen: Tapped video tile at index $index',
+            category: LogCategory.video);
+        _enterFeedMode(videos, index);
+      },
+      emptyBuilder: () => Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -502,198 +507,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen>
             ),
           ],
         ),
-      );
-    }
-
-    return GridView.builder(
-      padding: const EdgeInsets.all(12),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        childAspectRatio: 0.75,
-        crossAxisSpacing: 12,
-        mainAxisSpacing: 12,
       ),
-      itemCount: videos.length,
-      itemBuilder: (context, index) {
-        final video = videos[index];
-        return _buildVideoTile(video, index, videos);
-      },
-    );
-  }
-
-  Widget _buildVideoTile(VideoEvent video, int index, List<VideoEvent> videos) {
-    return GestureDetector(
-      onTap: () {
-        Log.info('🎯 ExploreScreen: Tapped video tile at index $index',
-            category: LogCategory.video);
-        _enterFeedMode(videos, index);
-      },
-      child: Container(
-        decoration: BoxDecoration(
-          color: VineTheme.cardBackground,
-          borderRadius: BorderRadius.circular(0),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.3),
-              blurRadius: 4,
-              offset: const Offset(0, 1),
-            ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(0),
-          child: Column(
-            children: [
-              // Video thumbnail with play overlay
-              Expanded(
-                flex: 5,
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    Container(
-                      color: VineTheme.cardBackground,
-                      child: video.thumbnailUrl != null
-                          ? VideoThumbnailWidget(
-                              video: video,
-                              width: double.infinity,
-                              height: double.infinity,
-                            )
-                          : Container(
-                              color: VineTheme.cardBackground,
-                              child: Icon(
-                                Icons.videocam,
-                                size: 40,
-                                color: VineTheme.secondaryText,
-                              ),
-                            ),
-                    ),
-                    // Play button overlay
-                    Center(
-                      child: Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: VineTheme.darkOverlay,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          Icons.play_arrow,
-                          size: 24,
-                          color: VineTheme.whiteText,
-                        ),
-                      ),
-                    ),
-                    // Duration badge if available
-                    if (video.duration != null)
-                      Positioned(
-                        bottom: 8,
-                        right: 8,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 6,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: VineTheme.darkOverlay,
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            '${video.duration}s',
-                            style: TextStyle(
-                              color: VineTheme.whiteText,
-                              fontSize: 10,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-              // Video info
-              Padding(
-                padding: const EdgeInsets.all(6),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Creator name
-                    _buildCreatorName(video, ref),
-                    const SizedBox(height: 2),
-                    // Title or content
-                    Text(
-                      video.title ??
-                      (video.content.length > 25
-                        ? '${video.content.substring(0, 25)}...'
-                        : video.content),
-                      style: TextStyle(
-                        color: VineTheme.primaryText,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w500,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 3),
-                    // Stats row
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.favorite,
-                          size: 11,
-                          color: VineTheme.likeRed,
-                        ),
-                        const SizedBox(width: 3),
-                        Text(
-                          '${video.originalLikes ?? 0}',
-                          style: TextStyle(
-                            color: VineTheme.secondaryText,
-                            fontSize: 10,
-                          ),
-                        ),
-                        if (video.originalLoops != null) ...[
-                          const SizedBox(width: 8),
-                          Icon(
-                            Icons.repeat,
-                            size: 11,
-                            color: VineTheme.secondaryText,
-                          ),
-                          const SizedBox(width: 3),
-                          Text(
-                            '${video.originalLoops}',
-                            style: TextStyle(
-                              color: VineTheme.secondaryText,
-                              fontSize: 10,
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCreatorName(VideoEvent video, WidgetRef ref) {
-    final profileService = ref.watch(userProfileServiceProvider);
-    final profile = profileService.getCachedProfile(video.pubkey);
-    final displayName = profile?.displayName ??
-        profile?.name ??
-        '@${video.pubkey.substring(0, 8)}...';
-
-    return Text(
-      displayName,
-      style: TextStyle(
-        color: VineTheme.secondaryText,
-        fontSize: 10,
-        fontWeight: FontWeight.w400,
-      ),
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
     );
   }
 

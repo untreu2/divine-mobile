@@ -107,12 +107,44 @@ post_install do |installer|
       end
     end
   end
-  
+
   # Ensure proper framework configuration
   installer.pods_project.targets.each do |target|
     if target.respond_to?(:product_type) and target.product_type == "com.apple.product-type.framework"
       target.build_configurations.each do |config|
         config.build_settings['CODE_SIGNING_ALLOWED'] = 'NO'
+      end
+    end
+  end
+
+  # Fix duplicate $(inherited) in generated xcconfig files
+  # This prevents POD_CONFIGURATION_DEBUG redefinition warnings
+  installer.pods_project.targets.each do |target|
+    target.build_configurations.each do |config|
+      xcconfig_path = config.base_configuration_reference&.real_path
+      next unless xcconfig_path && File.exist?(xcconfig_path)
+
+      xcconfig_content = File.read(xcconfig_path)
+      modified = false
+
+      # Fix GCC_PREPROCESSOR_DEFINITIONS with duplicate $(inherited) and empty strings
+      if xcconfig_content =~ /^GCC_PREPROCESSOR_DEFINITIONS = (.*)$/
+        original_line = $1
+        # Remove all $(inherited) and add back a single one at the start
+        cleaned_line = original_line.gsub(/\$\(inherited\)\s*/, '').strip
+        # Remove empty strings (both "" and empty entries)
+        cleaned_line = cleaned_line.gsub(/\s*""\s*/, ' ').gsub(/\s+/, ' ').strip
+        cleaned_line = "$(inherited) #{cleaned_line}".strip
+
+        new_content = xcconfig_content.sub(
+          /^GCC_PREPROCESSOR_DEFINITIONS = .*$/,
+          "GCC_PREPROCESSOR_DEFINITIONS = #{cleaned_line}"
+        )
+
+        if new_content != xcconfig_content
+          File.write(xcconfig_path, new_content)
+          modified = true
+        end
       end
     end
   end

@@ -1,16 +1,11 @@
-// ABOUTME: Utility for converting npub (bech32) to hex pubkey
-// ABOUTME: Returns null on invalid input instead of throwing
+// ABOUTME: Utility for converting any public identifier format to hex pubkey
+// ABOUTME: Returns null on invalid input instead of throwing (handles npub/nprofile/hex)
 
-import 'package:openvine/utils/nostr_encoding.dart';
+import 'package:openvine/utils/public_identifier_normalizer.dart';
 
-/// Convert npub to hex pubkey, returning null if invalid
-String? npubToHexOrNull(String? npub) {
-  if (npub == null || npub.isEmpty) return null;
-
-  try {
-    return NostrEncoding.decodePublicKey(npub);
-  } catch (e) {
-    // Invalid npub format
-    return null;
-  }
+/// Convert any public identifier (npub/nprofile/hex) to hex pubkey
+/// Returns null if invalid
+String? npubToHexOrNull(String? identifier) {
+  if (identifier == null || identifier.isEmpty) return null;
+  return normalizeToHex(identifier);
 }

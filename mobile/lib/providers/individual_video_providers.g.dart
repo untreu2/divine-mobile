@@ -81,7 +81,7 @@ final class IndividualVideoControllerProvider
 }
 
 String _$individualVideoControllerHash() =>
-    r'2da0c125b900570640334d22ec8e088b6d5a2d24';
+    r'2d72dfb78eaca04491f0bde2aa46eb7c535d1443';
 
 /// Provider for individual video controllers with autoDispose
 /// Each video gets its own controller instance
@@ -201,89 +201,4 @@ final class VideoLoadingStateFamily extends $Family
 
   @override
   String toString() => r'videoLoadingStateProvider';
-}
-
-/// Provider for checking if a specific video is currently active
-
-@ProviderFor(isVideoActive)
-const isVideoActiveProvider = IsVideoActiveFamily._();
-
-/// Provider for checking if a specific video is currently active
-
-final class IsVideoActiveProvider extends $FunctionalProvider<bool, bool, bool>
-    with $Provider<bool> {
-  /// Provider for checking if a specific video is currently active
-  const IsVideoActiveProvider._({
-    required IsVideoActiveFamily super.from,
-    required String super.argument,
-  }) : super(
-         retry: null,
-         name: r'isVideoActiveProvider',
-         isAutoDispose: true,
-         dependencies: null,
-         $allTransitiveDependencies: null,
-       );
-
-  @override
-  String debugGetCreateSourceHash() => _$isVideoActiveHash();
-
-  @override
-  String toString() {
-    return r'isVideoActiveProvider'
-        ''
-        '($argument)';
-  }
-
-  @$internal
-  @override
-  $ProviderElement<bool> $createElement($ProviderPointer pointer) =>
-      $ProviderElement(pointer);
-
-  @override
-  bool create(Ref ref) {
-    final argument = this.argument as String;
-    return isVideoActive(ref, argument);
-  }
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(bool value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<bool>(value),
-    );
-  }
-
-  @override
-  bool operator ==(Object other) {
-    return other is IsVideoActiveProvider && other.argument == argument;
-  }
-
-  @override
-  int get hashCode {
-    return argument.hashCode;
-  }
-}
-
-String _$isVideoActiveHash() => r'86924348acd0f3d501cda46ce176f79aa3814511';
-
-/// Provider for checking if a specific video is currently active
-
-final class IsVideoActiveFamily extends $Family
-    with $FunctionalFamilyOverride<bool, String> {
-  const IsVideoActiveFamily._()
-    : super(
-        retry: null,
-        name: r'isVideoActiveProvider',
-        dependencies: null,
-        $allTransitiveDependencies: null,
-        isAutoDispose: true,
-      );
-
-  /// Provider for checking if a specific video is currently active
-
-  IsVideoActiveProvider call(String videoId) =>
-      IsVideoActiveProvider._(argument: videoId, from: this);
-
-  @override
-  String toString() => r'isVideoActiveProvider';
 }

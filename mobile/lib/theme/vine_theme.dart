@@ -35,6 +35,7 @@ class VineTheme {
           backgroundColor: vineGreen,
           foregroundColor: whiteText,
           elevation: 1,
+          centerTitle: true,
           titleTextStyle: TextStyle(
             color: whiteText,
             fontSize: 20,

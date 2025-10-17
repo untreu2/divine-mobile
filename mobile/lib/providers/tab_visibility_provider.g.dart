@@ -41,7 +41,7 @@ final class TabVisibilityProvider
   }
 }
 
-String _$tabVisibilityHash() => r'e517e8255896a62e86a3bd5031b67b14bdbbc268';
+String _$tabVisibilityHash() => r'9cf5134d5df8c93996ae5069d971b6198cdcce2d';
 
 abstract class _$TabVisibility extends $Notifier<int> {
   int build();
