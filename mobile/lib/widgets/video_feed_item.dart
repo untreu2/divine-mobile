@@ -813,9 +813,44 @@ class VideoOverlayActions extends ConsumerWidget {
   }
 
   void _showBadgeExplanationModal(BuildContext context, VideoEvent video) {
+    // Pause video before showing modal
+    try {
+      final controllerParams = VideoControllerParams(
+        videoId: video.id,
+        videoUrl: video.videoUrl!,
+        videoEvent: video,
+      );
+      final controller = ref.read(individualVideoControllerProvider(controllerParams));
+      if (controller.value.isPlaying) {
+        controller.pause();
+      }
+    } catch (e) {
+      Log.error('Failed to pause video for modal: $e',
+          name: 'VideoFeedItem', category: LogCategory.ui);
+    }
+
     showDialog<void>(
       context: context,
       builder: (context) => BadgeExplanationModal(video: video),
-    );
+    ).then((_) {
+      // Resume video after modal closes if it was playing
+      try {
+        final controllerParams = VideoControllerParams(
+          videoId: video.id,
+          videoUrl: video.videoUrl!,
+          videoEvent: video,
+        );
+        final controller = ref.read(individualVideoControllerProvider(controllerParams));
+        final isActive = ref.read(isVideoActiveProvider(video.id));
+
+        // Only resume if video is still active (not scrolled away)
+        if (isActive && controller.value.isInitialized && !controller.value.isPlaying) {
+          controller.play();
+        }
+      } catch (e) {
+        Log.error('Failed to resume video after modal: $e',
+            name: 'VideoFeedItem', category: LogCategory.ui);
+      }
+    });
   }
 }

@@ -87,10 +87,13 @@ class AppShell extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final title = _titleFor(ref);
-    final ctx = ref.watch(pageContextProvider).asData?.value;
 
-    // Show back button for hashtag and search routes (non-main-tab routes)
-    final showBackButton = ctx?.type == RouteType.hashtag || ctx?.type == RouteType.search;
+    // Watch page context to determine if back button should show
+    final pageCtxAsync = ref.watch(pageContextProvider);
+    final showBackButton = pageCtxAsync.maybeWhen(
+      data: (ctx) => ctx.type == RouteType.hashtag || ctx.type == RouteType.search,
+      orElse: () => false,
+    );
 
     return Scaffold(
       appBar: AppBar(

@@ -16,6 +16,7 @@ class BadgeExplanationModal extends StatelessWidget {
     final isVineArchive = video.isOriginalVine;
 
     return AlertDialog(
+      backgroundColor: const Color(0xFF1E1E1E), // Dark background
       title: _buildTitle(isVineArchive),
       content: SingleChildScrollView(
         child: isVineArchive
@@ -25,7 +26,7 @@ class BadgeExplanationModal extends StatelessWidget {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Close'),
+          child: const Text('Close', style: TextStyle(color: Colors.blue)),
         ),
       ],
     );
@@ -42,7 +43,7 @@ class BadgeExplanationModal extends StatelessWidget {
         Expanded(
           child: Text(
             isVineArchive ? 'Original Vine Archive' : 'Video Verification',
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
           ),
         ),
       ],
@@ -64,18 +65,18 @@ class _VineArchiveExplanation extends StatelessWidget {
       children: [
         const Text(
           'This video is an original Vine recovered from the Internet Archive.',
-          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white),
         ),
         const SizedBox(height: 12),
         const Text(
           'Before Vine shut down in 2017, ArchiveTeam and the Internet Archive worked to preserve millions of Vines for posterity. This content is part of that historic preservation effort.',
-          style: TextStyle(fontSize: 13),
+          style: TextStyle(fontSize: 13, color: Colors.white70),
         ),
         const SizedBox(height: 12),
         if (video.originalLoops != null && video.originalLoops! > 0) ...[
           Text(
             'Original stats: ${video.originalLoops} loops',
-            style: const TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
+            style: const TextStyle(fontSize: 12, fontStyle: FontStyle.italic, color: Colors.white60),
           ),
           const SizedBox(height: 8),
         ],
@@ -125,14 +126,14 @@ class _ProofModeExplanation extends StatelessWidget {
       children: [
         const Text(
           'This video\'s authenticity is verified using ProofMode technology.',
-          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white),
         ),
         const SizedBox(height: 12),
         _VerificationLevelCard(video: video),
         const SizedBox(height: 12),
         const Text(
           'ProofMode helps verify that videos are original content and not AI-generated or manipulated.',
-          style: TextStyle(fontSize: 13),
+          style: TextStyle(fontSize: 13, color: Colors.white70),
         ),
         const SizedBox(height: 12),
         InkWell(
@@ -186,14 +187,14 @@ class _VerificationLevelCard extends StatelessWidget {
             const SizedBox(width: 8),
             Text(
               config.title,
-              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white),
             ),
           ],
         ),
         const SizedBox(height: 6),
         Text(
           config.description,
-          style: const TextStyle(fontSize: 12),
+          style: const TextStyle(fontSize: 12, color: Colors.white70),
         ),
       ],
     );
