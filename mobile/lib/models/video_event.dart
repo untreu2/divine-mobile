@@ -606,14 +606,33 @@ class VideoEvent {
   static void _parseImetaTag(
       List<String> tag, void Function(String key, String value) onKeyValue) {
     // Skip the first element which is "imeta"
-    for (var i = 1; i < tag.length; i++) {
-      final element = tag[i];
-      // Each element is "key value" separated by space
-      final spaceIndex = element.indexOf(' ');
-      if (spaceIndex > 0) {
-        final key = element.substring(0, spaceIndex);
-        final value = element.substring(spaceIndex + 1);
-        onKeyValue(key, value);
+    // Support TWO formats:
+    // 1. OLD: ["imeta", "url https://...", "m video/mp4", ...]  (space-separated key-value)
+    // 2. NEW: ["imeta", "url", "https://...", "m", "video/mp4", ...] (positional key-value pairs)
+
+    // Detect format by checking if tag[1] contains a space
+    if (tag.length > 1) {
+      final firstElement = tag[1];
+      final hasSpace = firstElement.contains(' ');
+
+      if (hasSpace) {
+        // OLD FORMAT: space-separated key-value within each element
+        for (var i = 1; i < tag.length; i++) {
+          final element = tag[i];
+          final spaceIndex = element.indexOf(' ');
+          if (spaceIndex > 0) {
+            final key = element.substring(0, spaceIndex);
+            final value = element.substring(spaceIndex + 1);
+            onKeyValue(key, value);
+          }
+        }
+      } else {
+        // NEW FORMAT: positional key-value pairs (tag[i] is key, tag[i+1] is value)
+        for (var i = 1; i < tag.length - 1; i += 2) {
+          final key = tag[i];
+          final value = tag[i + 1];
+          onKeyValue(key, value);
+        }
       }
     }
   }

@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed - NIP-71 imeta Tag Parsing (2025-10-25)
+
+#### Bug Fixes
+- **Fixed video URL extraction from new imeta tag format**
+  - Root cause: imeta tag format changed from space-separated key-value pairs to positional pairs
+  - OLD FORMAT: `["imeta", "url https://...", "m video/mp4"]` (space within element)
+  - NEW FORMAT: `["imeta", "url", "https://...", "m", "video/mp4"]` (separate elements)
+  - Parser only supported old format, causing video URLs to not be extracted
+  - Database had 1953 events but only 2 displayed because URLs weren't being parsed
+  - Now supports BOTH formats for backward compatibility
+
+#### Files Modified
+- `lib/models/video_event.dart` - Updated `_parseImetaTag()` to handle both imeta formats
+
+#### Technical Details
+- Parser now detects format by checking if first element contains a space
+- OLD FORMAT: Loop through elements, split on space to get key-value pairs
+- NEW FORMAT: Loop in steps of 2, treat consecutive elements as key-value pairs
+- Fixes issue where 1953 events in database appeared as "no videos" in explore feed
+- Enables proper video display from relay.divine.video and other relays using new format
+
 ### Fixed - Video Display Crash (2025-10-25)
 
 #### Bug Fixes
