@@ -4,6 +4,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:openvine/mixins/page_controller_sync_mixin.dart';
 import 'package:openvine/mixins/video_prefetch_mixin.dart';
 import 'package:openvine/providers/home_screen_controllers.dart';
 import 'package:openvine/providers/route_feed_providers.dart';
@@ -22,7 +23,8 @@ class HomeScreenRouter extends ConsumerStatefulWidget {
   ConsumerState<HomeScreenRouter> createState() => _HomeScreenRouterState();
 }
 
-class _HomeScreenRouterState extends ConsumerState<HomeScreenRouter> with VideoPrefetchMixin {
+class _HomeScreenRouterState extends ConsumerState<HomeScreenRouter>
+    with VideoPrefetchMixin, PageControllerSyncMixin {
   PageController? _controller;
   int? _lastUrlIndex;
   int? _lastPrefetchIndex;
@@ -56,7 +58,9 @@ class _HomeScreenRouterState extends ConsumerState<HomeScreenRouter> with VideoP
           return const Center(child: Text('Not a home route'));
         }
 
-        final urlIndex = ctx.videoIndex ?? 0;
+        int urlIndex = 0;
+
+        // Determine target index from route context
 
         // Get video data from home feed
         final videosAsync = ref.watch(videosForHomeRouteProvider);
@@ -64,6 +68,21 @@ class _HomeScreenRouterState extends ConsumerState<HomeScreenRouter> with VideoP
         return videosAsync.when(
           data: (state) {
             final videos = state.videos;
+
+            // Determine target index from route context
+            if (ctx.eventId != null) {
+              // Event-based routing: find video by ID
+              final targetIndex = videos.indexWhere((v) => v.id == ctx.eventId);
+              urlIndex = targetIndex != -1 ? targetIndex : 0;
+              Log.debug(
+                '📍 Event-based routing: eventId=${ctx.eventId} → index=$urlIndex',
+                name: 'HomeScreenRouter',
+                category: LogCategory.video,
+              );
+            } else {
+              // Legacy index-based routing
+              urlIndex = (ctx.videoIndex ?? 0).clamp(0, videos.length - 1);
+            }
 
             if (videos.isEmpty) {
               return const Center(
@@ -111,8 +130,12 @@ class _HomeScreenRouterState extends ConsumerState<HomeScreenRouter> with VideoP
                 );
                 WidgetsBinding.instance.addPostFrameCallback((_) {
                   if (!mounted) return;
+                  // Use event-based routing (always use event ID, not index)
                   context.go(buildRoute(
-                    RouteContext(type: RouteType.home, videoIndex: currentVideoIndex),
+                    RouteContext(
+                      type: RouteType.home,
+                      eventId: _currentVideoId,
+                    ),
                   ));
                 });
                 urlUpdatePending = true;
@@ -120,26 +143,22 @@ class _HomeScreenRouterState extends ConsumerState<HomeScreenRouter> with VideoP
             }
 
             // Sync controller when URL changes externally (back/forward/deeplink)
-            // Use post-frame to avoid calling jumpToPage during build
+            // OR when videos list changes (e.g., social provider loads)
             // Skip if URL update is already pending from reorder detection
-            if (_controller!.hasClients && !urlUpdatePending) {
-              final safeIndex = urlIndex.clamp(0, itemCount - 1);
-              final currentPage = _controller!.page?.round() ?? 0;
-
-              // Sync if URL changed OR if controller position doesn't match URL
-              if (urlIndex != _lastUrlIndex || currentPage != safeIndex) {
-                _lastUrlIndex = urlIndex;
-                _currentVideoId = videos[safeIndex].id; // Update tracked video
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  if (!mounted || !_controller!.hasClients) return;
-                  final currentPageNow = _controller!.page?.round() ?? 0;
-                  if (currentPageNow != safeIndex) {
-                    Log.debug('🔄 Syncing PageController: current=$currentPageNow -> target=$safeIndex',
-                        name: 'HomeScreenRouter', category: LogCategory.video);
-                    _controller!.jumpToPage(safeIndex);
-                  }
-                });
-              }
+            if (!urlUpdatePending &&
+                shouldSync(
+                  urlIndex: urlIndex,
+                  lastUrlIndex: _lastUrlIndex,
+                  controller: _controller,
+                  targetIndex: urlIndex.clamp(0, itemCount - 1),
+                )) {
+              _lastUrlIndex = urlIndex;
+              _currentVideoId = videos[urlIndex.clamp(0, itemCount - 1)].id; // Update tracked video
+              syncPageController(
+                controller: _controller!,
+                targetIndex: urlIndex,
+                itemCount: itemCount,
+              );
             }
 
             // Prefetch profiles for adjacent videos (±1 index) only when URL index changes
@@ -181,8 +200,12 @@ class _HomeScreenRouterState extends ConsumerState<HomeScreenRouter> with VideoP
 
                   // Guard: only navigate if URL doesn't match
                   if (newIndex != urlIndex) {
+                    // Use event-based routing (always use event ID, not index)
                     context.go(buildRoute(
-                      RouteContext(type: RouteType.home, videoIndex: newIndex),
+                      RouteContext(
+                        type: RouteType.home,
+                        eventId: videos[newIndex].id,
+                      ),
                     ));
                   }
 

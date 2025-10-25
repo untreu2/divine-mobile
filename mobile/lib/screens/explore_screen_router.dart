@@ -4,6 +4,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:openvine/mixins/page_controller_sync_mixin.dart';
 import 'package:openvine/mixins/video_prefetch_mixin.dart';
 import 'package:openvine/router/page_context_provider.dart';
 import 'package:openvine/router/route_utils.dart';
@@ -18,7 +19,8 @@ class ExploreScreenRouter extends ConsumerStatefulWidget {
       _ExploreScreenRouterState();
 }
 
-class _ExploreScreenRouterState extends ConsumerState<ExploreScreenRouter> with VideoPrefetchMixin {
+class _ExploreScreenRouterState extends ConsumerState<ExploreScreenRouter>
+    with VideoPrefetchMixin, PageControllerSyncMixin {
   PageController? _controller;
   int? _lastUrlIndex;
 
@@ -40,7 +42,7 @@ class _ExploreScreenRouterState extends ConsumerState<ExploreScreenRouter> with 
           return const Center(child: Text('Not an explore route'));
         }
 
-        final urlIndex = ctx.videoIndex ?? 0;
+        int urlIndex = 0;
 
         // Get video data
         final videosAsync = ref.watch(videoEventsProvider);
@@ -49,6 +51,16 @@ class _ExploreScreenRouterState extends ConsumerState<ExploreScreenRouter> with 
           data: (videos) {
             if (videos.isEmpty) {
               return const Center(child: Text('No videos available'));
+            }
+
+            // Determine target index from route context
+            if (ctx.eventId != null) {
+              // Event-based routing: find video by ID
+              final targetIndex = videos.indexWhere((v) => v.id == ctx.eventId);
+              urlIndex = targetIndex != -1 ? targetIndex : 0;
+            } else {
+              // Legacy index-based routing
+              urlIndex = (ctx.videoIndex ?? 0).clamp(0, videos.length - 1);
             }
 
             final itemCount = videos.length;
@@ -62,22 +74,18 @@ class _ExploreScreenRouterState extends ConsumerState<ExploreScreenRouter> with 
 
             // Sync controller when URL changes externally (back/forward/deeplink)
             // OR when videos list changes (e.g., provider reloads)
-            // Use post-frame to avoid calling jumpToPage during build
-            if (_controller!.hasClients) {
-              final safeIndex = urlIndex.clamp(0, itemCount - 1);
-              final currentPage = _controller!.page?.round() ?? 0;
-
-              // Sync if URL changed OR if controller position doesn't match URL
-              if (urlIndex != _lastUrlIndex || currentPage != safeIndex) {
-                _lastUrlIndex = urlIndex;
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  if (!mounted || !_controller!.hasClients) return;
-                  final currentPageNow = _controller!.page?.round() ?? 0;
-                  if (currentPageNow != safeIndex) {
-                    _controller!.jumpToPage(safeIndex);
-                  }
-                });
-              }
+            if (shouldSync(
+              urlIndex: urlIndex,
+              lastUrlIndex: _lastUrlIndex,
+              controller: _controller,
+              targetIndex: urlIndex.clamp(0, itemCount - 1),
+            )) {
+              _lastUrlIndex = urlIndex;
+              syncPageController(
+                controller: _controller!,
+                targetIndex: urlIndex,
+                itemCount: itemCount,
+              );
             }
 
             return PageView.builder(
@@ -86,8 +94,12 @@ class _ExploreScreenRouterState extends ConsumerState<ExploreScreenRouter> with 
               onPageChanged: (newIndex) {
                 // Guard: only navigate if URL doesn't match
                 if (newIndex != urlIndex) {
+                  // Use event-based routing
                   context.go(buildRoute(
-                    RouteContext(type: RouteType.explore, videoIndex: newIndex),
+                    RouteContext(
+                      type: RouteType.explore,
+                      eventId: videos[newIndex].id,
+                    ),
                   ));
                 }
 

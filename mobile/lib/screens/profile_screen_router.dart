@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:openvine/mixins/page_controller_sync_mixin.dart';
 import 'package:openvine/mixins/video_prefetch_mixin.dart';
 import 'package:openvine/models/video_event.dart';
 import 'package:openvine/providers/app_providers.dart';
@@ -41,7 +42,7 @@ class ProfileScreenRouter extends ConsumerStatefulWidget {
 }
 
 class _ProfileScreenRouterState extends ConsumerState<ProfileScreenRouter>
-    with TickerProviderStateMixin, VideoPrefetchMixin {
+    with TickerProviderStateMixin, VideoPrefetchMixin, PageControllerSyncMixin {
   late TabController _tabController;
   final ScrollController _scrollController = ScrollController();
   PageController? _videoController;  // For fullscreen video mode
@@ -178,21 +179,19 @@ class _ProfileScreenRouterState extends ConsumerState<ProfileScreenRouter>
 
               // Sync controller when URL changes externally (back/forward/deeplink)
               // OR when videos list changes (e.g., provider reloads)
-              if (_videoController!.hasClients) {
-                final targetIndex = listIndex.clamp(0, videos.length - 1);
-                final currentPage = _videoController!.page?.round() ?? 0;
-
-                // Sync if URL changed OR if controller position doesn't match URL
-                if (listIndex != _lastVideoUrlIndex || currentPage != targetIndex) {
-                  _lastVideoUrlIndex = listIndex;
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    if (!mounted || !_videoController!.hasClients) return;
-                    final currentPageNow = _videoController!.page?.round() ?? 0;
-                    if (currentPageNow != targetIndex) {
-                      _videoController!.jumpToPage(targetIndex);
-                    }
-                  });
-                }
+              final targetIndex = listIndex.clamp(0, videos.length - 1);
+              if (shouldSync(
+                urlIndex: listIndex,
+                lastUrlIndex: _lastVideoUrlIndex,
+                controller: _videoController,
+                targetIndex: targetIndex,
+              )) {
+                _lastVideoUrlIndex = listIndex;
+                syncPageController(
+                  controller: _videoController!,
+                  targetIndex: listIndex,
+                  itemCount: videos.length,
+                );
               }
 
               // Build fullscreen video PageView
