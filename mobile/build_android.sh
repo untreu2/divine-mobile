@@ -1,6 +1,6 @@
 #!/bin/bash
 # ABOUTME: Build script for OpenVine Android app (debug and release builds)
-# ABOUTME: Handles both debug and signed release APKs for Android platform
+# ABOUTME: Builds debug APKs for testing and release AABs for Play Store distribution
 
 set -e
 
@@ -30,7 +30,7 @@ while [[ $# -gt 0 ]]; do
       echo ""
       echo "Build types:"
       echo "  debug    - Build debug APK (default, no signing required)"
-      echo "  release  - Build signed release APK (requires keystore)"
+      echo "  release  - Build signed release AAB for Google Play (requires keystore)"
       echo ""
       echo "Options:"
       echo "  -v, --verbose  Show detailed build output"
@@ -79,14 +79,25 @@ if [ "$BUILD_TYPE" = "release" ]; then
   echo ""
 fi
 
-# Build APK
-echo -e "${YELLOW}Building Android APK ($BUILD_TYPE)...${NC}"
-echo ""
+# Build APK or AAB depending on build type
+if [ "$BUILD_TYPE" = "release" ]; then
+  echo -e "${YELLOW}Building Android App Bundle (AAB) for Play Store...${NC}"
+  echo ""
 
-if [ "$VERBOSE" = true ]; then
-  flutter build apk --$BUILD_TYPE -v
+  if [ "$VERBOSE" = true ]; then
+    flutter build appbundle --release -v
+  else
+    flutter build appbundle --release
+  fi
 else
-  flutter build apk --$BUILD_TYPE
+  echo -e "${YELLOW}Building Android APK ($BUILD_TYPE)...${NC}"
+  echo ""
+
+  if [ "$VERBOSE" = true ]; then
+    flutter build apk --$BUILD_TYPE -v
+  else
+    flutter build apk --$BUILD_TYPE
+  fi
 fi
 
 # Check build result
@@ -98,33 +109,39 @@ if [ $? -eq 0 ]; then
   echo ""
 
   if [ "$BUILD_TYPE" = "release" ]; then
-    APK_PATH="build/app/outputs/flutter-apk/app-release.apk"
+    OUTPUT_PATH="build/app/outputs/bundle/release/app-release.aab"
+    OUTPUT_TYPE="AAB"
   else
-    APK_PATH="build/app/outputs/flutter-apk/app-debug.apk"
+    OUTPUT_PATH="build/app/outputs/flutter-apk/app-debug.apk"
+    OUTPUT_TYPE="APK"
   fi
 
-  if [ -f "$APK_PATH" ]; then
-    APK_SIZE=$(du -h "$APK_PATH" | cut -f1)
-    echo -e "APK location: ${YELLOW}$APK_PATH${NC}"
-    echo -e "APK size: ${YELLOW}$APK_SIZE${NC}"
-    echo ""
-
-    # Show installation instructions
-    echo -e "${GREEN}To install on a connected device or emulator:${NC}"
-    echo -e "  flutter install"
-    echo ""
-    echo -e "${GREEN}To install APK directly with adb:${NC}"
-    echo -e "  adb install $APK_PATH"
+  if [ -f "$OUTPUT_PATH" ]; then
+    OUTPUT_SIZE=$(du -h "$OUTPUT_PATH" | cut -f1)
+    echo -e "$OUTPUT_TYPE location: ${YELLOW}$OUTPUT_PATH${NC}"
+    echo -e "$OUTPUT_TYPE size: ${YELLOW}$OUTPUT_SIZE${NC}"
     echo ""
 
     if [ "$BUILD_TYPE" = "release" ]; then
-      echo -e "${GREEN}To distribute this APK:${NC}"
-      echo -e "  - Upload to Google Play Console for testing"
-      echo -e "  - Share directly with testers (sideloading)"
+      echo -e "${GREEN}To upload to Google Play Console:${NC}"
+      echo -e "  1. Go to Google Play Console > Your app > Testing > Internal testing"
+      echo -e "  2. Create or manage a release"
+      echo -e "  3. Upload the AAB file: $OUTPUT_PATH"
+      echo ""
+      echo -e "${YELLOW}Note: AAB files cannot be installed directly via adb.${NC}"
+      echo -e "${YELLOW}For local testing, use './build_android.sh debug' to build an APK.${NC}"
+      echo ""
+    else
+      # Show installation instructions for debug APK
+      echo -e "${GREEN}To install on a connected device or emulator:${NC}"
+      echo -e "  flutter install"
+      echo ""
+      echo -e "${GREEN}To install APK directly with adb:${NC}"
+      echo -e "  adb install $OUTPUT_PATH"
       echo ""
     fi
   else
-    echo -e "${RED}Warning: APK file not found at expected location${NC}"
+    echo -e "${RED}Warning: $OUTPUT_TYPE file not found at expected location${NC}"
   fi
 else
   echo ""
