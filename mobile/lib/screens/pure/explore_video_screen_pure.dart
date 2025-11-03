@@ -80,7 +80,9 @@ class _ExploreVideoScreenPureState extends ConsumerState<ExploreVideoScreenPure>
     }
 
     // Use tab-specific video list from parent (preserves grid sort order)
-    return PageView.builder(
+    return Container(
+      color: Colors.black,
+      child: PageView.builder(
           itemCount: videos.length,
           controller: PageController(initialPage: _initialIndex),
           scrollDirection: Axis.vertical,
@@ -117,6 +119,7 @@ class _ExploreVideoScreenPureState extends ConsumerState<ExploreVideoScreenPure>
               contextTitle: widget.contextTitle,
             );
           },
-        );
+        ),
+    );
   }
 }

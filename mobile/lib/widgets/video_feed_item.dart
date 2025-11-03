@@ -450,6 +450,7 @@ class _VideoFeedItemState extends ConsumerState<VideoFeedItem> {
               VideoOverlayActions(
                 video: video,
                 isVisible: overlayVisible,
+                isActive: isActive,
                 hasBottomNavigation: widget.hasBottomNavigation,
                 contextTitle: widget.contextTitle,
               ),
@@ -487,12 +488,14 @@ class VideoOverlayActions extends ConsumerWidget {
     super.key,
     required this.video,
     required this.isVisible,
+    required this.isActive,
     this.hasBottomNavigation = true,
     this.contextTitle,
   });
 
   final VideoEvent video;
   final bool isVisible;
+  final bool isActive;
   final bool hasBottomNavigation;
   final String? contextTitle;
 
@@ -577,21 +580,24 @@ class VideoOverlayActions extends ConsumerWidget {
           bottom: 0,
           left: 16,
           right: 80, // Leave space for action buttons
-          child: Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.bottomCenter,
-                end: Alignment.topCenter,
-                colors: [
-                  Colors.black.withValues(alpha: 0.9),
-                  Colors.black.withValues(alpha: 0.6),
-                  Colors.transparent,
-                ],
-                stops: const [0.0, 0.5, 1.0],
+          child: AnimatedOpacity(
+            opacity: isActive ? 1.0 : 0.0,
+            duration: const Duration(milliseconds: 200),
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.bottomCenter,
+                  end: Alignment.topCenter,
+                  colors: [
+                    Colors.black.withValues(alpha: 0.9),
+                    Colors.black.withValues(alpha: 0.6),
+                    Colors.transparent,
+                  ],
+                  stops: const [0.0, 0.5, 1.0],
+                ),
               ),
-            ),
-            child: Column(
+              child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -664,6 +670,7 @@ class VideoOverlayActions extends ConsumerWidget {
                 ],
               ],
             ),
+          ),
           ),
         ),
         // Action buttons at bottom right
