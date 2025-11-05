@@ -42,6 +42,7 @@ class VideoFeedItem extends ConsumerStatefulWidget {
     this.forceShowOverlay = false,
     this.hasBottomNavigation = true,
     this.contextTitle,
+    this.disableAutoplay = false,
   });
 
   final VideoEvent video;
@@ -50,6 +51,7 @@ class VideoFeedItem extends ConsumerStatefulWidget {
   final bool forceShowOverlay;
   final bool hasBottomNavigation;
   final String? contextTitle;
+  final bool disableAutoplay;
 
   @override
   ConsumerState<VideoFeedItem> createState() => _VideoFeedItemState();
@@ -68,23 +70,30 @@ class _VideoFeedItemState extends ConsumerState<VideoFeedItem> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return; // Safety check: don't use ref if widget is disposed
 
-      // Check initial state and start playback if already active
-      final isActive = ref.read(isVideoActiveProvider(widget.video.id));
-      Log.info('🎬 VideoFeedItem.initState postFrameCallback: videoId=${widget.video.id}, isActive=$isActive',
-          name: 'VideoFeedItem', category: LogCategory.video);
-      if (isActive) {
-        _handlePlaybackChange(true);
+      // Check initial state and start playback if already active (unless autoplay is disabled)
+      if (!widget.disableAutoplay) {
+        final isActive = ref.read(isVideoActiveProvider(widget.video.id));
+        Log.info('🎬 VideoFeedItem.initState postFrameCallback: videoId=${widget.video.id}, isActive=$isActive',
+            name: 'VideoFeedItem', category: LogCategory.video);
+        if (isActive) {
+          _handlePlaybackChange(true);
+        }
+      } else {
+        Log.info('🎬 VideoFeedItem.initState: autoplay disabled for ${widget.video.id}',
+            name: 'VideoFeedItem', category: LogCategory.video);
       }
 
-      // Listen for future changes
-      ref.listenManual(
-        isVideoActiveProvider(widget.video.id),
-        (prev, next) {
-          Log.info('🔄 VideoFeedItem active state changed: videoId=${widget.video.id}, prev=$prev → next=$next',
-              name: 'VideoFeedItem', category: LogCategory.video);
-          _handlePlaybackChange(next);
-        },
-      );
+      // Listen for future changes (unless autoplay is disabled)
+      if (!widget.disableAutoplay) {
+        ref.listenManual(
+          isVideoActiveProvider(widget.video.id),
+          (prev, next) {
+            Log.info('🔄 VideoFeedItem active state changed: videoId=${widget.video.id}, prev=$prev → next=$next',
+                name: 'VideoFeedItem', category: LogCategory.video);
+            _handlePlaybackChange(next);
+          },
+        );
+      }
     });
   }
 
@@ -513,28 +522,34 @@ class VideoOverlayActions extends ConsumerWidget {
     // Only interactive elements (buttons, chips with GestureDetector) absorb taps
     return Stack(
         children: [
-          // Publisher chip (tap to profile)
-          Positioned(
-            top: MediaQuery.of(context).viewPadding.top + 16,
-            left: 16,
-            child: Consumer(builder: (context, ref, _) {
-            final profileAsync = ref.watch(fetchUserProfileProvider(video.pubkey));
-            final display = profileAsync.maybeWhen(
-                  data: (p) => p?.bestDisplayName ?? p?.displayName ?? p?.name,
-                  orElse: () => null,
-                ) ?? 'Loading...';
+        // Username and follow button at top left
+        Positioned(
+          top: MediaQuery.of(context).viewPadding.top + 16,
+          left: 16,
+          child: Consumer(
+            builder: (context, ref, _) {
+              final profileAsync = ref.watch(fetchUserProfileProvider(video.pubkey));
+              final display = profileAsync.maybeWhen(
+                data: (p) => p?.bestDisplayName ?? p?.displayName ?? p?.name,
+                orElse: () => null,
+              ) ?? 'Loading...';
 
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                IgnorePointer(
-                  ignoring: false, // This chip SHOULD receive taps
-                  child: GestureDetector(
+              final authService = ref.watch(authServiceProvider);
+              final currentUserPubkey = authService.currentPublicKeyHex;
+              final isOwnVideo = currentUserPubkey == video.pubkey;
+
+              final socialState = ref.watch(socialProvider);
+              final isFollowing = socialState.isFollowing(video.pubkey);
+              final isFollowInProgress = socialState.isFollowInProgress(video.pubkey);
+
+              return Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Username chip (tappable to go to profile)
+                  GestureDetector(
                     onTap: () {
                       Log.info('👤 User tapped profile: videoId=${video.id}, authorPubkey=${video.pubkey}',
-                          name: 'VideoFeedItem', category: LogCategory.ui);
-                      // Navigate to profile in grid mode (no video playing)
+                        name: 'VideoFeedItem', category: LogCategory.ui);
                       context.goProfileGrid(video.pubkey);
                     },
                     child: Container(
@@ -557,10 +572,56 @@ class VideoOverlayActions extends ConsumerWidget {
                       ),
                     ),
                   ),
-                ),
-              ],
-            );
-          }),
+                  // Follow button next to username (only for other users' videos)
+                  if (!isOwnVideo) ...[
+                    const SizedBox(width: 8),
+                    GestureDetector(
+                      onTap: isFollowInProgress ? null : () async {
+                        Log.info(
+                          '👤 Follow button tapped for ${video.pubkey}',
+                          name: 'VideoFeedItem',
+                          category: LogCategory.ui,
+                        );
+                        if (isFollowing) {
+                          await ref.read(socialProvider.notifier).unfollowUser(video.pubkey);
+                        } else {
+                          await ref.read(socialProvider.notifier).followUser(video.pubkey);
+                        }
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: (isFollowing ? Colors.grey[800] : VineTheme.vineGreen)?.withValues(alpha: 0.7),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: (isFollowing ? Colors.grey[600] : VineTheme.vineGreen)?.withValues(alpha: 0.5) ?? Colors.transparent,
+                            width: 1,
+                          ),
+                        ),
+                        child: isFollowInProgress
+                          ? const SizedBox(
+                              width: 12,
+                              height: 12,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : Text(
+                              isFollowing ? 'Following' : 'Follow',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                      ),
+                    ),
+                  ],
+                ],
+              );
+            },
+          ),
         ),
         // ProofMode and Vine badges in upper right corner (tappable)
         Positioned(
@@ -849,6 +910,15 @@ class VideoOverlayActions extends ConsumerWidget {
                 ),
               ),
             ],
+          ),
+
+          const SizedBox(height: 16),
+
+          // Flag/Report icon for content moderation
+          const Icon(
+            Icons.flag_outlined,
+            color: Colors.white,
+            size: 18,
           ),
 
           // Edit button (only show for owned videos when feature is enabled)
