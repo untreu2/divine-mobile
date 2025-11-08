@@ -64,8 +64,8 @@ class _BugReportDialogState extends State<BugReportDialog> {
         userPubkey: widget.userPubkey,
       );
 
-      // Send bug report via email
-      final result = await widget.bugReportService.sendBugReportViaEmail(reportData);
+      // Send bug report to Worker API
+      final result = await widget.bugReportService.sendBugReport(reportData);
 
       if (!_isDisposed && mounted) {
         setState(() {
@@ -73,9 +73,9 @@ class _BugReportDialogState extends State<BugReportDialog> {
           _isSuccess = result.success;
           if (result.success) {
             _resultMessage =
-                'File downloaded/ready! Opening email to contact@divine.video - please attach the file.';
+                'Bug report sent successfully! Thank you for your feedback.';
           } else {
-            _resultMessage = 'Failed to create bug report: ${result.error}';
+            _resultMessage = 'Failed to send bug report: ${result.error}';
           }
         });
 

@@ -4,6 +4,7 @@
 import 'dart:convert';
 import 'dart:io' show File;
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:http/http.dart' as http;
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -132,9 +133,50 @@ class BugReportService {
     return jsonString.length;
   }
 
-  /// Send bug report via Blossom upload + encrypted NIP-17 message to support
+  /// Send bug report to Cloudflare Worker backend
+  /// This is the primary method for submitting bug reports
   Future<BugReportResult> sendBugReport(BugReportData data) async {
-    return sendBugReportToRecipient(data, BugReportConfig.supportPubkey);
+    try {
+      Log.info('Sending bug report ${data.reportId} to Worker API',
+          category: LogCategory.system);
+
+      // Sanitize sensitive data before sending
+      final sanitizedData = sanitizeSensitiveData(data);
+
+      // POST to Cloudflare Worker
+      final response = await http.post(
+        Uri.parse(BugReportConfig.bugReportApiUrl),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(sanitizedData.toJson()),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final result = jsonDecode(response.body);
+        Log.info('✅ Bug report sent successfully: ${data.reportId}',
+            category: LogCategory.system);
+        return BugReportResult.createSuccess(
+          reportId: data.reportId,
+          messageEventId: result['reportId'] as String,
+        );
+      } else {
+        Log.error(
+            'Bug report API error: ${response.statusCode} ${response.body}',
+            category: LogCategory.system);
+
+        // Fall back to email if API fails
+        Log.info('Falling back to email attachment method',
+            category: LogCategory.system);
+        return sendBugReportViaEmail(data);
+      }
+    } catch (e, stackTrace) {
+      Log.error('Exception while sending bug report to Worker: $e',
+          category: LogCategory.system, error: e, stackTrace: stackTrace);
+
+      // Fall back to email on network errors
+      Log.info('Falling back to email attachment method',
+          category: LogCategory.system);
+      return sendBugReportViaEmail(data);
+    }
   }
 
   /// Send bug report to a specific recipient (for testing)
