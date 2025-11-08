@@ -183,6 +183,7 @@ class VineRecordingNotifier extends StateNotifier<VineRecordingUIState> {
           frameCount: _controller.segments.length,
           selectedApproach: 'native',
           proofManifestJson: proofManifestJson,
+          aspectRatio: _controller.aspectRatio,
         );
 
         await draftStorage.saveDraft(draft);
