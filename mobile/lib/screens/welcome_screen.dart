@@ -67,7 +67,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                 Text(
                   'diVine',
                   style: GoogleFonts.pacifico(
-                    fontSize: 64,
+                    fontSize: MediaQuery.of(context).size.width < 600 ? 48 : 64,
                     color: const Color(0xFFF5F6EA),
                   ),
                   textAlign: TextAlign.center,
