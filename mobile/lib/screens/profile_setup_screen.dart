@@ -616,6 +616,7 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
           ),
         ),
       );
+  }
 
   Future<void> _publishProfile() async {
     Log.info('🚀 Starting profile publish...',
