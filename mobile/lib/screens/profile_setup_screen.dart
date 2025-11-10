@@ -122,7 +122,7 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
     print('🔍 PROFILE_SETUP DEBUG: build called');
     print('🔍 PROFILE_SETUP DEBUG: route?.isFirst = ${route?.isFirst}');
     print('🔍 PROFILE_SETUP DEBUG: showAppBar = $showAppBar');
-    print('🔍 PROFILE_SETUP DEBUG: isNewUser = $isNewUser');
+    print('🔍 PROFILE_SETUP DEBUG: isNewUser = ${widget.isNewUser}');
 
     return Scaffold(
         backgroundColor: Colors.black,
