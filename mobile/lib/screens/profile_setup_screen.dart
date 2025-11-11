@@ -166,22 +166,23 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
             },
             tooltip: 'Back',
           ),
-        ),
+        ), // appBar
         body: GestureDetector(
           onTap: () {
             // Dismiss keyboard when tapping outside text fields
             FocusScope.of(context).unfocus();
           },
           child: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Align(
-                alignment: Alignment.topCenter,
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 600),
-                  child: Form(
-                    key: _formKey,
-                    child: SingleChildScrollView(
+            bottom: false, // Don't add bottom padding - let content extend to bottom
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
+                child: Align(
+                  alignment: Alignment.topCenter,
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 600),
+                    child: Form(
+                      key: _formKey,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -634,12 +635,12 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
                   ),
                 ),
               ),
-                ),
-                ),
             ),
-          ),
-        ),
-      );
+          ), // closes Padding
+        ), // closes SingleChildScrollView
+        ), // closes SafeArea
+        ), // closes GestureDetector - this is the 'body:' parameter value
+      ); // closes Scaffold
   }
 
   Future<void> _publishProfile() async {
