@@ -53,13 +53,24 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                // Top margin for better spacing
-                SizedBox(height: MediaQuery.of(context).size.width < 600 ? 40 : 80),
-                // App branding - Divine wordmark logo
+                // No top margin on phones, keep margin on tablets
+                SizedBox(height: MediaQuery.of(context).size.width < 600 ? 0 : 40),
+                // App branding - Divine icon (responsive sizing)
                 Image.asset(
-                  'assets/icon/White cropped.png',
-                  width: MediaQuery.of(context).size.width < 600 ? 240 : 320,
+                  'assets/icon/divine_icon_transparent.png',
+                  height: MediaQuery.of(context).size.width < 600 ? 224 : 320,
                   fit: BoxFit.contain,
+                ),
+                // No spacing on phones, keep spacing on tablets
+                if (MediaQuery.of(context).size.width >= 600)
+                  const SizedBox(height: 0),
+                Text(
+                  'Divine',
+                  style: GoogleFonts.pacifico(
+                    fontSize: MediaQuery.of(context).size.width < 600 ? 48 : 64,
+                    color: const Color(0xFFF5F6EA),
+                  ),
+                  textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 16),
                 const Text(
