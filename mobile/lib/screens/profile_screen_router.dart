@@ -579,7 +579,7 @@ class _ProfileScreenRouterState extends ConsumerState<ProfileScreenRouter>
                       profileStatsAsync.hasValue
                           ? profileStatsAsync.value!.videoCount
                           : null,
-                      'Vines',
+                      'Videos',
                       profileStatsAsync.isLoading,
                       onTap: null, // Videos aren't tappable
                     ),
