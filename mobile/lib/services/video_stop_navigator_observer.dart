@@ -18,8 +18,27 @@ class VideoStopNavigatorObserver extends NavigatorObserver {
   @override
   void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
     super.didPush(route, previousRoute);
+    print('🟪 NAV OBSERVER: didPush - route=${route.settings.name}, previousRoute=${previousRoute?.settings.name}');
     // Also stop on push for programmatic navigation (non-gesture)
     _stopAllVideos('didPush', route.settings.name);
+  }
+
+  @override
+  void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    super.didPop(route, previousRoute);
+    print('🟪 NAV OBSERVER: didPop - route=${route.settings.name}, previousRoute=${previousRoute?.settings.name}');
+  }
+
+  @override
+  void didRemove(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    super.didRemove(route, previousRoute);
+    print('🟪 NAV OBSERVER: didRemove - route=${route.settings.name}, previousRoute=${previousRoute?.settings.name}');
+  }
+
+  @override
+  void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) {
+    super.didReplace(newRoute: newRoute, oldRoute: oldRoute);
+    print('🟪 NAV OBSERVER: didReplace - newRoute=${newRoute?.settings.name}, oldRoute=${oldRoute?.settings.name}');
   }
 
   void _stopAllVideos(String action, String? routeName) {

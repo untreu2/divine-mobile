@@ -8,13 +8,14 @@ import 'dart:io';
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:openvine/models/user_profile.dart' as profile_model;
-import 'package:openvine/utils/unified_logger.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openvine/providers/app_providers.dart';
 import 'package:openvine/providers/user_profile_providers.dart';
 import 'package:openvine/theme/vine_theme.dart';
+import 'package:openvine/utils/unified_logger.dart';
 
 class ProfileSetupScreen extends ConsumerStatefulWidget {
   const ProfileSetupScreen({
@@ -116,8 +117,20 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
   Widget build(BuildContext context) {
     // /edit-profile and /setup-profile are standalone routes outside the ShellRoute
     // They should ALWAYS show their own AppBar
-    print('🔍 PROFILE_SETUP DEBUG: build called');
-    print('🔍 PROFILE_SETUP DEBUG: isNewUser = ${widget.isNewUser}');
+    print('🟪 PROFILE_SETUP DEBUG: build called');
+    print('🟪 PROFILE_SETUP DEBUG: isNewUser = ${widget.isNewUser}');
+
+    // Debug navigation state
+    final navigator = Navigator.of(context);
+    final canPop = navigator.canPop();
+    print('🟪 PROFILE_SETUP DEBUG: Navigator.canPop = $canPop');
+
+    // Debug modal route
+    final route = ModalRoute.of(context);
+    print('🟪 PROFILE_SETUP DEBUG: ModalRoute.isFirst = ${route?.isFirst}');
+    print('🟪 PROFILE_SETUP DEBUG: ModalRoute.isCurrent = ${route?.isCurrent}');
+    print('🟪 PROFILE_SETUP DEBUG: ModalRoute.isActive = ${route?.isActive}');
+    print('🟪 PROFILE_SETUP DEBUG: ModalRoute.settings.name = ${route?.settings.name}');
 
     return Scaffold(
         backgroundColor: Colors.black,
@@ -127,7 +140,30 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
           foregroundColor: VineTheme.whiteText,
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
-            onPressed: () => Navigator.of(context).pop(),
+            onPressed: () {
+              print('🟪 PROFILE_SETUP DEBUG: Back button pressed');
+
+              // Try to pop using context.pop() which GoRouter intercepts
+              // This should work even if canPop() returns false
+              try {
+                print('🟪 PROFILE_SETUP DEBUG: Attempting context.pop()');
+                context.pop();
+                print('🟪 PROFILE_SETUP DEBUG: context.pop() succeeded');
+              } catch (e) {
+                // If pop fails, navigate to profile or home as fallback
+                print('🟪 PROFILE_SETUP DEBUG: context.pop() failed: $e');
+                final authService = ref.read(authServiceProvider);
+                final currentPubkey = authService.currentPublicKeyHex;
+                if (currentPubkey != null) {
+                  final npub = authService.currentNpub;
+                  print('🟪 PROFILE_SETUP DEBUG: Navigating back to profile: $npub');
+                  context.go('/profile/$npub');
+                } else {
+                  print('🟪 PROFILE_SETUP DEBUG: No user, navigating to home');
+                  context.go('/home/0');
+                }
+              }
+            },
             tooltip: 'Back',
           ),
         ),
