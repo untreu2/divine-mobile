@@ -19,6 +19,8 @@ import 'package:openvine/database/app_database.dart';
 import 'package:openvine/router/app_router.dart';
 import 'package:openvine/router/route_normalization_provider.dart';
 import 'package:openvine/services/logging_config_service.dart';
+import 'package:openvine/services/seed_data_preload_service.dart';
+import 'package:openvine/services/seed_media_preload_service.dart';
 import 'package:openvine/services/startup_performance_service.dart';
 import 'package:openvine/services/video_cache_manager.dart';
 import 'package:openvine/theme/vine_theme.dart';
@@ -262,6 +264,39 @@ Future<void> _startOpenVineApp() async {
     await migrationDb?.close();
   }
   StartupPerformanceService.instance.completePhase('data_migration');
+
+  // Load seed data if database is empty (first install only)
+  StartupPerformanceService.instance.startPhase('seed_data_preload');
+  AppDatabase? seedDb;
+  try {
+    seedDb = AppDatabase();
+    await SeedDataPreloadService.loadSeedDataIfNeeded(seedDb);
+  } catch (e, stack) {
+    // Non-critical: user will fetch from relay normally
+    Log.error('[SEED] Data preload failed (non-critical): $e',
+        name: 'Main', category: LogCategory.system);
+    Log.verbose('[SEED] Stack: $stack',
+        name: 'Main', category: LogCategory.system);
+  } finally {
+    await seedDb?.close();
+  }
+  StartupPerformanceService.instance.completePhase('seed_data_preload');
+
+  // Load seed media files if cache is empty (first install only)
+  // Skip on web - no file-based caching
+  if (!kIsWeb) {
+    StartupPerformanceService.instance.startPhase('seed_media_preload');
+    try {
+      await SeedMediaPreloadService.loadSeedMediaIfNeeded();
+    } catch (e, stack) {
+      // Non-critical: user will download videos from network normally
+      Log.error('[SEED] Media preload failed (non-critical): $e',
+          name: 'Main', category: LogCategory.system);
+      Log.verbose('[SEED] Stack: $stack',
+          name: 'Main', category: LogCategory.system);
+    }
+    StartupPerformanceService.instance.completePhase('seed_media_preload');
+  }
 
   // Initialize SharedPreferences for feature flags
   StartupPerformanceService.instance.startPhase('shared_preferences');

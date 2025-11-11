@@ -1,5 +1,5 @@
 -- Divine Seed Data
--- Generated: 2025-11-10T22:35:07.865342
+-- Generated: 2025-11-10T22:58:47.583877
 -- Videos: 250
 --   Editor's Picks: 0
 --   Popular: 250
@@ -2850,7 +2850,7 @@ VALUES (
   '{"name":"Lele Pons","display_name":"Lele Pons","about":"Vine creator @Lele Pons","website":"https://vine.co/u/Lele Pons","nip05":"Lele Pons@divine.video","picture":"https://cdn.divine.video/c97a8d79d80c914680386cdfa3119e0b5bf72d1e1f2f350bce9f1d7a748f7f68.jpg"}',
   '2025-10-30T23:49:05.000',
   'fad467a1eb26cac9d69e5e4cc66113514f36cbe85ce586dbeb8bcc28d90fd8f9',
-  '2025-11-10T22:35:07.872362'
+  '2025-11-10T22:58:47.592569'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -2881,7 +2881,7 @@ VALUES (
   '{"name":"DeStorm Power","display_name":"DeStorm Power","about":"Vine creator @DeStorm Power","website":"https://vine.co/u/DeStorm Power","nip05":"DeStorm Power@divine.video","picture":"https://cdn.divine.video/2b75a4cfa9c093a2222ea89bc49509cedbe2de81e59d0d64c95a248171314c62.jpg"}',
   '2025-10-30T23:49:04.000',
   '7d56211783e1f77dd87658083eb68cb2c6110f99c9e6b3284916beb7620b6bfe',
-  '2025-11-10T22:35:07.872392'
+  '2025-11-10T22:58:47.592599'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -2912,7 +2912,7 @@ VALUES (
   '{"name": "Uldouz", "display_name": "Uldouz", "about": "Actress\r Follow me on Instagram/twitter @uldouz subscribe www.YouTube.com/uldouz Business Inquiries: Managementuldouz@gmail.com snapchat: snapuldouz Uldouz.com", "website": "https://youtube.com/@uldouz", "nip05": "Uldouz@divine.video", "location": "LA"}',
   '2025-10-13T21:51:06.000',
   'e02bfe2b15a29f7d1cb5fb9ee14d7bc9dbc8f8e4ddef72e1d44e10d4cedbd953',
-  '2025-11-10T22:35:07.872415'
+  '2025-11-10T22:58:47.592627'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -2945,7 +2945,7 @@ VALUES (
   '{"name": "lela alexis", "display_name": "lela alexis", "about": "Instagram : vaginasmoothie\n Twitter : monotonecunt\n Snapchat : lelathegoat11", "website": "https://instagram.com/vaginasmoothie", "nip05": "lela alexis@divine.video", "location": "i''m better looking in person"}',
   '2025-10-13T21:50:29.000',
   'b61fdb5db051cb08d6a140737735010df3dd8442c2c64df3e042162f1e196af2',
-  '2025-11-10T22:35:07.872442'
+  '2025-11-10T22:58:47.592658'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -2977,7 +2977,7 @@ s.v💙',
   '{"name": "actually greys", "display_name": "actually greys", "about": "erika \u2013 grey''s anatomy\ns.v\ud83d\udc99", "website": "https://vine.co/u/actually greys", "nip05": "actually greys@divine.video"}',
   '2025-10-13T21:49:21.000',
   '0928133b7d441e50751775ffda17b66bfd3d15f3bc01df7d7311b2b32cd2f8f6',
-  '2025-11-10T22:35:07.872477'
+  '2025-11-10T22:58:47.592761'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -3008,7 +3008,7 @@ VALUES (
   '{"name": "Twitter/IG RedJoker2418", "display_name": "Twitter/IG RedJoker2418", "about": "Twitter/Instagram/snapchat/\u27a1\ufe0e\u3010@Redjoker2418 \u3011\u30e1\u30fc\u30eb\u27a1\ufe0eredjoker2418@gmail.com Vine\u6b74\uff13\u5e74\u203c\ufe0e", "website": "https://instagram.com/Redjoker2418", "nip05": "Twitter/IG RedJoker2418@divine.video", "location": "Japan Tokyo"}',
   '2025-10-13T21:43:18.000',
   'ae9ee7eb5e9371f3f8d5674212df937a10fd47b03b0c0ac5e7189b0e752c1cf2',
-  '2025-11-10T22:35:07.872499'
+  '2025-11-10T22:58:47.592870'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -3039,7 +3039,7 @@ VALUES (
   '{"name": "ALEXIS SKY", "display_name": "ALEXIS SKY", "about": "Vine creator @ALEXIS SKY", "website": "https://vine.co/u/ALEXIS SKY", "nip05": "ALEXIS SKY@divine.video"}',
   '2025-10-13T19:05:21.000',
   '955c4981052db642dbd745d7918acb40f995429d368f93d565e8b4ddd4ccbfdb',
-  '2025-11-10T22:35:07.872515'
+  '2025-11-10T22:58:47.592889'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -3070,7 +3070,7 @@ VALUES (
   '{"name": "katie attolino", "display_name": "katie attolino", "about": "insta: katieattolino", "website": "https://instagram.com/katieattolino", "nip05": "katie attolino@divine.video"}',
   '2025-10-13T19:04:48.000',
   '1950569f56a2e301f57e09cdaf0f2f8f1231054e678d5d10a5858bbd823c54d1',
-  '2025-11-10T22:35:07.872531'
+  '2025-11-10T22:58:47.592907'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -3101,7 +3101,7 @@ VALUES (
   '{"name": "\u305e\u3089\u24d2", "display_name": "\u305e\u3089\u24d2", "about": "Vine creator @\u305e\u3089\u24d2", "website": "https://vine.co/u/\u305e\u3089\u24d2", "nip05": "\u305e\u3089\u24d2@divine.video"}',
   '2025-10-13T19:04:42.000',
   'b940b796d4d180e14833c455c543e5699a6a942d8c23d0bb02073461289d4464',
-  '2025-11-10T22:35:07.872578'
+  '2025-11-10T22:58:47.592925'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -3132,7 +3132,7 @@ VALUES (
   '{"name": "JosephStardust", "display_name": "JosephStardust", "about": "Just a typical", "website": "https://vine.co/u/JosephStardust", "nip05": "JosephStardust@divine.video"}',
   '2025-10-13T19:04:08.000',
   '88860ea2e6e79df58e21055cccd3f3d736db43fd795b02e8c2b649559e03f0f8',
-  '2025-11-10T22:35:07.872606'
+  '2025-11-10T22:58:47.592942'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -3163,7 +3163,7 @@ VALUES (
   '{"name": "\ubc29\ud53c\ucee4", "display_name": "\ubc29\ud53c\ucee4", "about": "Vine creator @\ubc29\ud53c\ucee4", "website": "https://vine.co/u/\ubc29\ud53c\ucee4", "nip05": "\ubc29\ud53c\ucee4@divine.video"}',
   '2025-10-13T19:03:12.000',
   'cbfa3afb94d577b467d1d143f1f9a0b9cb614cb5713d47652e0ea536ff01df60',
-  '2025-11-10T22:35:07.872624'
+  '2025-11-10T22:58:47.592964'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -3194,7 +3194,7 @@ VALUES (
   '{"name": "Game of Thrones Edits", "display_name": "Game of Thrones Edits", "about": "Vine creator @Game of Thrones Edits", "website": "https://vine.co/u/Game of Thrones Edits", "nip05": "Game of Thrones Edits@divine.video"}',
   '2025-10-13T19:02:42.000',
   '664692fc84be478d8dd702fb21dd8d0408511aad39306c888a00021f6c0089d8',
-  '2025-11-10T22:35:07.872639'
+  '2025-11-10T22:58:47.592985'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -3225,7 +3225,7 @@ VALUES (
   '{"name": "Chester Zoo", "display_name": "Chester Zoo", "about": "Vine creator @Chester Zoo", "website": "https://vine.co/u/Chester Zoo", "nip05": "Chester Zoo@divine.video"}',
   '2025-10-13T19:01:28.000',
   'aed272f19a4e4546ec313b9b3fb7d175eae9d87b4fc0b8fe73caafb7c58985aa',
-  '2025-11-10T22:35:07.872653'
+  '2025-11-10T22:58:47.593002'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -3256,7 +3256,7 @@ VALUES (
   '{"name": "\u2727chimchim\u2727", "display_name": "\u2727chimchim\u2727", "about": "cherise | marina\u2765", "website": "https://vine.co/u/\u2727chimchim\u2727", "nip05": "\u2727chimchim\u2727@divine.video"}',
   '2025-10-13T19:01:13.000',
   '9c548b343cc79be7a4b60a596008e67b61b587bb504a5c4cfaeb633e63af0c6d',
-  '2025-11-10T22:35:07.872668'
+  '2025-11-10T22:58:47.593019'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -3287,7 +3287,7 @@ VALUES (
   '{"name": "VATAMIN", "display_name": "VATAMIN", "about": "@vava_kfl", "website": "https://instagram.com/vava_kfl", "nip05": "VATAMIN@divine.video"}',
   '2025-10-13T19:01:05.000',
   '8acd9f8d244fc569b59abe61021f26236cb44754cca5c0e88c4a7fb23fcf54cf',
-  '2025-11-10T22:35:07.872682'
+  '2025-11-10T22:58:47.593039'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -3318,7 +3318,7 @@ VALUES (
   '{"name": "ThaAvonKing", "display_name": "ThaAvonKing", "about": "Vine creator @ThaAvonKing", "website": "https://vine.co/u/ThaAvonKing", "nip05": "ThaAvonKing@divine.video"}',
   '2025-10-13T19:00:42.000',
   '6fd49d54a5951e8437310af94a827d63e10c4f63bd66f2f29660180b35768b7c',
-  '2025-11-10T22:35:07.872695'
+  '2025-11-10T22:58:47.593059'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -3349,7 +3349,7 @@ VALUES (
   '{"name": "IG: blurrylane", "display_name": "IG: blurrylane", "about": "T W E N T Y O N E P I L O T S", "website": "https://vine.co/u/IG: blurrylane", "nip05": "IG: blurrylane@divine.video", "location": "Instagram \ud83d\udc49\ud83c\udffb blurrylane"}',
   '2025-10-13T19:00:27.000',
   '3d672a63d978e0149e35e51470305915061da0c331d6e8e8d25a355a7b8e785a',
-  '2025-11-10T22:35:07.872709'
+  '2025-11-10T22:58:47.593079'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -3380,7 +3380,7 @@ VALUES (
   '{"name": "\u3042\u3084\u304b", "display_name": "\u3042\u3084\u304b", "about": "love music,singing...and Yuzuru \u0295 \u2022\u0301\u0608\u2022\u0300 \u208e", "website": "https://vine.co/u/\u3042\u3084\u304b", "nip05": "\u3042\u3084\u304b@divine.video", "location": "Japan Myzk\u30fcFkok"}',
   '2025-10-13T18:59:00.000',
   'b64589a11e740f828a30688a805353062dad005b655fc786971750b0f0b4eaf6',
-  '2025-11-10T22:35:07.872726'
+  '2025-11-10T22:58:47.593098'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -3411,7 +3411,7 @@ VALUES (
   '{"name": "Jhonrachid", "display_name": "Jhonrachid", "about": "6 secondes c''est rien mais dans les death row c''est \u00e9norme www.zambard.com               Twitter : @JHONRACHID.      www.youtube.com/user/ZAMBARDLAND", "website": "https://youtube.com/@ZAMBARDLAND", "nip05": "Jhonrachid@divine.video"}',
   '2025-10-13T18:58:42.000',
   'cfffd43dab97bfe3d36973299be641113df4ea17e488839c11254d25f1e45d61',
-  '2025-11-10T22:35:07.872753'
+  '2025-11-10T22:58:47.593130'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -3442,7 +3442,7 @@ VALUES (
   '{"name": "DNCE", "display_name": "DNCE", "about": "Follow my Instagram @joeadamjonas", "website": "https://instagram.com/joeadamjonas", "nip05": "DNCE@divine.video"}',
   '2025-10-13T18:58:32.000',
   'd0421071d2ca8329fdfa58eee64ae1fd586dfa1d9be11e3568284a5a93009cf9',
-  '2025-11-10T22:35:07.872768'
+  '2025-11-10T22:58:47.593192'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -3473,7 +3473,7 @@ VALUES (
   '{"name": "Jackillynn (Layla Taliborn)", "display_name": "Jackillynn (Layla Taliborn)", "about": "Vine creator @Jackillynn (Layla Taliborn)", "website": "https://vine.co/u/Jackillynn (Layla Taliborn)", "nip05": "Jackillynn (Layla Taliborn)@divine.video"}',
   '2025-10-13T18:58:03.000',
   '53c810de15fffe917938166a1d4be809adb20be86434dfd0fc4eebc7042ba0ba',
-  '2025-11-10T22:35:07.872782'
+  '2025-11-10T22:58:47.593225'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -3504,7 +3504,7 @@ VALUES (
   '{"name": "Anfield HQ", "display_name": "Anfield HQ", "about": "Vine creator @Anfield HQ", "website": "https://vine.co/u/Anfield HQ", "nip05": "Anfield HQ@divine.video"}',
   '2025-10-13T18:57:45.000',
   '519cacf7cb2d6efc8e90577d40100fac732a7187fc5f5f62b0f73abb33d484b0',
-  '2025-11-10T22:35:07.872795'
+  '2025-11-10T22:58:47.593241'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -3535,7 +3535,7 @@ VALUES (
   '{"name": "Yorki", "display_name": "Yorki", "about": "Vine creator @Yorki", "website": "https://vine.co/u/Yorki", "nip05": "Yorki@divine.video"}',
   '2025-10-13T18:55:42.000',
   'fee1cdac76aaeaaf08e47e11e403186eb9fe268bf60a5cbd177d2224ffe6ebc7',
-  '2025-11-10T22:35:07.872810'
+  '2025-11-10T22:58:47.593257'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -3566,7 +3566,7 @@ VALUES (
   '{"name": "\u3089 \u3044 \u3080 \u3002", "display_name": "\u3089 \u3044 \u3080 \u3002", "about": "Vine creator @\u3089 \u3044 \u3080 \u3002", "website": "https://vine.co/u/\u3089 \u3044 \u3080 \u3002", "nip05": "\u3089 \u3044 \u3080 \u3002@divine.video"}',
   '2025-10-13T18:55:17.000',
   'c6c1250b00e467d53cc4b921421ceb8ad429b6031218c0432753fa10293ee959',
-  '2025-11-10T22:35:07.872825'
+  '2025-11-10T22:58:47.593308'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -3597,7 +3597,7 @@ VALUES (
   '{"name": "Felix Larsen Nilsson", "display_name": "Felix Larsen Nilsson", "about": "Vine creator @Felix Larsen Nilsson", "website": "https://vine.co/u/Felix Larsen Nilsson", "nip05": "Felix Larsen Nilsson@divine.video"}',
   '2025-10-13T18:54:45.000',
   '9ba8102805adbeed3685a90c0b7df171d662203a0db17a16cbca890d24e3ff60',
-  '2025-11-10T22:35:07.872839'
+  '2025-11-10T22:58:47.593326'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -3628,7 +3628,7 @@ VALUES (
   '{"name": "jumana", "display_name": "jumana", "about": "Vine creator @jumana", "website": "https://vine.co/u/jumana", "nip05": "jumana@divine.video", "location": "almadina"}',
   '2025-10-13T18:54:26.000',
   'e1f523fcdf278afb3a097f42f106989e8a3785e7972465b360b21703f05270f4',
-  '2025-11-10T22:35:07.872852'
+  '2025-11-10T22:58:47.593340'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -3659,7 +3659,7 @@ VALUES (
   '{"name": "Yinka | MrKookies\u2120", "display_name": "Yinka | MrKookies\u2120", "about": "Vine creator @Yinka | MrKookies\u2120", "website": "https://vine.co/u/Yinka | MrKookies\u2120", "nip05": "Yinka | MrKookies\u2120@divine.video"}',
   '2025-10-13T18:54:20.000',
   '50641d44b99cc77e549b55f9722da14676caa9993ffecbf7b917ea557b9d24e8',
-  '2025-11-10T22:35:07.872866'
+  '2025-11-10T22:58:47.593355'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -3690,7 +3690,7 @@ VALUES (
   '{"name": "Laura Daleman", "display_name": "Laura Daleman", "about": "Vine creator @Laura Daleman", "website": "https://vine.co/u/Laura Daleman", "nip05": "Laura Daleman@divine.video"}',
   '2025-10-13T18:54:14.000',
   '960d39f9f595948e9c29863b76f5bd8936d73bbf9ffa68e42f90023f82d914af',
-  '2025-11-10T22:35:07.872878'
+  '2025-11-10T22:58:47.593368'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -3721,7 +3721,7 @@ VALUES (
   '{"name": "\u2661\u2661ROCO\u2661\u2661", "display_name": "\u2661\u2661ROCO\u2661\u2661", "about": "Vine creator @\u2661\u2661ROCO\u2661\u2661", "website": "https://vine.co/u/\u2661\u2661ROCO\u2661\u2661", "nip05": "\u2661\u2661ROCO\u2661\u2661@divine.video"}',
   '2025-10-13T18:54:08.000',
   '255eb9b029e883a2b6cecf7a282b8e280deb9c3105e270a4552631db9d27075e',
-  '2025-11-10T22:35:07.872892'
+  '2025-11-10T22:58:47.593382'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -3752,7 +3752,7 @@ VALUES (
   '{"name": "cursed", "display_name": "cursed", "about": "Vine creator @cursed", "website": "https://vine.co/u/cursed", "nip05": "cursed@divine.video"}',
   '2025-10-13T18:53:52.000',
   'ae6589c8311b3f7a8d3b5188ffaa007c36b36d935270ae680e0ebee24ea30666',
-  '2025-11-10T22:35:07.872905'
+  '2025-11-10T22:58:47.593395'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -3783,7 +3783,7 @@ VALUES (
   '{"name": "ig: JokersGirl23", "display_name": "ig: JokersGirl23", "about": "Sexually attracted to a psychopathic clown. Fcp", "website": "https://vine.co/u/ig: JokersGirl23", "nip05": "ig: JokersGirl23@divine.video"}',
   '2025-10-13T18:51:54.000',
   'e046f09ea64e9aa4f026b54250b130c3232e47cf3876d008a1b469c471df3d88',
-  '2025-11-10T22:35:07.872919'
+  '2025-11-10T22:58:47.593409'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -3814,7 +3814,7 @@ VALUES (
   '{"name": "\u306f\u3068\u3074\u30fc", "display_name": "\u306f\u3068\u3074\u30fc", "about": "Vine creator @\u306f\u3068\u3074\u30fc", "website": "https://vine.co/u/\u306f\u3068\u3074\u30fc", "nip05": "\u306f\u3068\u3074\u30fc@divine.video"}',
   '2025-10-13T18:51:41.000',
   'bfaed9ce91ca9cf5ec34629a993f0f8b5b641fd10760ba5821181dd3d843bbfc',
-  '2025-11-10T22:35:07.872932'
+  '2025-11-10T22:58:47.593423'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -3845,7 +3845,7 @@ VALUES (
   '{"name": "aomine | ig: aominevine", "display_name": "aomine | ig: aominevine", "about": "the only one who can beat me is", "website": "https://vine.co/u/aomine | ig: aominevine", "nip05": "aomine | ig: aominevine@divine.video"}',
   '2025-10-13T18:50:51.000',
   '6f5ae039a1a790922332cc547e33332eed09219507d71a87679476bfb07e408c',
-  '2025-11-10T22:35:07.872946'
+  '2025-11-10T22:58:47.593436'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -3876,7 +3876,7 @@ VALUES (
   '{"name": "EDGY VINES", "display_name": "EDGY VINES", "about": "Vine creator @EDGY VINES", "website": "https://vine.co/u/EDGY VINES", "nip05": "EDGY VINES@divine.video"}',
   '2025-10-13T18:50:30.000',
   '63e9da5f8714e46cb79d467045f7c42c0d0decbfd287c008719b772008dbe860',
-  '2025-11-10T22:35:07.872958'
+  '2025-11-10T22:58:47.593449'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -3907,7 +3907,7 @@ VALUES (
   '{"name": "Paigey Cakey", "display_name": "Paigey Cakey", "about": "Vine creator @Paigey Cakey", "website": "https://vine.co/u/Paigey Cakey", "nip05": "Paigey Cakey@divine.video"}',
   '2025-10-13T18:49:46.000',
   '47460c6112053d7c3cdb82f54274c1b278b6d92a72f4c46acd7e4e9772be8926',
-  '2025-11-10T22:35:07.872988'
+  '2025-11-10T22:58:47.593462'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -3938,7 +3938,7 @@ VALUES (
   '{"name": "no way, noah", "display_name": "no way, noah", "about": "YT: NJH | Trusted by young metro | Weekly vines |", "website": "https://youtube.com/@NJH", "nip05": "no way, noah@divine.video"}',
   '2025-10-13T18:49:40.000',
   '88039bddc7a8a8ebd69a3068eaf4671e972b10c4d7467fe216a8cb9006424f4c',
-  '2025-11-10T22:35:07.873005'
+  '2025-11-10T22:58:47.593479'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -3969,7 +3969,7 @@ VALUES (
   '{"name": "csw", "display_name": "csw", "about": "rip vine", "website": "https://vine.co/u/csw", "nip05": "csw@divine.video", "location": "ig: coldboo"}',
   '2025-10-13T18:48:46.000',
   'a85e3614d496ff67375d757a0d5db8eb5c277e6963af8370700c2d8d10340896',
-  '2025-11-10T22:35:07.873018'
+  '2025-11-10T22:58:47.593494'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -4000,7 +4000,7 @@ VALUES (
   '{"name": "Brian", "display_name": "Brian", "about": "I KNO NIGGAZ HATE ME THATZ Y I KEEP A GUN \ud83d\udd2b\ud83d\udd2b\ud83d\udd2b\ud83d\udd2b", "website": "https://vine.co/u/Brian", "nip05": "Brian@divine.video", "location": "Detroit,Mi"}',
   '2025-10-13T18:48:30.000',
   'e0217244137c28fa9d456ef7ff7bb2d77fc3d834de3a3ce254128ec3e2d4f820',
-  '2025-11-10T22:35:07.873034'
+  '2025-11-10T22:58:47.593544'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -4031,7 +4031,7 @@ VALUES (
   '{"name": "zelda", "display_name": "zelda", "about": "Vine creator @zelda", "website": "https://vine.co/u/zelda", "nip05": "zelda@divine.video"}',
   '2025-10-13T18:48:20.000',
   'f809055a92d793ae5331f171a90b54d6db1741c31077d107741fc381d7ddf15e',
-  '2025-11-10T22:35:07.873047'
+  '2025-11-10T22:58:47.593566'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -4062,7 +4062,7 @@ VALUES (
   '{"name": "skins uk edits", "display_name": "skins uk edits", "about": "Vine creator @skins uk edits", "website": "https://vine.co/u/skins uk edits", "nip05": "skins uk edits@divine.video"}',
   '2025-10-13T18:48:13.000',
   '0012cb9ab826160e8d6c4ce3425fc1f38a0f3a277c131810f0990926e2b7e21b',
-  '2025-11-10T22:35:07.873059'
+  '2025-11-10T22:58:47.593580'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -4093,7 +4093,7 @@ VALUES (
   '{"name": "alexxa dolan", "display_name": "alexxa dolan", "about": "eth x19 x1 gray x1 x1", "website": "https://vine.co/u/alexxa dolan", "nip05": "alexxa dolan@divine.video"}',
   '2025-10-13T18:48:08.000',
   '675d5c3831b86f3692240466ac9596180f9854cea58ffd18e29e9bfc87b95e89',
-  '2025-11-10T22:35:07.873073'
+  '2025-11-10T22:58:47.593594'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -4124,7 +4124,7 @@ VALUES (
   '{"name": "biebizzle\u265b", "display_name": "biebizzle\u265b", "about": "FINALLY SAW MY EVERYTHING at 10/02/16", "website": "https://vine.co/u/biebizzle\u265b", "nip05": "biebizzle\u265b@divine.video", "location": "Justin liked my vine 2/2/15"}',
   '2025-10-13T18:47:18.000',
   '5b7325949ef9d063b1fc481feb318660116ef0f842448052c24ab7cd360d3a04',
-  '2025-11-10T22:35:07.873088'
+  '2025-11-10T22:58:47.593612'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -4155,7 +4155,7 @@ VALUES (
   '{"name": "ifntjeon", "display_name": "ifntjeon", "about": "Vine creator @ifntjeon", "website": "https://vine.co/u/ifntjeon", "nip05": "ifntjeon@divine.video"}',
   '2025-10-13T18:47:01.000',
   '9368723158f0f6d90d443edf3d85121dde3ac0660cf29adb8b226a4905d6cc6a',
-  '2025-11-10T22:35:07.873101'
+  '2025-11-10T22:58:47.593625'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -4186,7 +4186,7 @@ VALUES (
   '{"name": "West Ham Vines", "display_name": "West Ham Vines", "about": "Vine creator @West Ham Vines", "website": "https://vine.co/u/West Ham Vines", "nip05": "West Ham Vines@divine.video"}',
   '2025-10-13T18:46:33.000',
   'c85f68aa671257f6b82b167cc48c9133039d76e9f2c8adecd75c4960df14729a',
-  '2025-11-10T22:35:07.873114'
+  '2025-11-10T22:58:47.593638'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -4217,7 +4217,7 @@ VALUES (
   '{"name": "Moreamex Edits | active", "display_name": "Moreamex Edits | active", "about": "Computer editor ... I use svp 13 and I ship Lucaya & Riarkle started: 8/11/15", "website": "https://vine.co/u/Moreamex Edits | active", "nip05": "Moreamex Edits | active@divine.video"}',
   '2025-10-13T18:46:13.000',
   'f0fc43b7519a16886edf7a6fae9dfef7d4f80f5e923bf14e75d11cb42b74864e',
-  '2025-11-10T22:35:07.873128'
+  '2025-11-10T22:58:47.593649'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -4248,7 +4248,7 @@ VALUES (
   '{"name": "\u062f. \u0633\u062a\u064a\u0641\u0627\u0646\u0648 \u24eb", "display_name": "\u062f. \u0633\u062a\u064a\u0641\u0627\u0646\u0648 \u24eb", "about": "Vine creator @\u062f. \u0633\u062a\u064a\u0641\u0627\u0646\u0648 \u24eb", "website": "https://vine.co/u/\u062f. \u0633\u062a\u064a\u0641\u0627\u0646\u0648 \u24eb", "nip05": "\u062f. \u0633\u062a\u064a\u0641\u0627\u0646\u0648 \u24eb@divine.video"}',
   '2025-10-13T18:45:48.000',
   'e4900f2555656e78e153f401cc0d003677b0fa2ee598a53f03e6316856bb4131',
-  '2025-11-10T22:35:07.873144'
+  '2025-11-10T22:58:47.593668'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -4279,7 +4279,7 @@ VALUES (
   '{"name": "Instagram : @FreddyGladieux", "display_name": "Instagram : @FreddyGladieux", "about": "Instagram/Snapchat : freddygladieux", "website": "https://snapchat.com/add/freddygladieux", "nip05": "Instagram : @FreddyGladieux@divine.video", "location": "Paris"}',
   '2025-10-13T18:44:54.000',
   'bac505c0040d8951102300e9023b3d2ff4931cc75d93378b9faf6dec73635863',
-  '2025-11-10T22:35:07.873196'
+  '2025-11-10T22:58:47.593682'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -4310,7 +4310,7 @@ VALUES (
   '{"name": "\u2b50\u2202\u028a\u2113\u0e5b\u0454\u2b50", "display_name": "\u2b50\u2202\u028a\u2113\u0e5b\u0454\u2b50", "about": "Vine creator @\u2b50\u2202\u028a\u2113\u0e5b\u0454\u2b50", "website": "https://vine.co/u/\u2b50\u2202\u028a\u2113\u0e5b\u0454\u2b50", "nip05": "\u2b50\u2202\u028a\u2113\u0e5b\u0454\u2b50@divine.video"}',
   '2025-10-13T18:43:59.000',
   '060dce8fe7ccb74651d15ee93b10fbf30cb7dc840be88c4adb6a68462e6b8f25',
-  '2025-11-10T22:35:07.873211'
+  '2025-11-10T22:58:47.593698'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -4341,7 +4341,7 @@ VALUES (
   '{"name": "Weest", "display_name": "Weest", "about": "Find me spending half an hour on a six second video for a few people to watch it a couple of times", "website": "https://vine.co/u/Weest", "nip05": "Weest@divine.video"}',
   '2025-10-13T18:43:39.000',
   '5475fab3cc83f6cbb4ef81beaaddffab2ebde39a50cee9b626a40d44cd57c24e',
-  '2025-11-10T22:35:07.873222'
+  '2025-11-10T22:58:47.593712'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -4372,7 +4372,7 @@ VALUES (
   '{"name": "\ub354\uc720\ub2c8\ucf58", "display_name": "\ub354\uc720\ub2c8\ucf58", "about": "Vine creator @\ub354\uc720\ub2c8\ucf58", "website": "https://vine.co/u/\ub354\uc720\ub2c8\ucf58", "nip05": "\ub354\uc720\ub2c8\ucf58@divine.video"}',
   '2025-10-13T18:43:12.000',
   '86bb716f167de5fd62c0ed7fc6827e2a6751c4f00367f0cf3508b12091503b05',
-  '2025-11-10T22:35:07.873235'
+  '2025-11-10T22:58:47.593727'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -4403,7 +4403,7 @@ VALUES (
   '{"name": "Audix | iFunny", "display_name": "Audix | iFunny", "about": "banned at 1.7k get me back p l s", "website": "https://vine.co/u/Audix | iFunny", "nip05": "Audix | iFunny@divine.video"}',
   '2025-10-13T19:24:22.000',
   '97a4fd335b1782ddd8d6168b6cde413a09feb1cf4d0a0ef8d54e9077aa4507cc',
-  '2025-11-10T22:35:07.873245'
+  '2025-11-10T22:58:47.593740'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -4434,7 +4434,7 @@ VALUES (
   '{"name": "\uc12d\uc528321\u00b0C", "display_name": "\uc12d\uc528321\u00b0C", "about": "Vine creator @\uc12d\uc528321\u00b0C", "website": "https://vine.co/u/\uc12d\uc528321\u00b0C", "nip05": "\uc12d\uc528321\u00b0C@divine.video"}',
   '2025-10-13T19:24:10.000',
   '327e5157685d7857a3a6202232f667ee847fb61ac5b99c893a59ab348fbf8c8a',
-  '2025-11-10T22:35:07.873258'
+  '2025-11-10T22:58:47.593756'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -4465,7 +4465,7 @@ VALUES (
   '{"name": "Ivanovich", "display_name": "Ivanovich", "about": "Vine creator @Ivanovich", "website": "https://vine.co/u/Ivanovich", "nip05": "Ivanovich@divine.video"}',
   '2025-10-13T19:24:02.000',
   '08db563758c84ac992b0818bffc85d8226cdaa04bebb062c5b9b9f456a0d33aa',
-  '2025-11-10T22:35:07.873268'
+  '2025-11-10T22:58:47.593769'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -4496,7 +4496,7 @@ VALUES (
   '{"name": "Antonio Brown", "display_name": "Antonio Brown", "about": "Vine creator @Antonio Brown", "website": "https://vine.co/u/Antonio Brown", "nip05": "Antonio Brown@divine.video", "location": "Elyria, OH"}',
   '2025-10-13T19:23:56.000',
   '36d74c4dc23dc2020166a3a6a8d59d397fa24a3dbb71796a1bc1e7de7844dd78',
-  '2025-11-10T22:35:07.873280'
+  '2025-11-10T22:58:47.593783'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -4527,7 +4527,7 @@ VALUES (
   '{"name": "lifeofskylynn", "display_name": "lifeofskylynn", "about": "Twitter - @skylynninfo email- lifeofskylynn@gmail SkylynnInquiries@gmail.com http://www.goodluckfromsky.com/. https://youtu.be/6goMjseKvgA", "website": "https://instagram.com/skylynninfo", "nip05": "lifeofskylynn@divine.video", "location": "instagram - lifeofskylynn"}',
   '2025-10-13T19:23:37.000',
   'c49c3e5d5e4568ef0f02bf870654fde29abb074622ce8b6f6658cef0555856b2',
-  '2025-11-10T22:35:07.873291'
+  '2025-11-10T22:58:47.593797'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -4558,7 +4558,7 @@ VALUES (
   '{"name": "Neymar Vines", "display_name": "Neymar Vines", "about": "Vine creator @Neymar Vines", "website": "https://vine.co/u/Neymar Vines", "nip05": "Neymar Vines@divine.video"}',
   '2025-10-13T19:23:29.000',
   'aaa05c1ef79f1fffc712f7dcb9b294dd2fa3e3ea0b3df2433138865fa6f1e31f',
-  '2025-11-10T22:35:07.873301'
+  '2025-11-10T22:58:47.593809'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -4589,7 +4589,7 @@ VALUES (
   '{"name": "Morpinee", "display_name": "Morpinee", "about": "The more I live the more I realise that I''m okay with nodding out to death with some oxycodone and heroin flowing in my veins", "website": "https://vine.co/u/Morpinee", "nip05": "Morpinee@divine.video", "location": "Jacksonville Beach, FL"}',
   '2025-10-13T19:23:23.000',
   '4757af4c527562682a0833263b4b26670ab858af53ca0b1c4a6e387c9f0fc4c3',
-  '2025-11-10T22:35:07.873322'
+  '2025-11-10T22:58:47.593835'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -4620,7 +4620,7 @@ VALUES (
   '{"name": "eleven''s eggos", "display_name": "eleven''s eggos", "about": "m\u0336a\u0336t\u0336t\u0336e\u0336r\u0336s\u0336", "website": "https://vine.co/u/eleven''s eggos", "nip05": "eleven''s eggos@divine.video"}',
   '2025-10-13T19:23:03.000',
   'db8470f369453a72f36a4252376cf1d5a678fd10575417ec9696d0430839d22d',
-  '2025-11-10T22:35:07.873345'
+  '2025-11-10T22:58:47.593864'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -4651,7 +4651,7 @@ VALUES (
   '{"name": "DMV Ravers\u2122", "display_name": "DMV Ravers\u2122", "about": "Bringing you the sickest EDM drops and shows from the DMV area. Direct Message or dmvravers.official@gmail.com for inquiries.", "website": "https://instagram.com/gmail.com", "nip05": "DMV Ravers\u2122@divine.video", "location": "DC/Maryland/Virginia \ud83c\uddfa\ud83c\uddf8"}',
   '2025-10-13T19:22:28.000',
   'abcb29fb44d89339ba5197bb8e41cff9b644c4434c57def2c2fd507d0aa2ad1d',
-  '2025-11-10T22:35:07.873359'
+  '2025-11-10T22:58:47.593879'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -4684,7 +4684,7 @@ little busters! enthusiast',
   '{"name": "supreme lord medliinvas", "display_name": "supreme lord medliinvas", "about": "https://www.youtube.com/c/medliinvas\nneou! | supreme | lord\nlittle busters! enthusiast", "website": "https://youtube.com/@medliinvas", "nip05": "supreme lord medliinvas@divine.video", "location": "tommy - 34k osu!"}',
   '2025-10-13T19:22:04.000',
   '21fb83833a3523705aa1a9e01e324ee98e72d076c170487fd868bc7874228f4e',
-  '2025-11-10T22:35:07.873371'
+  '2025-11-10T22:58:47.593895'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -4715,7 +4715,7 @@ VALUES (
   '{"name": "brokenxhearts", "display_name": "brokenxhearts", "about": "addie\ud83d\udc99\ud83c\udf39", "website": "https://vine.co/u/brokenxhearts", "nip05": "brokenxhearts@divine.video"}',
   '2025-10-13T19:21:49.000',
   '7d6969bf9bac5cdf5f9ea9ffde56941b3b15e8be105b2bf3ab999e17d2ef8fdc',
-  '2025-11-10T22:35:07.873382'
+  '2025-11-10T22:58:47.593910'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -4746,7 +4746,7 @@ VALUES (
   '{"name": "A.S.D.F", "display_name": "A.S.D.F", "about": "Vine creator @A.S.D.F", "website": "https://vine.co/u/A.S.D.F", "nip05": "A.S.D.F@divine.video"}',
   '2025-10-13T19:21:03.000',
   '3af43b658adf836565c44c108877713aa05c285879ee28ea1b04b24a90e7f94b',
-  '2025-11-10T22:35:07.873392'
+  '2025-11-10T22:58:47.593922'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -4777,7 +4777,7 @@ VALUES (
   '{"name": "Tom VanHaaren", "display_name": "Tom VanHaaren", "about": "Vine creator @Tom VanHaaren", "website": "https://vine.co/u/Tom VanHaaren", "nip05": "Tom VanHaaren@divine.video"}',
   '2025-10-13T19:19:55.000',
   '3c3bb22db974586faee288a8d65b76ad11871d8def8d0e833c7daaf0d08cf1af',
-  '2025-11-10T22:35:07.873404'
+  '2025-11-10T22:58:47.593938'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -4808,7 +4808,7 @@ VALUES (
   '{"name": "( \u0361\u00b0 \u035c\u0296 \u0361\u00b0)", "display_name": "( \u0361\u00b0 \u035c\u0296 \u0361\u00b0)", "about": "I dont have a life", "website": "https://vine.co/u/( \u0361\u00b0 \u035c\u0296 \u0361\u00b0)", "nip05": "( \u0361\u00b0 \u035c\u0296 \u0361\u00b0)@divine.video", "location": "unicorn"}',
   '2025-10-13T19:19:49.000',
   '80def32626a51dd342408545eacde144ce05cf015837a2dade8bdf90449e17a6',
-  '2025-11-10T22:35:07.873418'
+  '2025-11-10T22:58:47.593956'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -4839,7 +4839,7 @@ VALUES (
   '{"name": "Mat\u00e9o", "display_name": "Mat\u00e9o", "about": "Vine creator @Mat\u00e9o", "website": "https://vine.co/u/Mat\u00e9o", "nip05": "Mat\u00e9o@divine.video"}',
   '2025-10-13T19:18:54.000',
   'bc754498095c67989fd0b7cc1741bae68993d3db3abb7c9c8ecb1086943d9ebe',
-  '2025-11-10T22:35:07.873430'
+  '2025-11-10T22:58:47.593971'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -4870,7 +4870,7 @@ VALUES (
   '{"name": "Inmy7mind", "display_name": "Inmy7mind", "about": "Vine creator @Inmy7mind", "website": "https://vine.co/u/Inmy7mind", "nip05": "Inmy7mind@divine.video"}',
   '2025-10-13T19:18:40.000',
   '27d42fd36344cee239dd80fba1be78cf34b33bbfc31b2a5414661975f46f0b58',
-  '2025-11-10T22:35:07.873439'
+  '2025-11-10T22:58:47.593984'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -4901,7 +4901,7 @@ VALUES (
   '{"name": "emilyxa vol. 2", "display_name": "emilyxa vol. 2", "about": "Vine creator @emilyxa vol. 2", "website": "https://vine.co/u/emilyxa vol. 2", "nip05": "emilyxa vol. 2@divine.video"}',
   '2025-10-13T19:18:34.000',
   'ec8cbb9722e48fc74d473354e47292ba7177b836aa8b0a178155c536fbed4f60',
-  '2025-11-10T22:35:07.873449'
+  '2025-11-10T22:58:47.593996'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -4932,7 +4932,7 @@ VALUES (
   '{"name": "assllie", "display_name": "assllie", "about": "fight me pls", "website": "https://vine.co/u/assllie", "nip05": "assllie@divine.video", "location": "uranus"}',
   '2025-10-13T19:18:28.000',
   '03cfda67a8a9a3e8c5ffd8de73eac52030fdd19e51e33edc1187cffe2b0ccba7',
-  '2025-11-10T22:35:07.873459'
+  '2025-11-10T22:58:47.594009'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -4963,7 +4963,7 @@ VALUES (
   '{"name": "taehyunged", "display_name": "taehyunged", "about": "multifandom", "website": "https://vine.co/u/taehyunged", "nip05": "taehyunged@divine.video"}',
   '2025-10-13T19:17:40.000',
   '670713fe42f6037a965a8e88f543c240e77e836fae1857d041ae89dd56aa07cb',
-  '2025-11-10T22:35:07.873469'
+  '2025-11-10T22:58:47.594021'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -4994,7 +4994,7 @@ VALUES (
   '{"name": "danger zone", "display_name": "danger zone", "about": "Vine creator @danger zone", "website": "https://vine.co/u/danger zone", "nip05": "danger zone@divine.video"}',
   '2025-10-13T19:17:22.000',
   '95c1e2ca3c74c40bd5ad64e16889464b6056f5f7bb06d3f8d3767b7884fa4795',
-  '2025-11-10T22:35:07.873478'
+  '2025-11-10T22:58:47.594033'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -5028,7 +5028,7 @@ Quality over Quantity',
   '{"name": "Btwlb", "display_name": "Btwlb", "about": "\u01b8\u0335\u0321\u04dc\u0335\u0328\u0304\u01b7\nSharing with people I Love\nPsychologic Edits & Short Clips\nQuality over Quantity", "website": "https://vine.co/u/Btwlb", "nip05": "Btwlb@divine.video", "location": "2013-2016"}',
   '2025-10-13T19:15:39.000',
   '5cf1e1b8fe097847eb8c51dabaf2431f4e30610b8eb268fc1e770320478c0ad6',
-  '2025-11-10T22:35:07.873490'
+  '2025-11-10T22:58:47.594048'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -5059,7 +5059,7 @@ VALUES (
   '{"name": "hesap", "display_name": "hesap", "about": "Vine creator @hesap", "website": "https://vine.co/u/hesap", "nip05": "hesap@divine.video"}',
   '2025-10-13T19:15:26.000',
   'b28e555d3fecbade6f23830b7dd262d81dcfc229c861770aaf5cbd3adcc0ebb2',
-  '2025-11-10T22:35:07.873499'
+  '2025-11-10T22:58:47.594060'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -5090,7 +5090,7 @@ VALUES (
   '{"name": "Abadaba\u3072", "display_name": "Abadaba\u3072", "about": "Instagram: Mr.Estep \ud83d\ude0e\ud83d\udcaf Twitter & Snapchat: Lilg_ballin \ud83d\ude0e\ud83d\udcaf", "website": "https://instagram.com/Mr.Estep", "nip05": "Abadaba\u3072@divine.video", "location": "PG County MD"}',
   '2025-10-13T19:14:22.000',
   'a0d235e300f196cb7f7a389aeeefd473c04f0376ae88f3f3c844a9bf522d79dd',
-  '2025-11-10T22:35:07.873512'
+  '2025-11-10T22:58:47.594077'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -5121,7 +5121,7 @@ VALUES (
   '{"name": "SodiumChloride", "display_name": "SodiumChloride", "about": "Vine creator @SodiumChloride", "website": "https://vine.co/u/SodiumChloride", "nip05": "SodiumChloride@divine.video"}',
   '2025-10-13T19:14:08.000',
   '9cfb4ae546dda888948d576342576c273365e9732b9f3f2f6f2ffa9d29782cf7',
-  '2025-11-10T22:35:07.873522'
+  '2025-11-10T22:58:47.594089'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -5152,7 +5152,7 @@ VALUES (
   '{"name": "Reid Wiseman", "display_name": "Reid Wiseman", "about": "Vine creator @Reid Wiseman", "website": "https://vine.co/u/Reid Wiseman", "nip05": "Reid Wiseman@divine.video"}',
   '2025-10-13T19:13:54.000',
   '153fed4a8de9ca83111ca1d0740769a28ff7e693df94c1f54ac7359eb4c7843b',
-  '2025-11-10T22:35:07.873532'
+  '2025-11-10T22:58:47.594102'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -5183,7 +5183,7 @@ VALUES (
   '{"name": "The Famous Aberdeen", "display_name": "The Famous Aberdeen", "about": "Vine creator @The Famous Aberdeen", "website": "https://vine.co/u/The Famous Aberdeen", "nip05": "The Famous Aberdeen@divine.video"}',
   '2025-10-13T19:13:48.000',
   '9a3f8453dc4846efa61cf807aed0c2008a9f8adc04ac31a288c7854a24af61bf',
-  '2025-11-10T22:35:07.873542'
+  '2025-11-10T22:58:47.594114'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -5214,7 +5214,7 @@ VALUES (
   '{"name": "YT: lazzy of eden", "display_name": "YT: lazzy of eden", "about": "Vine creator @YT: lazzy of eden", "website": "https://vine.co/u/YT: lazzy of eden", "nip05": "YT: lazzy of eden@divine.video", "location": "gods of eden"}',
   '2025-10-13T19:13:23.000',
   '567758fb5b657da7a392773bbe7a65f47952f9b41ffee5ab282fb3558f4fdc67',
-  '2025-11-10T22:35:07.873552'
+  '2025-11-10T22:58:47.594127'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -5245,7 +5245,7 @@ VALUES (
   '{"name": "\u85e4\u30f6\u8c37\u7236\u3055\u3093", "display_name": "\u85e4\u30f6\u8c37\u7236\u3055\u3093", "about": "Vine creator @\u85e4\u30f6\u8c37\u7236\u3055\u3093", "website": "https://vine.co/u/\u85e4\u30f6\u8c37\u7236\u3055\u3093", "nip05": "\u85e4\u30f6\u8c37\u7236\u3055\u3093@divine.video"}',
   '2025-10-13T19:12:25.000',
   'c01cc6f6313592e22934c9fb83d016217cdef6757f53ea28910f6c14ab9af3f1',
-  '2025-11-10T22:35:07.873565'
+  '2025-11-10T22:58:47.594143'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -5276,7 +5276,7 @@ VALUES (
   '{"name": "Sean Clare", "display_name": "Sean Clare", "about": "Vine creator @Sean Clare", "website": "https://vine.co/u/Sean Clare", "nip05": "Sean Clare@divine.video", "location": "813"}',
   '2025-10-13T19:11:27.000',
   '0ff188dce7f70d2a9a89ea082262ba1156286c09f083d9cfeaef2baf8a51a87e',
-  '2025-11-10T22:35:07.873577'
+  '2025-11-10T22:58:47.594155'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -5307,7 +5307,7 @@ VALUES (
   '{"name": "JJ Buck", "display_name": "JJ Buck", "about": "Vine creator @JJ Buck", "website": "https://vine.co/u/JJ Buck", "nip05": "JJ Buck@divine.video"}',
   '2025-10-13T19:11:08.000',
   'a3344911c5714e333857fac09584ca8e88dfa98d64adbae6d5028c973156fe83',
-  '2025-11-10T22:35:07.873587'
+  '2025-11-10T22:58:47.594167'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -5338,7 +5338,7 @@ VALUES (
   '{"name": "Shining Motion", "display_name": "Shining Motion", "about": "Vine creator @Shining Motion", "website": "https://vine.co/u/Shining Motion", "nip05": "Shining Motion@divine.video"}',
   '2025-10-13T19:10:37.000',
   '20c5c5b19beb04dfb2436e51c42d42afa56fc205205aa23057514326f90d0d56',
-  '2025-11-10T22:35:07.873596'
+  '2025-11-10T22:58:47.594179'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -5369,7 +5369,7 @@ VALUES (
   '{"name": "\ubc0d\ubc0d\ubc0d", "display_name": "\ubc0d\ubc0d\ubc0d", "about": "Vine creator @\ubc0d\ubc0d\ubc0d", "website": "https://vine.co/u/\ubc0d\ubc0d\ubc0d", "nip05": "\ubc0d\ubc0d\ubc0d@divine.video"}',
   '2025-10-13T19:10:31.000',
   '079bd56dc8369e6d26654f56fd3bb059070e95419e7b2aa9e89c694cb6808f2d',
-  '2025-11-10T22:35:07.873608'
+  '2025-11-10T22:58:47.594193'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -5400,7 +5400,7 @@ VALUES (
   '{"name": "Jerry Maher", "display_name": "Jerry Maher", "about": "Vine creator @Jerry Maher", "website": "https://vine.co/u/Jerry Maher", "nip05": "Jerry Maher@divine.video"}',
   '2025-10-13T19:10:07.000',
   'd7294da860f194c580d402f54349ba826c008dc2fa121739e504851e2c352bb3',
-  '2025-11-10T22:35:07.873618'
+  '2025-11-10T22:58:47.594206'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -5431,7 +5431,7 @@ VALUES (
   '{"name": "Isadora", "display_name": "Isadora", "about": "Vine creator @Isadora", "website": "https://vine.co/u/Isadora", "nip05": "Isadora@divine.video"}',
   '2025-10-13T19:09:51.000',
   'e367da161034d3d8df5ad4c0da2fde5a3562c59cf71af6e8b0709221b23cece4',
-  '2025-11-10T22:35:07.873629'
+  '2025-11-10T22:58:47.594218'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -5462,7 +5462,7 @@ VALUES (
   '{"name": "IG: fangirlofyt", "display_name": "IG: fangirlofyt", "about": "If you want to still follow me when vine is gone, find me @ coub, twitter, instagram, tumblr and youTube with the same user name", "website": "https://youtube.com/@with", "nip05": "IG: fangirlofyt@divine.video", "location": "THERE ARE SPOILERS SO BEWARE"}',
   '2025-10-13T19:09:37.000',
   'a922dc7701383d0740b09376ab5dc75b9492b4cabc2d5873db6edf8fbb7bc213',
-  '2025-11-10T22:35:07.873640'
+  '2025-11-10T22:58:47.594232'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -5493,7 +5493,7 @@ VALUES (
   '{"name": "meiluv", "display_name": "meiluv", "about": "When u can finally edit but vine ded", "website": "https://vine.co/u/meiluv", "nip05": "meiluv@divine.video", "location": "\u2606\u5f61"}',
   '2025-10-13T19:09:31.000',
   '984f9ddd8072fbafdde95fd5572b487c2d7dca508437fd558e9bfd6ce986d737',
-  '2025-11-10T22:35:07.873651'
+  '2025-11-10T22:58:47.594246'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -5524,7 +5524,7 @@ VALUES (
   '{"name": "BadLuckBoeri\u2122", "display_name": "BadLuckBoeri\u2122", "about": "Covering the sports highlights no one bothers to do, Bruins, Redsox, Pats, Celtics, Twitter and Instagram @BadLuckBoeri 21, Protective Agent, SNHU", "website": "https://instagram.com/BadLuckBoeri", "nip05": "BadLuckBoeri\u2122@divine.video", "location": "Somewhere in New England"}',
   '2025-10-13T19:09:24.000',
   'd37a0e052ba899b727321413924a39862ac1a463f23ab558c77b92ecdd04131b',
-  '2025-11-10T22:35:07.873663'
+  '2025-11-10T22:58:47.594262'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -5555,7 +5555,7 @@ VALUES (
   '{"name": "Jean-Jacques Ranu", "display_name": "Jean-Jacques Ranu", "about": "Vine creator @Jean-Jacques Ranu", "website": "https://vine.co/u/Jean-Jacques Ranu", "nip05": "Jean-Jacques Ranu@divine.video"}',
   '2025-10-13T19:08:57.000',
   'f63cdd00f56fc9799d6acc530c1161a4ae62bfc8026cbe1604fc305743a93872',
-  '2025-11-10T22:35:07.873675'
+  '2025-11-10T22:58:47.594273'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -5586,7 +5586,7 @@ VALUES (
   '{"name": "dope daphne edits", "display_name": "dope daphne edits", "about": "hello im daphne and this is my vine", "website": "https://vine.co/u/dope daphne edits", "nip05": "dope daphne edits@divine.video"}',
   '2025-10-13T19:08:13.000',
   'c577e6855813bd2389f3b1bad2b2b7f2df401d3f1e6e1fbc2b550acb8529aab2',
-  '2025-11-10T22:35:07.873688'
+  '2025-11-10T22:58:47.594285'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -5617,7 +5617,7 @@ VALUES (
   '{"name": "B Smyth", "display_name": "B Smyth", "about": "Recording artist B. Smyth IG:TheRealBsmyth", "website": "https://instagram.com/TheRealBsmyth", "nip05": "B Smyth@divine.video"}',
   '2025-10-13T19:07:47.000',
   'fd51a61ba616d710a2e8889f3d81ac91e1d65e484d802e5a504210b0d398923f',
-  '2025-11-10T22:35:07.873699'
+  '2025-11-10T22:58:47.594299'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -5648,7 +5648,7 @@ VALUES (
   '{"name": "DRUMLlNEDUN", "display_name": "DRUMLlNEDUN", "about": "Vine creator @DRUMLlNEDUN", "website": "https://vine.co/u/DRUMLlNEDUN", "nip05": "DRUMLlNEDUN@divine.video"}',
   '2025-10-13T19:07:33.000',
   '599958019d0f3dc6ef999ce5e9d51c672d4e436d686d43bc9ff636106b7018b9',
-  '2025-11-10T22:35:07.873708'
+  '2025-11-10T22:58:47.594311'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -5679,7 +5679,7 @@ VALUES (
   '{"name": "ibeery", "display_name": "ibeery", "about": "Vine creator @ibeery", "website": "https://vine.co/u/ibeery", "nip05": "ibeery@divine.video"}',
   '2025-10-13T19:07:03.000',
   '5e60377328c6f2b94ea9bc04a8f971eb76443302491cf82dad4798ecd933ab23',
-  '2025-11-10T22:35:07.873718'
+  '2025-11-10T22:58:47.594324'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -5710,7 +5710,7 @@ VALUES (
   '{"name": "\u307e\u3042\u3053", "display_name": "\u307e\u3042\u3053", "about": "Vine creator @\u307e\u3042\u3053", "website": "https://vine.co/u/\u307e\u3042\u3053", "nip05": "\u307e\u3042\u3053@divine.video"}',
   '2025-10-13T19:06:38.000',
   'cac803c0025d262b6f9cabdc4b0ee8f59e0bde1b577fbec5aea4f2bc791ab339',
-  '2025-11-10T22:35:07.873729'
+  '2025-11-10T22:58:47.594338'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -5741,7 +5741,7 @@ VALUES (
   '{"name": "Moonbin af", "display_name": "Moonbin af", "about": "\ud83d\udc7d\ud83c\udf65 Moonbin \ud83c\udf65\ud83d\udc7d", "website": "https://vine.co/u/Moonbin af", "nip05": "Moonbin af@divine.video", "location": "July 17th, 2015"}',
   '2025-10-13T19:06:32.000',
   '3e91966e74dc89864f62228fd8af8cecc5ee9507fb926b502f55c3dad7dcfcff',
-  '2025-11-10T22:35:07.873740'
+  '2025-11-10T22:58:47.594353'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -5772,7 +5772,7 @@ VALUES (
   '{"name": "Jake Roberts", "display_name": "Jake Roberts", "about": "Vine creator @Jake Roberts", "website": "https://vine.co/u/Jake Roberts", "nip05": "Jake Roberts@divine.video"}',
   '2025-10-13T19:05:36.000',
   '61eb52355503139fc15b1a4a9d52673b9099a72a3a49011e6c0493a944a73580',
-  '2025-11-10T22:35:07.873750'
+  '2025-11-10T22:58:47.594365'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -5803,7 +5803,7 @@ VALUES (
   '{"name": "bella", "display_name": "bella", "about": "more love no stress", "website": "https://vine.co/u/bella", "nip05": "bella@divine.video", "location": "sanja - sp"}',
   '2025-10-13T19:03:00.000',
   '73f4debd97e30ae47e92fde4cacdd58a4a6818b8f834311eed7c918f3b901403',
-  '2025-11-10T22:35:07.873760'
+  '2025-11-10T22:58:47.594378'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -5834,7 +5834,7 @@ VALUES (
   '{"name": "barstool rDT", "display_name": "barstool rDT", "about": "Vine creator @barstool rDT", "website": "https://vine.co/u/barstool rDT", "nip05": "barstool rDT@divine.video"}',
   '2025-10-13T19:02:20.000',
   '5052ac1e33d5eb492601c856e28d1563cfc8bd512739cf2ddcb5495c933b3027',
-  '2025-11-10T22:35:07.873769'
+  '2025-11-10T22:58:47.594389'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -5865,7 +5865,7 @@ VALUES (
   '{"name": "Rockamole", "display_name": "Rockamole", "about": "Vine creator @Rockamole", "website": "https://vine.co/u/Rockamole", "nip05": "Rockamole@divine.video"}',
   '2025-10-13T19:01:19.000',
   'cc045eb5b045548b9f5d8044e37b12477eba5278c4fe567ca36ddc72272ca407',
-  '2025-11-10T22:35:07.873779'
+  '2025-11-10T22:58:47.594401'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -5896,7 +5896,7 @@ VALUES (
   '{"name": "\u30ad\u30e3\u30bf\u30d4\u30fc", "display_name": "\u30ad\u30e3\u30bf\u30d4\u30fc", "about": "Vine creator @\u30ad\u30e3\u30bf\u30d4\u30fc", "website": "https://vine.co/u/\u30ad\u30e3\u30bf\u30d4\u30fc", "nip05": "\u30ad\u30e3\u30bf\u30d4\u30fc@divine.video"}',
   '2025-10-13T18:53:14.000',
   'e7a6ee023796cf9a50db04bdaa27b6e2939715846063df0c476e81bc04300755',
-  '2025-11-10T22:35:07.873791'
+  '2025-11-10T22:58:47.594416'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -5929,7 +5929,7 @@ kaitlyn ily
   '{"name": "jikook af", "display_name": "jikook af", "about": "follow me on ig; juliapersman (although i wont post anything vine related)\nkaitlyn ily\n\u2764\ufe0fkakalia\u2764\ufe0f", "website": "https://vine.co/u/jikook af", "nip05": "jikook af@divine.video"}',
   '2025-10-13T18:45:26.000',
   'd9c0f4a7c7c41f812592836ddce6d45c7ea7c8b789263863dc5bdd38e233ab08',
-  '2025-11-10T22:35:07.873802'
+  '2025-11-10T22:58:47.594430'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -5960,7 +5960,7 @@ VALUES (
   '{"name": "XTINACUNTY", "display_name": "XTINACUNTY", "about": "Snapchat: JoshuaBilano", "website": "https://snapchat.com/add/JoshuaBilano", "nip05": "XTINACUNTY@divine.video"}',
   '2025-10-13T20:22:15.000',
   '29a2fd0cdba4ac1d890f255cd1c1ae246a7514fb0101a7c6f2d787d2ce696d7d',
-  '2025-11-10T22:35:07.873813'
+  '2025-11-10T22:58:47.594443'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -5991,7 +5991,7 @@ VALUES (
   '{"name": "lightxblake", "display_name": "lightxblake", "about": "yt: holy delena/ig: malachaimalec", "website": "https://youtube.com/@holy", "nip05": "lightxblake@divine.video", "location": "gayngels\u2122"}',
   '2025-10-13T20:21:13.000',
   '7a53253bd18c71c7df9ac3b3f6bd36c5e25c221dc5413e71087e22500bc1078d',
-  '2025-11-10T22:35:07.873824'
+  '2025-11-10T22:58:47.594457'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -6022,7 +6022,7 @@ VALUES (
   '{"name": "BrazilHiPHop", "display_name": "BrazilHiPHop", "about": "The best HipHop tracks directely from brazil", "website": "https://vine.co/u/BrazilHiPHop", "nip05": "BrazilHiPHop@divine.video"}',
   '2025-10-13T20:08:04.000',
   '33b73d06cc172dcb133d56bc039628167cdf09835d490936d50393748b353e8e',
-  '2025-11-10T22:35:07.873834'
+  '2025-11-10T22:58:47.594469'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -6053,7 +6053,7 @@ VALUES (
   '{"name": "T RAIN", "display_name": "T RAIN", "about": "Vine creator @T RAIN", "website": "https://vine.co/u/T RAIN", "nip05": "T RAIN@divine.video"}',
   '2025-10-13T20:07:38.000',
   'a5c2a4312677478895f9bc0bf6213c96ecf7a002e5e56db6125c3b26137900a4',
-  '2025-11-10T22:35:07.873844'
+  '2025-11-10T22:58:47.594480'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -6084,7 +6084,7 @@ VALUES (
   '{"name": "carefree edits", "display_name": "carefree edits", "about": "#ripcaleb | I fell for some qt''s", "website": "https://vine.co/u/carefree edits", "nip05": "carefree edits@divine.video", "location": "My name is Maggie"}',
   '2025-10-13T20:00:46.000',
   '87dd8e0aa079eab83a375bd044d55ccb816b6de46d9c1391b2c8c21bdc6a484b',
-  '2025-11-10T22:35:07.873860'
+  '2025-11-10T22:58:47.594500'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -6115,7 +6115,7 @@ VALUES (
   '{"name": "hera", "display_name": "hera", "about": "Vine creator @hera", "website": "https://vine.co/u/hera", "nip05": "hera@divine.video"}',
   '2025-10-13T19:52:01.000',
   '80911fb2606a677767033ab43e2b77cf99bea1bac213f2a97a8331a8554d4ad3',
-  '2025-11-10T22:35:07.873870'
+  '2025-11-10T22:58:47.594510'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -6146,7 +6146,7 @@ VALUES (
   '{"name": "ceyhangir", "display_name": "ceyhangir", "about": "Vine creator @ceyhangir", "website": "https://vine.co/u/ceyhangir", "nip05": "ceyhangir@divine.video"}',
   '2025-10-13T19:50:38.000',
   '6dc40037d46f6722534cc3066eee02bde1bc2ed4921d1c3d0b48316100e0c6d1',
-  '2025-11-10T22:35:07.873880'
+  '2025-11-10T22:58:47.594522'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -6177,7 +6177,7 @@ VALUES (
   '{"name": "dolan paradise", "display_name": "dolan paradise", "about": "I make simple edits | Ethan Liked 3x\u2764\ufe0fgrateful | MB\ud83d\udc4c\ud83c\udffd", "website": "https://vine.co/u/dolan paradise", "nip05": "dolan paradise@divine.video"}',
   '2025-10-13T19:50:11.000',
   'dde5dfb11ee31e318d5b8397c4ed06f2015b2d232d3bed0f5abc9b6e6cedefc1',
-  '2025-11-10T22:35:07.873892'
+  '2025-11-10T22:58:47.594537'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -6208,7 +6208,7 @@ VALUES (
   '{"name": "nationass", "display_name": "nationass", "about": "Beautiful girl + music", "website": "https://vine.co/u/nationass", "nip05": "nationass@divine.video", "location": "@nationass"}',
   '2025-10-13T19:40:51.000',
   'b6b8f4884ebed1a18632baa5e526e818b2b447996d89bb6ebcd788ec7df80b7d',
-  '2025-11-10T22:35:07.873903'
+  '2025-11-10T22:58:47.594551'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -6239,7 +6239,7 @@ VALUES (
   '{"name": "joyce byers", "display_name": "joyce byers", "about": "winona ryder, that is all.", "website": "https://vine.co/u/joyce byers", "nip05": "joyce byers@divine.video", "location": "stranger things"}',
   '2025-10-13T19:36:07.000',
   '697aa34f3808b63cb84e6d1f006bfe8dd6467f8b372b0fa77b8c5a6567ef4883',
-  '2025-11-10T22:35:07.873914'
+  '2025-11-10T22:58:47.594563'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -6271,7 +6271,7 @@ VALUES (
   '{"name": "nightblood", "display_name": "nightblood", "about": "ig: undeadyeun\n-fcp-", "website": "https://instagram.com/undeadyeun", "nip05": "nightblood@divine.video", "location": "[flossy]"}',
   '2025-10-13T19:33:03.000',
   'a7ebab3628181e2d5c0b805714b87a1e33bb98e503b2eb387694cf2990f26918',
-  '2025-11-10T22:35:07.873925'
+  '2025-11-10T22:58:47.594574'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -6302,7 +6302,7 @@ VALUES (
   '{"name": "wot pieterse", "display_name": "wot pieterse", "about": "I can only afford the bus", "website": "https://vine.co/u/wot pieterse", "nip05": "wot pieterse@divine.video"}',
   '2025-10-13T19:26:27.000',
   '4f78dd9e2c6739c15fc9d688ab403d1f5133f49227cc54c563209f4b4dccd422',
-  '2025-11-10T22:35:07.873934'
+  '2025-11-10T22:58:47.594584'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -6333,7 +6333,7 @@ VALUES (
   '{"name": "chaos grimes", "display_name": "chaos grimes", "about": "insta: chaos grimes", "website": "https://instagram.com/chaos", "nip05": "chaos grimes@divine.video", "location": "florida"}',
   '2025-10-13T19:25:13.000',
   '272615c95f6b7aa55b8acd9c33d8382cda3fb04b0aab776dd60a4da4a237ab6a',
-  '2025-11-10T22:35:07.873945'
+  '2025-11-10T22:58:47.594595'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -6364,7 +6364,7 @@ VALUES (
   '{"name": "\u0641\u062d\u0644 \u0644\u0627\u062e\u062a\u0643 \u064a\u0627\u062f\u064a\u0648\u062b", "display_name": "\u0641\u062d\u0644 \u0644\u0627\u062e\u062a\u0643 \u064a\u0627\u062f\u064a\u0648\u062b", "about": "Vine creator @\u0641\u062d\u0644 \u0644\u0627\u062e\u062a\u0643 \u064a\u0627\u062f\u064a\u0648\u062b", "website": "https://vine.co/u/\u0641\u062d\u0644 \u0644\u0627\u062e\u062a\u0643 \u064a\u0627\u062f\u064a\u0648\u062b", "nip05": "\u0641\u062d\u0644 \u0644\u0627\u062e\u062a\u0643 \u064a\u0627\u062f\u064a\u0648\u062b@divine.video"}',
   '2025-10-13T19:25:08.000',
   'fbc742233b8061e6cbc8213d0cbbc9245fd6dbf2637915c60e0c00a05b07e5c9',
-  '2025-11-10T22:35:07.873959'
+  '2025-11-10T22:58:47.594610'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -6395,7 +6395,7 @@ VALUES (
   '{"name": "CherishedPEACH", "display_name": "CherishedPEACH", "about": "Vine creator @CherishedPEACH", "website": "https://vine.co/u/CherishedPEACH", "nip05": "CherishedPEACH@divine.video"}',
   '2025-10-13T19:24:44.000',
   '7adcc519fbc1ef4c05b1b124eeda698e24ca2990e39d29f4ed3d5a7e877c049d',
-  '2025-11-10T22:35:07.873969'
+  '2025-11-10T22:58:47.594619'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -6426,7 +6426,7 @@ VALUES (
   '{"name": "\ubbff\uace0\ub4e3\ub294\ube44\ud22c\ube44", "display_name": "\ubbff\uace0\ub4e3\ub294\ube44\ud22c\ube44", "about": "Vine creator @\ubbff\uace0\ub4e3\ub294\ube44\ud22c\ube44", "website": "https://vine.co/u/\ubbff\uace0\ub4e3\ub294\ube44\ud22c\ube44", "nip05": "\ubbff\uace0\ub4e3\ub294\ube44\ud22c\ube44@divine.video"}',
   '2025-10-13T19:22:45.000',
   '3876319803b8d0ee33524933fdf8de13dc968233e2155ac02b62ba4a48ec9cc9',
-  '2025-11-10T22:35:07.873982'
+  '2025-11-10T22:58:47.594632'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -6457,7 +6457,7 @@ VALUES (
   '{"name": "nina''s edits", "display_name": "nina''s edits", "about": "Vine creator @nina''s edits", "website": "https://vine.co/u/nina''s edits", "nip05": "nina''s edits@divine.video"}',
   '2025-10-13T19:20:42.000',
   '11ea8865ca0613a0a649ac1a679ad82bff2fc2ccfd94781d49ed0b1cdf824076',
-  '2025-11-10T22:35:07.874004'
+  '2025-11-10T22:58:47.594658'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -6488,7 +6488,7 @@ VALUES (
   '{"name": "EBCD", "display_name": "EBCD", "about": "Vine creator @EBCD", "website": "https://vine.co/u/EBCD", "nip05": "EBCD@divine.video"}',
   '2025-10-13T19:19:33.000',
   '8f098f195a9851f4257bf70672b088188f723a6969b96627b35825c8e1e49002',
-  '2025-11-10T22:35:07.874015'
+  '2025-11-10T22:58:47.594668'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -6519,7 +6519,7 @@ VALUES (
   '{"name": "@tfor_thomas", "display_name": "@tfor_thomas", "about": "\ud83d\ude02twitter: @tfor_thomas\ud83d\ude02 \ud83d\ude1cyoutube show: 2 Freaks Play\ud83d\ude1c \ud83d\udc4c\ud83c\udffbSnapchat: tfor_thomas\ud83d\udc4c\ud83c\udffb\ud83d\udc1dWii U User: tfor_thomas16\ud83d\udc1d \ud83c\udf00IG: @tfor_thomas16\ud83c\udf00", "website": "https://youtube.com/@show", "nip05": "@tfor_thomas@divine.video", "location": "lol try and find me"}',
   '2025-10-13T19:18:07.000',
   '3428f271e2e7c437a4088b61b68af5e8a1e6964016af23b7922612d88f6ea98b',
-  '2025-11-10T22:35:07.874031'
+  '2025-11-10T22:58:47.594684'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -6553,7 +6553,7 @@ Snapchat/@bevan2001. Musically/@bevanmustdie . Coub/ @Earlcielphantomhive~',
   '{"name": "IG: ExrlCielPhantomhive", "display_name": "IG: ExrlCielPhantomhive", "about": "Did anyone call an uber? \n 3\u202210\u202215\nIg/@bevanmustdie and @phantomcosplay\nSnapchat/@bevan2001. Musically/@bevanmustdie . Coub/ @Earlcielphantomhive~", "website": "https://instagram.com/Earlcielphantomhive", "nip05": "IG: ExrlCielPhantomhive@divine.video", "location": "#FIGHTFORVINE !!!"}',
   '2025-10-13T19:17:55.000',
   'bb928d5eb194e237fc677e554729cdba811f932b1a01454707589c0c2097aed0',
-  '2025-11-10T22:35:07.874045'
+  '2025-11-10T22:58:47.594697'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -6584,7 +6584,7 @@ VALUES (
   '{"name": "ANGEL JINHWAN", "display_name": "ANGEL JINHWAN", "about": "Vine creator @ANGEL JINHWAN", "website": "https://vine.co/u/ANGEL JINHWAN", "nip05": "ANGEL JINHWAN@divine.video"}',
   '2025-10-13T19:17:28.000',
   '163e4df22497224c303fb8a9ea50c19bb36f6b60b1d95b083d4ffd377e828992',
-  '2025-11-10T22:35:07.874055'
+  '2025-11-10T22:58:47.594709'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -6615,7 +6615,7 @@ VALUES (
   '{"name": "Weaboi Edits\u2122", "display_name": "Weaboi Edits\u2122", "about": "\"Heros never die\" - Mercy || Multi fandom || \ud83c\udf1a|| I liek video games || Youtubers saved me || Bipolar AF \ud83d\udc0b || used to be Alphys Edits", "website": "https://vine.co/u/Weaboi Edits\u2122", "nip05": "Weaboi Edits\u2122@divine.video", "location": "insta- weaboi_edits"}',
   '2025-10-13T19:16:33.000',
   'f1280d025bd39890821270c5446cf33a5367992d964eaede3d1d42cd366f9e70',
-  '2025-11-10T22:35:07.874068'
+  '2025-11-10T22:58:47.594725'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -6646,7 +6646,7 @@ VALUES (
   '{"name": "#TeenMomOG", "display_name": "#TeenMomOG", "about": "Vine creator @#TeenMomOG", "website": "https://vine.co/u/#TeenMomOG", "nip05": "#TeenMomOG@divine.video"}',
   '2025-10-13T19:15:51.000',
   'd1f8c69b9d74b5f96616316c8ed06e5cb824cc7f321745b79dcbda8dad439a66',
-  '2025-11-10T22:35:07.874079'
+  '2025-11-10T22:58:47.594738'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -6679,7 +6679,7 @@ ig: ᴠᴏɪᴅᴅᴜʜ',
   '{"name": "ig. voidduh", "display_name": "ig. voidduh", "about": "- hi! i''m vlada & i''m still learning -\neryn is the best friend ever\nig: \u1d20\u1d0f\u026a\u1d05\u1d05\u1d1c\u029c", "website": "https://vine.co/u/ig. voidduh", "nip05": "ig. voidduh@divine.video"}',
   '2025-10-13T19:15:45.000',
   '6ec93dc1d628a01bb4c685a7a9c573015d210f62220ceaac5f9312ba74b78b52',
-  '2025-11-10T22:35:07.874099'
+  '2025-11-10T22:58:47.594761'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -6710,7 +6710,7 @@ VALUES (
   '{"name": "dolan4ou", "display_name": "dolan4ou", "about": "program: svp 13", "website": "https://instagram.com/svp", "nip05": "dolan4ou@divine.video", "location": "ig: dolann4ou ~ tt: dolann4ou"}',
   '2025-10-13T19:14:54.000',
   '627b3da4ed8ede47e1e8bbf6494171083eff06b6dc54f44261f894726ad526ec',
-  '2025-11-10T22:35:07.874110'
+  '2025-11-10T22:58:47.594772'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -6741,7 +6741,7 @@ VALUES (
   '{"name": "stelena edits", "display_name": "stelena edits", "about": "Vine creator @stelena edits", "website": "https://vine.co/u/stelena edits", "nip05": "stelena edits@divine.video"}',
   '2025-10-13T19:14:37.000',
   '20abd293a4b330294c48ba38afa8537b92f30eafa2d5c3a827475ddcf5dec95a',
-  '2025-11-10T22:35:07.874120'
+  '2025-11-10T22:58:47.594782'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -6772,7 +6772,7 @@ VALUES (
   '{"name": "\u3072\u3087\u3093\u3002", "display_name": "\u3072\u3087\u3093\u3002", "about": "Vine creator @\u3072\u3087\u3093\u3002", "website": "https://vine.co/u/\u3072\u3087\u3093\u3002", "nip05": "\u3072\u3087\u3093\u3002@divine.video"}',
   '2025-10-13T19:13:36.000',
   '45faff90548352754bcce020a5072c52cd96bd7c103ad94be4e543fe2c784c9e',
-  '2025-11-10T22:35:07.874132'
+  '2025-11-10T22:58:47.594794'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -6803,7 +6803,7 @@ VALUES (
   '{"name": "Anaide Zem", "display_name": "Anaide Zem", "about": "Vine creator @Anaide Zem", "website": "https://vine.co/u/Anaide Zem", "nip05": "Anaide Zem@divine.video"}',
   '2025-10-13T19:13:12.000',
   '2bc554a3a252b62196f56669994d0e54e426a4618508df915f0fbd84418e20bc',
-  '2025-11-10T22:35:07.874142'
+  '2025-11-10T22:58:47.594806'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -6834,7 +6834,7 @@ VALUES (
   '{"name": "jesus christ its alec", "display_name": "jesus christ its alec", "about": "Vine creator @jesus christ its alec", "website": "https://vine.co/u/jesus christ its alec", "nip05": "jesus christ its alec@divine.video"}',
   '2025-10-13T19:11:57.000',
   'a7894445311ce9af657fb5d671c5606fe0145bea7d5506e500db9214c764a2bd',
-  '2025-11-10T22:35:07.874152'
+  '2025-11-10T22:58:47.594818'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -6865,7 +6865,7 @@ VALUES (
   '{"name": "jojo''s edits", "display_name": "jojo''s edits", "about": "i do edits.", "website": "https://vine.co/u/jojo''s edits", "nip05": "jojo''s edits@divine.video", "location": "middle of nowhere "}',
   '2025-10-13T19:10:00.000',
   '7b8eff768bbafdc9142b8713cc4c7dca122e50b8177d8bf4fd9945aa828f03a9',
-  '2025-11-10T22:35:07.874173'
+  '2025-11-10T22:58:47.594845'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -6896,7 +6896,7 @@ VALUES (
   '{"name": "Yuki Nagasato \u6c38\u91cc\u512a\u5b63", "display_name": "Yuki Nagasato \u6c38\u91cc\u512a\u5b63", "about": "Vine creator @Yuki Nagasato \u6c38\u91cc\u512a\u5b63", "website": "https://vine.co/u/Yuki Nagasato \u6c38\u91cc\u512a\u5b63", "nip05": "Yuki Nagasato \u6c38\u91cc\u512a\u5b63@divine.video"}',
   '2025-10-13T19:08:36.000',
   '51389aa151bacbb2b3afa18a3ac65cfc66fe849f325897466dadca4a0e900e4c',
-  '2025-11-10T22:35:07.874186'
+  '2025-11-10T22:58:47.594858'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -6927,7 +6927,7 @@ VALUES (
   '{"name": "PSG Hand", "display_name": "PSG Hand", "about": "Vine creator @PSG Hand", "website": "https://vine.co/u/PSG Hand", "nip05": "PSG Hand@divine.video"}',
   '2025-10-13T19:07:40.000',
   'c072c89176de1e4497a6a92b12df9b1e67ca82b3006aff1d8a2da3837a2c483d',
-  '2025-11-10T22:35:07.874196'
+  '2025-11-10T22:58:47.594869'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -6958,7 +6958,7 @@ VALUES (
   '{"name": "Trump''s Skin", "display_name": "Trump''s Skin", "about": "It was a good run. Gonna miss you Vine", "website": "https://vine.co/u/Trump''s Skin", "nip05": "Trump''s Skin@divine.video"}',
   '2025-10-13T19:07:16.000',
   'c9277fa0cf16592d8f4837e7de216ada9c916b07b94a0aacc05846ef545695f6',
-  '2025-11-10T22:35:07.874218'
+  '2025-11-10T22:58:47.594891'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -6989,7 +6989,7 @@ VALUES (
   '{"name": "\ub9c8\uc774(\u307e\u3044)", "display_name": "\ub9c8\uc774(\u307e\u3044)", "about": "Vine creator @\ub9c8\uc774(\u307e\u3044)", "website": "https://vine.co/u/\ub9c8\uc774(\u307e\u3044)", "nip05": "\ub9c8\uc774(\u307e\u3044)@divine.video"}',
   '2025-10-13T19:04:59.000',
   '2c0b4146cabad0d91d94be555a4547993a1b2fe8dad1e08e7e98ed758afa0f0b',
-  '2025-11-10T22:35:07.874231'
+  '2025-11-10T22:58:47.594908'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -7022,7 +7022,7 @@ valentina | fcp | yt madebyvalx
   '{"name": "gxllaghers", "display_name": "gxllaghers", "about": "please be active\nvalentina | fcp | yt madebyvalx\n14/6-15", "website": "https://youtube.com/@madebyvalx", "nip05": "gxllaghers@divine.video"}',
   '2025-10-13T18:59:07.000',
   '10a0a110f39910b31bd503b6a4dc091fa89f5f6541c595711a0b6344cb8c480b',
-  '2025-11-10T22:35:07.874242'
+  '2025-11-10T22:58:47.594922'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -7053,7 +7053,7 @@ VALUES (
   '{"name": "Kamui.Fas", "display_name": "Kamui.Fas", "about": "Trying to edit heheheh \ud83d\ude00", "website": "https://vine.co/u/Kamui.Fas", "nip05": "Kamui.Fas@divine.video"}',
   '2025-10-13T18:56:48.000',
   '98bf04d6fb412fc315cc1731d7708824e59a9054d6cad59db30f7d7845b6e910',
-  '2025-11-10T22:35:07.874253'
+  '2025-11-10T22:58:47.594935'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -7084,7 +7084,7 @@ VALUES (
   '{"name": "\u2661\u028d\u03c5\u03b1\u0447", "display_name": "\u2661\u028d\u03c5\u03b1\u0447", "about": "Vine creator @\u2661\u028d\u03c5\u03b1\u0447", "website": "https://vine.co/u/\u2661\u028d\u03c5\u03b1\u0447", "nip05": "\u2661\u028d\u03c5\u03b1\u0447@divine.video"}',
   '2025-10-13T18:56:29.000',
   '9b2a7f5378b363a624e293de955ab02fd1525e8b13bb1fac1747a305a31f53ee',
-  '2025-11-10T22:35:07.874265'
+  '2025-11-10T22:58:47.594948'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -7115,7 +7115,7 @@ VALUES (
   '{"name": "\u00f8h-seun | twitter: divinesuga", "display_name": "\u00f8h-seun | twitter: divinesuga", "about": "Vine creator @\u00f8h-seun | twitter: divinesuga", "website": "https://vine.co/u/\u00f8h-seun | twitter: divinesuga", "nip05": "\u00f8h-seun | twitter: divinesuga@divine.video"}',
   '2025-10-13T18:56:14.000',
   'af4f3bdf2cdd0bcb1d2bf3130d25abe282032cd1795e2c7fb38e35b93e323f19',
-  '2025-11-10T22:35:07.874277'
+  '2025-11-10T22:58:47.594959'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -7146,7 +7146,7 @@ VALUES (
   '{"name": "rvcklvss.dayz", "display_name": "rvcklvss.dayz", "about": "ig: @rvcklvss.dayz", "website": "https://instagram.com/rvcklvss.dayz", "nip05": "rvcklvss.dayz@divine.video"}',
   '2025-10-13T18:56:07.000',
   '4dae6e4cfcf4cd06d70474eaca4a8461adff51663fec6ca29f25b0f9ec81d55b',
-  '2025-11-10T22:35:07.874288'
+  '2025-11-10T22:58:47.594970'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -7177,7 +7177,7 @@ VALUES (
   '{"name": "Soccer Fusion (bio)", "display_name": "Soccer Fusion (bio)", "about": "Follow me on Insta!! Username is \ud83d\udc47 Messieditsx I have 8.5k", "website": "https://vine.co/u/Soccer Fusion (bio)", "nip05": "Soccer Fusion (bio)@divine.video"}',
   '2025-10-13T18:53:05.000',
   '441895c95ee4a9aed1958e90fd800d518e7e83f0160d4604dbfa8e00786a9e24',
-  '2025-11-10T22:35:07.874299'
+  '2025-11-10T22:58:47.594981'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -7208,7 +7208,7 @@ VALUES (
   '{"name": "kat''s edits", "display_name": "kat''s edits", "about": "Vine creator @kat''s edits", "website": "https://vine.co/u/kat''s edits", "nip05": "kat''s edits@divine.video"}',
   '2025-10-13T18:51:08.000',
   '0f9d4228f36e0c0329e5490da959e6b65454dad54ce8df8700f7f1f82be24062',
-  '2025-11-10T22:35:07.874320'
+  '2025-11-10T22:58:47.595007'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -7239,7 +7239,7 @@ VALUES (
   '{"name": "\u0631\u0627\u0643\u0627\u0646", "display_name": "\u0631\u0627\u0643\u0627\u0646", "about": "Vine creator @\u0631\u0627\u0643\u0627\u0646", "website": "https://vine.co/u/\u0631\u0627\u0643\u0627\u0646", "nip05": "\u0631\u0627\u0643\u0627\u0646@divine.video"}',
   '2025-10-13T18:50:18.000',
   '06dfa7a36ff5ee6c31603816c8d3ebd0dcdcba6da561f936886a824ce150c986',
-  '2025-11-10T22:35:07.874333'
+  '2025-11-10T22:58:47.595022'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -7270,7 +7270,7 @@ VALUES (
   '{"name": "\u3086\u3068\u3061\u30fc\u305a", "display_name": "\u3086\u3068\u3061\u30fc\u305a", "about": "Vine creator @\u3086\u3068\u3061\u30fc\u305a", "website": "https://vine.co/u/\u3086\u3068\u3061\u30fc\u305a", "nip05": "\u3086\u3068\u3061\u30fc\u305a@divine.video"}',
   '2025-10-13T18:50:06.000',
   '100aee32c68b4b6ab151a3be4120d1a49dd8a3e9d37d51b07d7db7cbcfb2278c',
-  '2025-11-10T22:35:07.874384'
+  '2025-11-10T22:58:47.595036'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -7301,7 +7301,7 @@ VALUES (
   '{"name": "rad edits wut", "display_name": "rad edits wut", "about": "kaye is the name!", "website": "https://vine.co/u/rad edits wut", "nip05": "rad edits wut@divine.video", "location": "svp 13"}',
   '2025-10-13T18:49:31.000',
   '14337114e7b217c352d50db4dd0fe60652ef6332a984ba1dae993f64c6eee881',
-  '2025-11-10T22:35:07.874432'
+  '2025-11-10T22:58:47.595047'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -7332,7 +7332,7 @@ VALUES (
   '{"name": "instagram: bariscetineronline", "display_name": "instagram: bariscetineronline", "about": "instagram.com/bariscetineronline ileti\u015fim: cetinerbaris@hotmail.com", "website": "https://instagram.com/bariscetineronline", "nip05": "instagram: bariscetineronline@divine.video", "location": "\u0130stanbul / Bak\u0131rk\u00f6y "}',
   '2025-10-13T18:47:31.000',
   '3c69f7c8ef0c6a873d31059bac6ecaf9ea95401a7612a5b93caee34dcd4137bf',
-  '2025-11-10T22:35:07.874451'
+  '2025-11-10T22:58:47.595059'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -7365,7 +7365,7 @@ ig : exoceanfx',
   '{"name": "exocean | bio !!!", "display_name": "exocean | bio !!!", "about": "yt : byunight\ntwt : baekugou\nig : exoceanfx", "website": "https://youtube.com/@byunight", "nip05": "exocean | bio !!!@divine.video", "location": "<3"}',
   '2025-10-13T18:47:25.000',
   'a3059ff19a343309e0dd1df11d9c7ea0c238dd2cbae9a95296d3901283561a56',
-  '2025-11-10T22:35:07.874463'
+  '2025-11-10T22:58:47.595071'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -7396,7 +7396,7 @@ VALUES (
   '{"name": "Sehunyoonji", "display_name": "Sehunyoonji", "about": "Twitter:  @sehunyoonji", "website": "https://instagram.com/sehunyoonji", "nip05": "Sehunyoonji@divine.video"}',
   '2025-10-13T18:46:18.000',
   'afda6603ac867d29c45e57a8f137929ad07f80e6af0c527da8a16f1f7541f85d',
-  '2025-11-10T22:35:07.874474'
+  '2025-11-10T22:58:47.595157'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -7427,7 +7427,7 @@ VALUES (
   '{"name": "New York City FC", "display_name": "New York City FC", "about": "Vine creator @New York City FC", "website": "https://vine.co/u/New York City FC", "nip05": "New York City FC@divine.video"}',
   '2025-10-13T18:46:01.000',
   '87f160ebebe42e49bc0e5670c2dea0164a19fa85e5e8e6889c07088596a62840',
-  '2025-11-10T22:35:07.874484'
+  '2025-11-10T22:58:47.595169'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -7458,7 +7458,7 @@ VALUES (
   '{"name": "Precious", "display_name": "Precious", "about": "Vine creator @Precious", "website": "https://vine.co/u/Precious", "nip05": "Precious@divine.video"}',
   '2025-10-13T18:45:09.000',
   'f89f047ca36d309bf063f7eccd551e26a840c7393cccc2e43ee8c0d907d9a783',
-  '2025-11-10T22:35:07.874495'
+  '2025-11-10T22:58:47.595180'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -7489,7 +7489,7 @@ VALUES (
   '{"name": "eigacom", "display_name": "eigacom", "about": "Vine creator @eigacom", "website": "https://vine.co/u/eigacom", "nip05": "eigacom@divine.video"}',
   '2025-10-13T18:44:37.000',
   '1cfd9e6382539387df20097d528079afe7cceb235adcaaa1232eeb0bde103120',
-  '2025-11-10T22:35:07.874504'
+  '2025-11-10T22:58:47.595246'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -7520,7 +7520,7 @@ VALUES (
   '{"name": "Rafodrio", "display_name": "Rafodrio", "about": "Vine creator @Rafodrio", "website": "https://vine.co/u/Rafodrio", "nip05": "Rafodrio@divine.video"}',
   '2025-10-13T21:50:54.000',
   'f3d29435eb347d1dcf89b2aba5ba654d30e770c725211f8695bb5a01039091f5',
-  '2025-11-10T22:35:07.874514'
+  '2025-11-10T22:58:47.595298'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -7552,7 +7552,7 @@ VALUES (
   '{"name": "ig:CINVTAE [ bio ]", "display_name": "ig:CINVTAE [ bio ]", "about": "\u2661 twitter: cerxce \n Instagram: CINVTAE", "website": "https://instagram.com/CINVTAE", "nip05": "ig:CINVTAE [ bio ]@divine.video"}',
   '2025-10-13T21:44:50.000',
   '85dd6cd9aa2ac772f05ea0b3831b9e76735b590f731e6db52bd076e521898873',
-  '2025-11-10T22:35:07.874525'
+  '2025-11-10T22:58:47.595344'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -7583,7 +7583,7 @@ VALUES (
   '{"name": "wine mom", "display_name": "wine mom", "about": "if Kermit the frog was a human", "website": "https://vine.co/u/wine mom", "nip05": "wine mom@divine.video", "location": "ig: urlru"}',
   '2025-10-13T21:44:27.000',
   'f4c039c44ca6ed2fc13e3848859f0f5ed9047e0cd5ae1130125835db5684cca6',
-  '2025-11-10T22:35:07.874534'
+  '2025-11-10T22:58:47.595368'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -7614,7 +7614,7 @@ VALUES (
   '{"name": "Berk Tanr\u0131verdi", "display_name": "Berk Tanr\u0131verdi", "about": "Twitter ; @berktanriverdii \u0130nstagram ; berktanriverdii Member Of Brick Squad Monopoly", "website": "https://instagram.com/berktanriverdii", "nip05": "Berk Tanr\u0131verdi@divine.video"}',
   '2025-10-13T21:20:51.000',
   '71aa21829fdc2588105689104406bc84b0bc74af9a73fe39aeb65caf02184aaf',
-  '2025-11-10T22:35:07.874547'
+  '2025-11-10T22:58:47.595385'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -7645,7 +7645,7 @@ VALUES (
   '{"name": "IG: @_pablorom", "display_name": "IG: @_pablorom", "about": "Constructor de cohetes, experto en pizzas, amante de los gigantes, padre.", "website": "https://vine.co/u/IG: @_pablorom", "nip05": "IG: @_pablorom@divine.video", "location": "Twitter: @PabloRom_"}',
   '2025-10-13T21:15:25.000',
   '51dd99a1883f1bfc594360ec16a225d3bf5855c8231572e2c33f472c06f578e0',
-  '2025-11-10T22:35:07.874557'
+  '2025-11-10T22:58:47.595397'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -7676,7 +7676,7 @@ VALUES (
   '{"name": "blob fish", "display_name": "blob fish", "about": "Vine creator @blob fish", "website": "https://vine.co/u/blob fish", "nip05": "blob fish@divine.video"}',
   '2025-10-13T20:35:54.000',
   '2d7e6d4619705d19afeca8b20c62a411aaa089cf6c45ac7cb8aa6d5d90fda50a',
-  '2025-11-10T22:35:07.874567'
+  '2025-11-10T22:58:47.595407'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -7707,7 +7707,7 @@ VALUES (
   '{"name": "Borislav Pekez", "display_name": "Borislav Pekez", "about": "Vine creator @Borislav Pekez", "website": "https://vine.co/u/Borislav Pekez", "nip05": "Borislav Pekez@divine.video"}',
   '2025-10-13T20:31:02.000',
   'ee2d92dfb7245dcd501fd8586817be7f3755619c50e4e1770722b8aa5f548571',
-  '2025-11-10T22:35:07.874576'
+  '2025-11-10T22:58:47.595416'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -7738,7 +7738,7 @@ VALUES (
   '{"name": "z \u03b1\u00a0i \u2654 -bio-", "display_name": "z \u03b1\u00a0i \u2654 -bio-", "about": "\u00d7 Twitter/Youtube: mydoblass \u00d7   \u00d7 Instagram: by.zai \u00d7", "website": "https://youtube.com/@mydoblass", "nip05": "z \u03b1\u00a0i \u2654 -bio-@divine.video"}',
   '2025-10-13T19:36:38.000',
   '425f017122f0be6d8d279927863d1c967fed3e40dc380c8585a34d9d7f3e0783',
-  '2025-11-10T22:35:07.874589'
+  '2025-11-10T22:58:47.595433'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -7769,7 +7769,7 @@ VALUES (
   '{"name": "HilariousGamers", "display_name": "HilariousGamers", "about": "Vine creator @HilariousGamers", "website": "https://vine.co/u/HilariousGamers", "nip05": "HilariousGamers@divine.video"}',
   '2025-10-13T19:25:19.000',
   '1399f91e56a94e73ff83cbd6d608d866e9ae6a80d484c5efa74f64e15fb75df3',
-  '2025-11-10T22:35:07.874599'
+  '2025-11-10T22:58:47.595445'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -7800,7 +7800,7 @@ VALUES (
   '{"name": "yeolsus", "display_name": "yeolsus", "about": "twitter: yeoIsus", "website": "https://twitter.com/yeoIsus", "nip05": "yeolsus@divine.video"}',
   '2025-10-13T19:24:16.000',
   'bd88af7525a0da2c34c8a5fa0b15bdd38808dc1f8e7c2cc77cb8f12406b6dfd9',
-  '2025-11-10T22:35:07.874609'
+  '2025-11-10T22:58:47.595457'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -7831,7 +7831,7 @@ VALUES (
   '{"name": "Day&Night", "display_name": "Day&Night", "about": "Vine creator @Day&Night", "website": "https://vine.co/u/Day&Night", "nip05": "Day&Night@divine.video"}',
   '2025-10-13T19:22:20.000',
   '84cc8753cf789b9c1eea1f329d4b98682e196e3ed103ad6ffb0a41c6f67ec1fc',
-  '2025-11-10T22:35:07.874617'
+  '2025-11-10T22:58:47.595468'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -7862,7 +7862,7 @@ VALUES (
   '{"name": "Riles", "display_name": "Riles", "about": "Vine creator @Riles", "website": "https://vine.co/u/Riles", "nip05": "Riles@divine.video", "location": "Big Bear California"}',
   '2025-10-13T19:22:14.000',
   'c4fb3717c51b67ccc4d65eaf4d7cbba099e98bc2911add46d8c70c9c5d37dca1',
-  '2025-11-10T22:35:07.874627'
+  '2025-11-10T22:58:47.595479'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -7893,7 +7893,7 @@ VALUES (
   '{"name": "Cloud1516", "display_name": "Cloud1516", "about": "Vine creator @Cloud1516", "website": "https://vine.co/u/Cloud1516", "nip05": "Cloud1516@divine.video"}',
   '2025-10-13T19:21:43.000',
   '1d784303f8c1e8bff3ada67a6c4f1936895d41f562c70efa661c8744917bab0c',
-  '2025-11-10T22:35:07.874636'
+  '2025-11-10T22:58:47.595488'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -7924,7 +7924,7 @@ VALUES (
   '{"name": "le blackbird", "display_name": "le blackbird", "about": "( Twitter : @leBlackbird_ )", "website": "https://instagram.com/leBlackbird_", "nip05": "le blackbird@divine.video", "location": "la bretagne du roi arthur "}',
   '2025-10-13T19:21:31.000',
   '079e73840dfb1c7000f8a26888985fb6849118f5c1640930fa47cfccc9f0f8e7',
-  '2025-11-10T22:35:07.874646'
+  '2025-11-10T22:58:47.595499'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -7955,7 +7955,7 @@ VALUES (
   '{"name": "yoongi. \u91cd\u8981 (twitter: peachywohn)", "display_name": "yoongi. \u91cd\u8981 (twitter: peachywohn)", "about": "I love park bogum", "website": "https://vine.co/u/yoongi. \u91cd\u8981 (twitter: peachywohn)", "nip05": "yoongi. \u91cd\u8981 (twitter: peachywohn)@divine.video", "location": "nct trash "}',
   '2025-10-13T19:18:14.000',
   '6c22f3398009bc1f57a6f35eee7fbf29c3b106da7b41310fc3d8cbf8d3c48d51',
-  '2025-11-10T22:35:07.874658'
+  '2025-11-10T22:58:47.595511'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -7986,7 +7986,7 @@ VALUES (
   '{"name": "swiftxgreys edits", "display_name": "swiftxgreys edits", "about": "| He had a thing for ferryboats. She had a thing for him. #MerDerForever | Taylor Swift has my heart and my money. | Twitter: @swiftxgreys", "website": "https://instagram.com/swiftxgreys", "nip05": "swiftxgreys edits@divine.video", "location": "Ontario, Canada"}',
   '2025-10-13T19:17:06.000',
   'ff97548a09749341dbb13a6a7d87d3f8d0ff44d4edccf77290ba749c64477b9e',
-  '2025-11-10T22:35:07.874668'
+  '2025-11-10T22:58:47.595524'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -8017,7 +8017,7 @@ VALUES (
   '{"name": "oh wow cassie", "display_name": "oh wow cassie", "about": "carlos", "website": "https://vine.co/u/oh wow cassie", "nip05": "oh wow cassie@divine.video", "location": "ig @ohwowcassievine"}',
   '2025-10-13T19:16:28.000',
   '56695734d9d2649b4664d2fd3a7f08f46311ece0f40c822959751e659a584773',
-  '2025-11-10T22:35:07.874678'
+  '2025-11-10T22:58:47.595536'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -8049,7 +8049,7 @@ i met d&p on may 22nd + im in dapgo :,)',
   '{"name": "ig; phaxn", "display_name": "ig; phaxn", "about": "-claudia\ni met d&p on may 22nd + im in dapgo :,)", "website": "https://vine.co/u/ig; phaxn", "nip05": "ig; phaxn@divine.video"}',
   '2025-10-13T19:15:57.000',
   'b492e2d743fd3c3d6368be163d5f387eab582e211d34addd3550b1240e8cfeee',
-  '2025-11-10T22:35:07.874688'
+  '2025-11-10T22:58:47.595548'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -8080,7 +8080,7 @@ VALUES (
   '{"name": "I dont know", "display_name": "I dont know", "about": "Need followers", "website": "https://vine.co/u/I dont know", "nip05": "I dont know@divine.video"}',
   '2025-10-13T19:15:08.000',
   'aaca40ac56b749d701da6b5bdfe97a34570991144fd80e425f8a7c80dd1aace3',
-  '2025-11-10T22:35:07.874697'
+  '2025-11-10T22:58:47.595559'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -8111,7 +8111,7 @@ VALUES (
   '{"name": "king yixing | ig king.yixing", "display_name": "king yixing | ig king.yixing", "about": "zhang yixing, always.", "website": "https://vine.co/u/king yixing | ig king.yixing", "nip05": "king yixing | ig king.yixing@divine.video"}',
   '2025-10-13T19:14:27.000',
   '86940a8f75203c595e161d4035263cc22d66bed49d4257e1ed7d7d0644779c46',
-  '2025-11-10T22:35:07.874706'
+  '2025-11-10T22:58:47.595570'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -8142,7 +8142,7 @@ VALUES (
   '{"name": "\u3042\u3084\u306a", "display_name": "\u3042\u3084\u306a", "about": "Vine creator @\u3042\u3084\u306a", "website": "https://vine.co/u/\u3042\u3084\u306a", "nip05": "\u3042\u3084\u306a@divine.video"}',
   '2025-10-13T19:14:14.000',
   '3fe387f6168b6991dade429cd81650c1064c6745e64b43d8b9fe354f09474940',
-  '2025-11-10T22:35:07.874719'
+  '2025-11-10T22:58:47.595582'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -8173,7 +8173,7 @@ VALUES (
   '{"name": "\u308a  \u307c  \u3093", "display_name": "\u308a  \u307c  \u3093", "about": "Vine creator @\u308a  \u307c  \u3093", "website": "https://vine.co/u/\u308a  \u307c  \u3093", "nip05": "\u308a  \u307c  \u3093@divine.video"}',
   '2025-10-13T19:13:07.000',
   '5a3d023f24b2bd436bf86858a2aa65ec19b7f250133c481e25dae7f2fcf8feb2',
-  '2025-11-10T22:35:07.874732'
+  '2025-11-10T22:58:47.595594'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -8206,7 +8206,7 @@ asuna is my wife okay',
   '{"name": "ig: badassuna", "display_name": "ig: badassuna", "about": "leader of yuuki \u52c7\n\u00a5en | \u732b | \u767e\u5408 | slit cult | .kun\nasuna is my wife okay", "website": "https://vine.co/u/ig: badassuna", "nip05": "ig: badassuna@divine.video", "location": "anime on fleek"}',
   '2025-10-13T19:12:03.000',
   '7ea250715a2d1c765ea42221626e831d5dc9f98c8108293320e56ed003a0ac30',
-  '2025-11-10T22:35:07.874743'
+  '2025-11-10T22:58:47.595606'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -8237,7 +8237,7 @@ VALUES (
   '{"name": "snazzy edits", "display_name": "snazzy edits", "about": "Vine creator @snazzy edits", "website": "https://vine.co/u/snazzy edits", "nip05": "snazzy edits@divine.video"}',
   '2025-10-13T19:10:25.000',
   'ef475157699419885b498803886a4ba5c230cf37b0ccd8c63f87a9d512f3a9f7',
-  '2025-11-10T22:35:07.874752'
+  '2025-11-10T22:58:47.595618'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -8268,7 +8268,7 @@ VALUES (
   '{"name": "effy stonem", "display_name": "effy stonem", "about": "Lace up", "website": "https://vine.co/u/effy stonem", "nip05": "effy stonem@divine.video", "location": "West Sussex, England"}',
   '2025-10-13T19:09:03.000',
   '9fda621ad5ff624904ba55fdabd399e12138d0d075260d7812c5c31a74d42890',
-  '2025-11-10T22:35:07.874761'
+  '2025-11-10T22:58:47.595629'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -8299,7 +8299,7 @@ VALUES (
   '{"name": "suldaeng \u2763", "display_name": "suldaeng \u2763", "about": "Vine creator @suldaeng \u2763", "website": "https://vine.co/u/suldaeng \u2763", "nip05": "suldaeng \u2763@divine.video"}',
   '2025-10-13T19:08:00.000',
   '6216c561afbe7dd000d4536f22ab404fa1f7651c12b8837cfd9674564a96d738',
-  '2025-11-10T22:35:07.874772'
+  '2025-11-10T22:58:47.595643'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -8330,7 +8330,7 @@ VALUES (
   '{"name": "Badiha130", "display_name": "Badiha130", "about": "Vine creator @Badiha130", "website": "https://vine.co/u/Badiha130", "nip05": "Badiha130@divine.video"}',
   '2025-10-13T19:06:25.000',
   '4dc66743c27145e6f579e710e8adda1fc976a610539774fd0ff1896bf81def75',
-  '2025-11-10T22:35:07.874782'
+  '2025-11-10T22:58:47.595654'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -8364,7 +8364,7 @@ youtube: ROWAYONCE',
   '{"name": "ROWAYONCE ig : rowayonce", "display_name": "ROWAYONCE ig : rowayonce", "about": "ig: ROWAYONCE\ntwitter: ROWAYONCES\ncoub: ROWAYONCE\nyoutube: ROWAYONCE", "website": "https://youtube.com/@ROWAYONCE", "nip05": "ROWAYONCE ig : rowayonce@divine.video"}',
   '2025-10-13T19:06:11.000',
   'cd7e6027eef031c49bda53ec6bb65c834be725009983456860da0c7e5cabafb3',
-  '2025-11-10T22:35:07.874794'
+  '2025-11-10T22:58:47.595667'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -8395,7 +8395,7 @@ VALUES (
   '{"name": "LINKED", "display_name": "LINKED", "about": "youtube.com/linkedits", "website": "https://youtube.com/@linkedits", "nip05": "LINKED@divine.video", "location": "cassia"}',
   '2025-10-13T19:05:06.000',
   'e4c7dc44f8851dbe46c2cbd05e1fefc711581740f1019a6340ee5e5731214cf4',
-  '2025-11-10T22:35:07.874804'
+  '2025-11-10T22:58:47.595676'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -8426,7 +8426,7 @@ VALUES (
   '{"name": "jjgvk \u30db", "display_name": "jjgvk \u30db", "about": "Vine creator @jjgvk \u30db", "website": "https://vine.co/u/jjgvk \u30db", "nip05": "jjgvk \u30db@divine.video"}',
   '2025-10-13T19:04:35.000',
   '7908a246615ac6e9932683355dbde4d30f91fc60739eb290886a025b14465f5a',
-  '2025-11-10T22:35:07.874815'
+  '2025-11-10T22:58:47.595688'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -8457,7 +8457,7 @@ VALUES (
   '{"name": "\u4e2d\u6b66\u826f\u5e73", "display_name": "\u4e2d\u6b66\u826f\u5e73", "about": "Vine creator @\u4e2d\u6b66\u826f\u5e73", "website": "https://vine.co/u/\u4e2d\u6b66\u826f\u5e73", "nip05": "\u4e2d\u6b66\u826f\u5e73@divine.video"}',
   '2025-10-13T19:04:28.000',
   '995bc29b7edc6dd226a61f6d77410011e7b5ab1df1115d2c62efd8b29734d587',
-  '2025-11-10T22:35:07.874857'
+  '2025-11-10T22:58:47.595701'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -8488,7 +8488,7 @@ VALUES (
   '{"name": "Vines Televisivos", "display_name": "Vines Televisivos", "about": "Vine creator @Vines Televisivos", "website": "https://vine.co/u/Vines Televisivos", "nip05": "Vines Televisivos@divine.video"}',
   '2025-10-13T19:03:43.000',
   'd2e850308058606b6481e99cf16648b5b1e7bdef87ea56e765cde794e814751e',
-  '2025-11-10T22:35:07.874868'
+  '2025-11-10T22:58:47.595712'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -8519,7 +8519,7 @@ VALUES (
   '{"name": "yanime", "display_name": "yanime", "about": "Vine creator @yanime", "website": "https://vine.co/u/yanime", "nip05": "yanime@divine.video"}',
   '2025-10-13T19:00:48.000',
   '00cac1270230f8d0034d2664f0552574a1ea289ccd7d7439674495101c726d89',
-  '2025-11-10T22:35:07.874878'
+  '2025-11-10T22:58:47.595723'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -8550,7 +8550,7 @@ VALUES (
   '{"name": "Johnny Unite-Us", "display_name": "Johnny Unite-Us", "about": "Owner Operator of Eightpointsun Intermodal #GrownFolksCheckIn #ITCM", "website": "https://vine.co/u/Johnny Unite-Us", "nip05": "Johnny Unite-Us@divine.video"}',
   '2025-10-13T18:59:28.000',
   '704c095aa7ec8d880cdeadaf1ed8d6efae1a599ae49904df2b6a36a10f13c939',
-  '2025-11-10T22:35:07.874888'
+  '2025-11-10T22:58:47.595735'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -8581,7 +8581,7 @@ VALUES (
   '{"name": "Classiplier", "display_name": "Classiplier", "about": "Welcome to Classiplier''s official Vine account", "website": "https://vine.co/u/Classiplier", "nip05": "Classiplier@divine.video", "location": "| Goodbye, Vine... |"}',
   '2025-10-13T18:59:15.000',
   'fda348b217626c32c3a0d1e5043bf38bb89713c28a1f03a2b307a9697ea471cb',
-  '2025-11-10T22:35:07.874905'
+  '2025-11-10T22:58:47.595826'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -8612,7 +8612,7 @@ VALUES (
   '{"name": "Joel Pimentel", "display_name": "Joel Pimentel", "about": "I''m Joel. I''m 15. I love acting & singing. I love Jesus Christ . Follow for funny vines and covers!", "website": "https://vine.co/u/Joel Pimentel", "nip05": "Joel Pimentel@divine.video", "location": "california"}',
   '2025-10-13T18:55:23.000',
   'f29d68249dfc1511240eb723eb815d77d4a007f4d3e09060fa1de8e65951356d',
-  '2025-11-10T22:35:07.874949'
+  '2025-11-10T22:58:47.595840'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -8643,7 +8643,7 @@ VALUES (
   '{"name": "Toronto Maple Leafs", "display_name": "Toronto Maple Leafs", "about": "Vine creator @Toronto Maple Leafs", "website": "https://vine.co/u/Toronto Maple Leafs", "nip05": "Toronto Maple Leafs@divine.video"}',
   '2025-10-13T18:54:51.000',
   '4e149ef8c4a415ab37e1c91e748d0efd93d6451b6f93deeb17082a01568e61c6',
-  '2025-11-10T22:35:07.874965'
+  '2025-11-10T22:58:47.595850'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -8674,7 +8674,7 @@ VALUES (
   '{"name": "virgo\u2013witch", "display_name": "virgo\u2013witch", "about": "ig: virgo.witch yt: virgo\u2013witch", "website": "https://youtube.com/@virgo", "nip05": "virgo\u2013witch@divine.video", "location": "Grace \ud83d\udc93"}',
   '2025-10-13T18:54:34.000',
   'ea01db3c4cf6afdeadd0848db36dbe1a31a21c04e13fee8f8b06258b76653e7e',
-  '2025-11-10T22:35:07.874979'
+  '2025-11-10T22:58:47.595865'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -8705,7 +8705,7 @@ VALUES (
   '{"name": "friends perk", "display_name": "friends perk", "about": "\u2014 ig: friendsperkvine", "website": "https://instagram.com/friendsperkvine", "nip05": "friends perk@divine.video", "location": "twitter: friendsprk"}',
   '2025-10-13T18:51:47.000',
   '8c83a9b50b11150b1c28e261599f53aaac4c62cbc4418aaf70dfcf366ac7aff2',
-  '2025-11-10T22:35:07.874990'
+  '2025-11-10T22:58:47.595876'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -8736,7 +8736,7 @@ VALUES (
   '{"name": "kookiebaby", "display_name": "kookiebaby", "about": "Vine creator @kookiebaby", "website": "https://vine.co/u/kookiebaby", "nip05": "kookiebaby@divine.video"}',
   '2025-10-13T18:48:59.000',
   '01b3b8b0552db9868333492cdf217055e0c1bb565a77e0c13861b0a3bed00d0f',
-  '2025-11-10T22:35:07.874999'
+  '2025-11-10T22:58:47.595885'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -8767,7 +8767,7 @@ VALUES (
   '{"name": "grayblake3", "display_name": "grayblake3", "about": "Instagram-grayblake3", "website": "https://vine.co/u/grayblake3", "nip05": "grayblake3@divine.video"}',
   '2025-10-13T18:47:07.000',
   '80f6c3d702fc2f11866038cc8b8a7c1935263af071a04b2f7ba958d0a876a485',
-  '2025-11-10T22:35:07.875009'
+  '2025-11-10T22:58:47.595895'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -8798,7 +8798,7 @@ VALUES (
   '{"name": "seriously pll", "display_name": "seriously pll", "about": "Vine creator @seriously pll", "website": "https://vine.co/u/seriously pll", "nip05": "seriously pll@divine.video"}',
   '2025-10-13T18:46:53.000',
   'ac4bd1d71bb91d0301220acb606f2bbfe24cfc9846d787e2308b5bffbe7b4442',
-  '2025-11-10T22:35:07.875018'
+  '2025-11-10T22:58:47.595906'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -8829,7 +8829,7 @@ VALUES (
   '{"name": "iCris7M", "display_name": "iCris7M", "about": "My style is Black .. and EXPENSIVE", "website": "https://vine.co/u/iCris7M", "nip05": "iCris7M@divine.video", "location": "PARADISE \u2708"}',
   '2025-10-13T18:44:44.000',
   'e3d48f368a4579c1c6ab9ec611a5f71f74b060abb0a958df00f2af1b26b364c6',
-  '2025-11-10T22:35:07.875029'
+  '2025-11-10T22:58:47.595918'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -8860,7 +8860,7 @@ VALUES (
   '{"name": "tennis_superplay", "display_name": "tennis_superplay", "about": "Vine creator @tennis_superplay", "website": "https://vine.co/u/tennis_superplay", "nip05": "tennis_superplay@divine.video"}',
   '2025-10-13T18:44:26.000',
   '6aac8da242985060a12b211bdf0b42c27417fbd307f8c9f07bcea975b8502287',
-  '2025-11-10T22:35:07.875038'
+  '2025-11-10T22:58:47.595928'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -8891,7 +8891,7 @@ VALUES (
   '{"name": "jvcksonwvng\u2022bio", "display_name": "jvcksonwvng\u2022bio", "about": "thank you for the memories! if you want to find me, my twitter is jvcks0nwvng and yt is JVCKSONWVNG", "website": "https://youtube.com/@is", "nip05": "jvcksonwvng\u2022bio@divine.video"}',
   '2025-10-13T18:43:45.000',
   'e93b0dfd2988e0feee809e195b88f1c571ce8bcf533dd930a3ec83603bb6fb10',
-  '2025-11-10T22:35:07.875049'
+  '2025-11-10T22:58:47.595938'
 );
 INSERT OR IGNORE INTO event (id, pubkey, created_at, kind, tags, content, sig, sources)
 VALUES (
@@ -8922,7 +8922,7 @@ VALUES (
   '{"name": "grease jun", "display_name": "grease jun", "about": "greasejun on insta | Main : Kpop transformations", "website": "https://vine.co/u/grease jun", "nip05": "grease jun@divine.video"}',
   '2025-10-13T18:43:32.000',
   'ea213fa99a5cdfb597cfbd3940a629e7b183e235e79e18d050a051920baf9199',
-  '2025-11-10T22:35:07.875058'
+  '2025-11-10T22:58:47.595947'
 );
 
 -- Video Metrics
@@ -8933,7 +8933,7 @@ VALUES (
   9363,
   NULL,
   415,
-  '2025-11-10T22:35:07.875179'
+  '2025-11-10T22:58:47.596078'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -8942,7 +8942,7 @@ VALUES (
   934817,
   NULL,
   14926,
-  '2025-11-10T22:35:07.875187'
+  '2025-11-10T22:58:47.596087'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -8951,7 +8951,7 @@ VALUES (
   934817,
   NULL,
   14926,
-  '2025-11-10T22:35:07.875194'
+  '2025-11-10T22:58:47.596092'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -8960,7 +8960,7 @@ VALUES (
   768406,
   NULL,
   13704,
-  '2025-11-10T22:35:07.875200'
+  '2025-11-10T22:58:47.596097'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -8969,7 +8969,7 @@ VALUES (
   213521,
   NULL,
   2498,
-  '2025-11-10T22:35:07.875206'
+  '2025-11-10T22:58:47.596102'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -8978,7 +8978,7 @@ VALUES (
   213521,
   NULL,
   2498,
-  '2025-11-10T22:35:07.875211'
+  '2025-11-10T22:58:47.596107'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -8987,7 +8987,7 @@ VALUES (
   248986,
   NULL,
   1348,
-  '2025-11-10T22:35:07.875216'
+  '2025-11-10T22:58:47.596112'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -8996,7 +8996,7 @@ VALUES (
   248986,
   NULL,
   1348,
-  '2025-11-10T22:35:07.875221'
+  '2025-11-10T22:58:47.596117'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9005,7 +9005,7 @@ VALUES (
   283510,
   NULL,
   3082,
-  '2025-11-10T22:35:07.875227'
+  '2025-11-10T22:58:47.596121'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9014,7 +9014,7 @@ VALUES (
   283510,
   NULL,
   3082,
-  '2025-11-10T22:35:07.875232'
+  '2025-11-10T22:58:47.596126'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9023,7 +9023,7 @@ VALUES (
   153579,
   NULL,
   979,
-  '2025-11-10T22:35:07.875238'
+  '2025-11-10T22:58:47.596131'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9032,7 +9032,7 @@ VALUES (
   153579,
   NULL,
   979,
-  '2025-11-10T22:35:07.875243'
+  '2025-11-10T22:58:47.596136'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9041,7 +9041,7 @@ VALUES (
   201355,
   NULL,
   1774,
-  '2025-11-10T22:35:07.875249'
+  '2025-11-10T22:58:47.596141'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9050,7 +9050,7 @@ VALUES (
   235136,
   NULL,
   2277,
-  '2025-11-10T22:35:07.875255'
+  '2025-11-10T22:58:47.596146'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9059,7 +9059,7 @@ VALUES (
   235136,
   NULL,
   2277,
-  '2025-11-10T22:35:07.875262'
+  '2025-11-10T22:58:47.596151'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9068,7 +9068,7 @@ VALUES (
   139140,
   NULL,
   2124,
-  '2025-11-10T22:35:07.875268'
+  '2025-11-10T22:58:47.596156'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9077,7 +9077,7 @@ VALUES (
   139140,
   NULL,
   2124,
-  '2025-11-10T22:35:07.875274'
+  '2025-11-10T22:58:47.596161'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9086,7 +9086,7 @@ VALUES (
   117542,
   NULL,
   860,
-  '2025-11-10T22:35:07.875279'
+  '2025-11-10T22:58:47.596166'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9095,7 +9095,7 @@ VALUES (
   117542,
   NULL,
   860,
-  '2025-11-10T22:35:07.875285'
+  '2025-11-10T22:58:47.596170'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9104,7 +9104,7 @@ VALUES (
   22651,
   NULL,
   1280,
-  '2025-11-10T22:35:07.875290'
+  '2025-11-10T22:58:47.596175'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9113,7 +9113,7 @@ VALUES (
   22651,
   NULL,
   1280,
-  '2025-11-10T22:35:07.875295'
+  '2025-11-10T22:58:47.596179'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9122,7 +9122,7 @@ VALUES (
   8164,
   NULL,
   93,
-  '2025-11-10T22:35:07.875301'
+  '2025-11-10T22:58:47.596184'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9131,7 +9131,7 @@ VALUES (
   1213,
   NULL,
   45,
-  '2025-11-10T22:35:07.875306'
+  '2025-11-10T22:58:47.596189'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9140,7 +9140,7 @@ VALUES (
   4024,
   NULL,
   100,
-  '2025-11-10T22:35:07.875312'
+  '2025-11-10T22:58:47.596194'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9149,7 +9149,7 @@ VALUES (
   2588,
   NULL,
   344,
-  '2025-11-10T22:35:07.875318'
+  '2025-11-10T22:58:47.596199'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9158,7 +9158,7 @@ VALUES (
   2588,
   NULL,
   344,
-  '2025-11-10T22:35:07.875323'
+  '2025-11-10T22:58:47.596204'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9167,7 +9167,7 @@ VALUES (
   2784,
   NULL,
   395,
-  '2025-11-10T22:35:07.875328'
+  '2025-11-10T22:58:47.596208'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9176,7 +9176,7 @@ VALUES (
   879,
   NULL,
   42,
-  '2025-11-10T22:35:07.875333'
+  '2025-11-10T22:58:47.596213'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9185,7 +9185,7 @@ VALUES (
   1119,
   NULL,
   26,
-  '2025-11-10T22:35:07.875339'
+  '2025-11-10T22:58:47.596218'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9194,7 +9194,7 @@ VALUES (
   1895,
   NULL,
   44,
-  '2025-11-10T22:35:07.875346'
+  '2025-11-10T22:58:47.596224'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9203,7 +9203,7 @@ VALUES (
   1621,
   NULL,
   14,
-  '2025-11-10T22:35:07.875351'
+  '2025-11-10T22:58:47.596229'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9212,7 +9212,7 @@ VALUES (
   24,
   NULL,
   0,
-  '2025-11-10T22:35:07.875358'
+  '2025-11-10T22:58:47.596235'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9221,7 +9221,7 @@ VALUES (
   24,
   NULL,
   0,
-  '2025-11-10T22:35:07.875365'
+  '2025-11-10T22:58:47.596240'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9230,7 +9230,7 @@ VALUES (
   1,
   NULL,
   0,
-  '2025-11-10T22:35:07.875370'
+  '2025-11-10T22:58:47.596245'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9239,7 +9239,7 @@ VALUES (
   2731,
   NULL,
   83,
-  '2025-11-10T22:35:07.875376'
+  '2025-11-10T22:58:47.596251'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9248,7 +9248,7 @@ VALUES (
   NULL,
   NULL,
   0,
-  '2025-11-10T22:35:07.875382'
+  '2025-11-10T22:58:47.596256'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9257,7 +9257,7 @@ VALUES (
   150,
   NULL,
   6,
-  '2025-11-10T22:35:07.875388'
+  '2025-11-10T22:58:47.596261'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9266,7 +9266,7 @@ VALUES (
   1800,
   NULL,
   78,
-  '2025-11-10T22:35:07.875393'
+  '2025-11-10T22:58:47.596266'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9275,7 +9275,7 @@ VALUES (
   2505,
   NULL,
   46,
-  '2025-11-10T22:35:07.875398'
+  '2025-11-10T22:58:47.596270'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9284,7 +9284,7 @@ VALUES (
   2072,
   NULL,
   108,
-  '2025-11-10T22:35:07.875404'
+  '2025-11-10T22:58:47.596275'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9293,7 +9293,7 @@ VALUES (
   2200,
   NULL,
   50,
-  '2025-11-10T22:35:07.875409'
+  '2025-11-10T22:58:47.596280'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9302,7 +9302,7 @@ VALUES (
   144,
   NULL,
   0,
-  '2025-11-10T22:35:07.875414'
+  '2025-11-10T22:58:47.596289'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9311,7 +9311,7 @@ VALUES (
   2518,
   NULL,
   106,
-  '2025-11-10T22:35:07.875419'
+  '2025-11-10T22:58:47.596299'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9320,7 +9320,7 @@ VALUES (
   160,
   NULL,
   0,
-  '2025-11-10T22:35:07.875425'
+  '2025-11-10T22:58:47.596313'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9329,7 +9329,7 @@ VALUES (
   2367,
   NULL,
   109,
-  '2025-11-10T22:35:07.875430'
+  '2025-11-10T22:58:47.596325'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9338,7 +9338,7 @@ VALUES (
   3535,
   NULL,
   60,
-  '2025-11-10T22:35:07.875436'
+  '2025-11-10T22:58:47.596337'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9347,7 +9347,7 @@ VALUES (
   43,
   NULL,
   0,
-  '2025-11-10T22:35:07.875444'
+  '2025-11-10T22:58:47.596352'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9356,7 +9356,7 @@ VALUES (
   1,
   NULL,
   0,
-  '2025-11-10T22:35:07.875450'
+  '2025-11-10T22:58:47.596362'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9365,7 +9365,7 @@ VALUES (
   311,
   NULL,
   14,
-  '2025-11-10T22:35:07.875457'
+  '2025-11-10T22:58:47.596393'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9374,7 +9374,7 @@ VALUES (
   85,
   NULL,
   1,
-  '2025-11-10T22:35:07.875463'
+  '2025-11-10T22:58:47.596405'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9383,7 +9383,7 @@ VALUES (
   56,
   NULL,
   14,
-  '2025-11-10T22:35:07.875469'
+  '2025-11-10T22:58:47.596412'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9392,7 +9392,7 @@ VALUES (
   17,
   NULL,
   0,
-  '2025-11-10T22:35:07.875476'
+  '2025-11-10T22:58:47.596419'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9401,7 +9401,7 @@ VALUES (
   1702,
   NULL,
   84,
-  '2025-11-10T22:35:07.875500'
+  '2025-11-10T22:58:47.596425'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9410,7 +9410,7 @@ VALUES (
   6,
   NULL,
   0,
-  '2025-11-10T22:35:07.875507'
+  '2025-11-10T22:58:47.596430'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9419,7 +9419,7 @@ VALUES (
   1275,
   NULL,
   20,
-  '2025-11-10T22:35:07.875514'
+  '2025-11-10T22:58:47.596436'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9428,7 +9428,7 @@ VALUES (
   2232,
   NULL,
   125,
-  '2025-11-10T22:35:07.875520'
+  '2025-11-10T22:58:47.596443'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9437,7 +9437,7 @@ VALUES (
   2232,
   NULL,
   125,
-  '2025-11-10T22:35:07.875525'
+  '2025-11-10T22:58:47.596449'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9446,7 +9446,7 @@ VALUES (
   69,
   NULL,
   1,
-  '2025-11-10T22:35:07.875529'
+  '2025-11-10T22:58:47.596453'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9455,7 +9455,7 @@ VALUES (
   3805,
   NULL,
   96,
-  '2025-11-10T22:35:07.875535'
+  '2025-11-10T22:58:47.596459'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9464,7 +9464,7 @@ VALUES (
   2050,
   NULL,
   69,
-  '2025-11-10T22:35:07.875540'
+  '2025-11-10T22:58:47.596464'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9473,7 +9473,7 @@ VALUES (
   2665,
   NULL,
   34,
-  '2025-11-10T22:35:07.875546'
+  '2025-11-10T22:58:47.596471'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9482,7 +9482,7 @@ VALUES (
   287,
   NULL,
   8,
-  '2025-11-10T22:35:07.875552'
+  '2025-11-10T22:58:47.596477'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9491,7 +9491,7 @@ VALUES (
   399,
   NULL,
   18,
-  '2025-11-10T22:35:07.875557'
+  '2025-11-10T22:58:47.596483'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9500,7 +9500,7 @@ VALUES (
   971,
   NULL,
   16,
-  '2025-11-10T22:35:07.875562'
+  '2025-11-10T22:58:47.596489'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9509,7 +9509,7 @@ VALUES (
   35,
   NULL,
   2,
-  '2025-11-10T22:35:07.875566'
+  '2025-11-10T22:58:47.596493'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9518,7 +9518,7 @@ VALUES (
   1326,
   NULL,
   129,
-  '2025-11-10T22:35:07.875572'
+  '2025-11-10T22:58:47.596499'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9527,7 +9527,7 @@ VALUES (
   121,
   NULL,
   4,
-  '2025-11-10T22:35:07.875578'
+  '2025-11-10T22:58:47.596505'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9536,7 +9536,7 @@ VALUES (
   2177,
   NULL,
   79,
-  '2025-11-10T22:35:07.875583'
+  '2025-11-10T22:58:47.596511'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9545,7 +9545,7 @@ VALUES (
   15,
   NULL,
   1,
-  '2025-11-10T22:35:07.875591'
+  '2025-11-10T22:58:47.596519'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9554,7 +9554,7 @@ VALUES (
   62,
   NULL,
   0,
-  '2025-11-10T22:35:07.875596'
+  '2025-11-10T22:58:47.596524'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9563,7 +9563,7 @@ VALUES (
   3477,
   NULL,
   108,
-  '2025-11-10T22:35:07.875601'
+  '2025-11-10T22:58:47.596530'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9572,7 +9572,7 @@ VALUES (
   5,
   NULL,
   0,
-  '2025-11-10T22:35:07.875606'
+  '2025-11-10T22:58:47.596535'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9581,7 +9581,7 @@ VALUES (
   5,
   NULL,
   0,
-  '2025-11-10T22:35:07.875611'
+  '2025-11-10T22:58:47.596541'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9590,7 +9590,7 @@ VALUES (
   1307,
   NULL,
   23,
-  '2025-11-10T22:35:07.875617'
+  '2025-11-10T22:58:47.596547'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9599,7 +9599,7 @@ VALUES (
   1550,
   NULL,
   58,
-  '2025-11-10T22:35:07.875622'
+  '2025-11-10T22:58:47.596553'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9608,7 +9608,7 @@ VALUES (
   3252,
   NULL,
   138,
-  '2025-11-10T22:35:07.875628'
+  '2025-11-10T22:58:47.596559'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9617,7 +9617,7 @@ VALUES (
   2,
   NULL,
   0,
-  '2025-11-10T22:35:07.875632'
+  '2025-11-10T22:58:47.596564'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9626,7 +9626,7 @@ VALUES (
   1074,
   NULL,
   78,
-  '2025-11-10T22:35:07.875638'
+  '2025-11-10T22:58:47.596570'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9635,7 +9635,7 @@ VALUES (
   3056,
   NULL,
   103,
-  '2025-11-10T22:35:07.875642'
+  '2025-11-10T22:58:47.596575'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9644,7 +9644,7 @@ VALUES (
   225,
   NULL,
   15,
-  '2025-11-10T22:35:07.875648'
+  '2025-11-10T22:58:47.596581'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9653,7 +9653,7 @@ VALUES (
   1,
   NULL,
   0,
-  '2025-11-10T22:35:07.875652'
+  '2025-11-10T22:58:47.596585'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9662,7 +9662,7 @@ VALUES (
   146,
   NULL,
   7,
-  '2025-11-10T22:35:07.875657'
+  '2025-11-10T22:58:47.596591'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9671,7 +9671,7 @@ VALUES (
   2688,
   NULL,
   136,
-  '2025-11-10T22:35:07.875662'
+  '2025-11-10T22:58:47.596597'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9680,7 +9680,7 @@ VALUES (
   2688,
   NULL,
   136,
-  '2025-11-10T22:35:07.875667'
+  '2025-11-10T22:58:47.596602'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9689,7 +9689,7 @@ VALUES (
   1191,
   NULL,
   290,
-  '2025-11-10T22:35:07.875672'
+  '2025-11-10T22:58:47.596607'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9698,7 +9698,7 @@ VALUES (
   1191,
   NULL,
   290,
-  '2025-11-10T22:35:07.875677'
+  '2025-11-10T22:58:47.596612'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9707,7 +9707,7 @@ VALUES (
   193,
   NULL,
   5,
-  '2025-11-10T22:35:07.875682'
+  '2025-11-10T22:58:47.596617'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9716,7 +9716,7 @@ VALUES (
   2318,
   NULL,
   145,
-  '2025-11-10T22:35:07.875687'
+  '2025-11-10T22:58:47.596623'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9725,7 +9725,7 @@ VALUES (
   2693,
   NULL,
   93,
-  '2025-11-10T22:35:07.875692'
+  '2025-11-10T22:58:47.596628'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9734,7 +9734,7 @@ VALUES (
   1010,
   NULL,
   28,
-  '2025-11-10T22:35:07.875697'
+  '2025-11-10T22:58:47.596634'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9743,7 +9743,7 @@ VALUES (
   5,
   NULL,
   0,
-  '2025-11-10T22:35:07.875703'
+  '2025-11-10T22:58:47.596640'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9752,7 +9752,7 @@ VALUES (
   28,
   NULL,
   0,
-  '2025-11-10T22:35:07.875708'
+  '2025-11-10T22:58:47.596646'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9761,7 +9761,7 @@ VALUES (
   241,
   NULL,
   0,
-  '2025-11-10T22:35:07.875713'
+  '2025-11-10T22:58:47.596651'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9770,7 +9770,7 @@ VALUES (
   NULL,
   NULL,
   0,
-  '2025-11-10T22:35:07.875719'
+  '2025-11-10T22:58:47.596657'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9779,7 +9779,7 @@ VALUES (
   NULL,
   NULL,
   0,
-  '2025-11-10T22:35:07.875725'
+  '2025-11-10T22:58:47.596663'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9788,7 +9788,7 @@ VALUES (
   13,
   NULL,
   0,
-  '2025-11-10T22:35:07.875730'
+  '2025-11-10T22:58:47.596669'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9797,7 +9797,7 @@ VALUES (
   2063,
   NULL,
   61,
-  '2025-11-10T22:35:07.875735'
+  '2025-11-10T22:58:47.596674'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9806,7 +9806,7 @@ VALUES (
   2,
   NULL,
   0,
-  '2025-11-10T22:35:07.875741'
+  '2025-11-10T22:58:47.596680'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9815,7 +9815,7 @@ VALUES (
   1,
   NULL,
   0,
-  '2025-11-10T22:35:07.875746'
+  '2025-11-10T22:58:47.596686'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9824,7 +9824,7 @@ VALUES (
   164,
   NULL,
   6,
-  '2025-11-10T22:35:07.875751'
+  '2025-11-10T22:58:47.596691'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9833,7 +9833,7 @@ VALUES (
   2418,
   NULL,
   130,
-  '2025-11-10T22:35:07.875757'
+  '2025-11-10T22:58:47.596698'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9842,7 +9842,7 @@ VALUES (
   553,
   NULL,
   11,
-  '2025-11-10T22:35:07.875762'
+  '2025-11-10T22:58:47.596703'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9851,7 +9851,7 @@ VALUES (
   4,
   NULL,
   0,
-  '2025-11-10T22:35:07.875770'
+  '2025-11-10T22:58:47.596711'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9860,7 +9860,7 @@ VALUES (
   512,
   NULL,
   14,
-  '2025-11-10T22:35:07.875775'
+  '2025-11-10T22:58:47.596717'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9869,7 +9869,7 @@ VALUES (
   1377,
   NULL,
   73,
-  '2025-11-10T22:35:07.875780'
+  '2025-11-10T22:58:47.596722'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9878,7 +9878,7 @@ VALUES (
   3,
   NULL,
   0,
-  '2025-11-10T22:35:07.875785'
+  '2025-11-10T22:58:47.596727'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9887,7 +9887,7 @@ VALUES (
   946,
   NULL,
   9,
-  '2025-11-10T22:35:07.875791'
+  '2025-11-10T22:58:47.596734'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9896,7 +9896,7 @@ VALUES (
   2587,
   NULL,
   161,
-  '2025-11-10T22:35:07.875796'
+  '2025-11-10T22:58:47.596740'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9905,7 +9905,7 @@ VALUES (
   1010,
   NULL,
   24,
-  '2025-11-10T22:35:07.875801'
+  '2025-11-10T22:58:47.596745'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9914,7 +9914,7 @@ VALUES (
   19,
   NULL,
   0,
-  '2025-11-10T22:35:07.875807'
+  '2025-11-10T22:58:47.596751'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9923,7 +9923,7 @@ VALUES (
   3381,
   NULL,
   80,
-  '2025-11-10T22:35:07.875813'
+  '2025-11-10T22:58:47.596757'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9932,7 +9932,7 @@ VALUES (
   2,
   NULL,
   0,
-  '2025-11-10T22:35:07.875818'
+  '2025-11-10T22:58:47.596763'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9941,7 +9941,7 @@ VALUES (
   1628,
   NULL,
   28,
-  '2025-11-10T22:35:07.875823'
+  '2025-11-10T22:58:47.596769'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9950,7 +9950,7 @@ VALUES (
   2434,
   NULL,
   146,
-  '2025-11-10T22:35:07.875828'
+  '2025-11-10T22:58:47.596774'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9959,7 +9959,7 @@ VALUES (
   105,
   NULL,
   11,
-  '2025-11-10T22:35:07.875833'
+  '2025-11-10T22:58:47.596780'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9968,7 +9968,7 @@ VALUES (
   1774,
   NULL,
   67,
-  '2025-11-10T22:35:07.875842'
+  '2025-11-10T22:58:47.596931'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9977,7 +9977,7 @@ VALUES (
   1617,
   NULL,
   101,
-  '2025-11-10T22:35:07.875848'
+  '2025-11-10T22:58:47.596942'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9986,7 +9986,7 @@ VALUES (
   975,
   NULL,
   18,
-  '2025-11-10T22:35:07.875854'
+  '2025-11-10T22:58:47.596949'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -9995,7 +9995,7 @@ VALUES (
   2298,
   NULL,
   69,
-  '2025-11-10T22:35:07.875859'
+  '2025-11-10T22:58:47.596953'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10004,7 +10004,7 @@ VALUES (
   3256,
   NULL,
   88,
-  '2025-11-10T22:35:07.875865'
+  '2025-11-10T22:58:47.596958'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10013,7 +10013,7 @@ VALUES (
   93,
   NULL,
   9,
-  '2025-11-10T22:35:07.875870'
+  '2025-11-10T22:58:47.596988'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10022,7 +10022,7 @@ VALUES (
   1083,
   NULL,
   31,
-  '2025-11-10T22:35:07.875875'
+  '2025-11-10T22:58:47.596994'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10031,7 +10031,7 @@ VALUES (
   49,
   NULL,
   3,
-  '2025-11-10T22:35:07.875881'
+  '2025-11-10T22:58:47.597021'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10040,7 +10040,7 @@ VALUES (
   839,
   NULL,
   12,
-  '2025-11-10T22:35:07.875923'
+  '2025-11-10T22:58:47.597029'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10049,7 +10049,7 @@ VALUES (
   NULL,
   NULL,
   0,
-  '2025-11-10T22:35:07.875934'
+  '2025-11-10T22:58:47.597033'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10058,7 +10058,7 @@ VALUES (
   3316,
   NULL,
   86,
-  '2025-11-10T22:35:07.875939'
+  '2025-11-10T22:58:47.597037'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10067,7 +10067,7 @@ VALUES (
   2,
   NULL,
   0,
-  '2025-11-10T22:35:07.875943'
+  '2025-11-10T22:58:47.597040'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10076,7 +10076,7 @@ VALUES (
   2366,
   NULL,
   61,
-  '2025-11-10T22:35:07.875946'
+  '2025-11-10T22:58:47.597069'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10085,7 +10085,7 @@ VALUES (
   98,
   NULL,
   0,
-  '2025-11-10T22:35:07.875950'
+  '2025-11-10T22:58:47.597075'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10094,7 +10094,7 @@ VALUES (
   3203,
   NULL,
   57,
-  '2025-11-10T22:35:07.875953'
+  '2025-11-10T22:58:47.597105'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10103,7 +10103,7 @@ VALUES (
   35,
   NULL,
   0,
-  '2025-11-10T22:35:07.875957'
+  '2025-11-10T22:58:47.597111'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10112,7 +10112,7 @@ VALUES (
   35,
   NULL,
   0,
-  '2025-11-10T22:35:07.875961'
+  '2025-11-10T22:58:47.597115'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10121,7 +10121,7 @@ VALUES (
   7,
   NULL,
   0,
-  '2025-11-10T22:35:07.875964'
+  '2025-11-10T22:58:47.597119'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10130,7 +10130,7 @@ VALUES (
   247,
   NULL,
   3,
-  '2025-11-10T22:35:07.875967'
+  '2025-11-10T22:58:47.597123'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10139,7 +10139,7 @@ VALUES (
   2612,
   NULL,
   58,
-  '2025-11-10T22:35:07.875970'
+  '2025-11-10T22:58:47.597127'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10148,7 +10148,7 @@ VALUES (
   2491,
   NULL,
   83,
-  '2025-11-10T22:35:07.875973'
+  '2025-11-10T22:58:47.597131'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10157,7 +10157,7 @@ VALUES (
   3157,
   NULL,
   61,
-  '2025-11-10T22:35:07.875977'
+  '2025-11-10T22:58:47.597135'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10166,7 +10166,7 @@ VALUES (
   2255,
   NULL,
   57,
-  '2025-11-10T22:35:07.875981'
+  '2025-11-10T22:58:47.597139'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10175,7 +10175,7 @@ VALUES (
   7,
   NULL,
   0,
-  '2025-11-10T22:35:07.875984'
+  '2025-11-10T22:58:47.597144'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10184,7 +10184,7 @@ VALUES (
   748,
   NULL,
   31,
-  '2025-11-10T22:35:07.875987'
+  '2025-11-10T22:58:47.597148'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10193,7 +10193,7 @@ VALUES (
   748,
   NULL,
   31,
-  '2025-11-10T22:35:07.875990'
+  '2025-11-10T22:58:47.597152'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10202,7 +10202,7 @@ VALUES (
   2948,
   NULL,
   54,
-  '2025-11-10T22:35:07.876021'
+  '2025-11-10T22:58:47.597156'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10211,7 +10211,7 @@ VALUES (
   1086,
   NULL,
   44,
-  '2025-11-10T22:35:07.876026'
+  '2025-11-10T22:58:47.597160'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10220,7 +10220,7 @@ VALUES (
   2790,
   NULL,
   11,
-  '2025-11-10T22:35:07.876030'
+  '2025-11-10T22:58:47.597164'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10229,7 +10229,7 @@ VALUES (
   15,
   NULL,
   0,
-  '2025-11-10T22:35:07.876034'
+  '2025-11-10T22:58:47.597169'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10238,7 +10238,7 @@ VALUES (
   2127,
   NULL,
   138,
-  '2025-11-10T22:35:07.876037'
+  '2025-11-10T22:58:47.597172'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10247,7 +10247,7 @@ VALUES (
   2115,
   NULL,
   39,
-  '2025-11-10T22:35:07.876058'
+  '2025-11-10T22:58:47.597176'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10256,7 +10256,7 @@ VALUES (
   1,
   NULL,
   0,
-  '2025-11-10T22:35:07.876063'
+  '2025-11-10T22:58:47.597180'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10265,7 +10265,7 @@ VALUES (
   108,
   NULL,
   2,
-  '2025-11-10T22:35:07.876083'
+  '2025-11-10T22:58:47.597185'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10274,7 +10274,7 @@ VALUES (
   1830,
   NULL,
   7,
-  '2025-11-10T22:35:07.876091'
+  '2025-11-10T22:58:47.597191'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10283,7 +10283,7 @@ VALUES (
   1673,
   NULL,
   18,
-  '2025-11-10T22:35:07.876096'
+  '2025-11-10T22:58:47.597195'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10292,7 +10292,7 @@ VALUES (
   NULL,
   NULL,
   0,
-  '2025-11-10T22:35:07.876100'
+  '2025-11-10T22:58:47.597199'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10301,7 +10301,7 @@ VALUES (
   2266,
   NULL,
   80,
-  '2025-11-10T22:35:07.876103'
+  '2025-11-10T22:58:47.597203'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10310,7 +10310,7 @@ VALUES (
   35,
   NULL,
   0,
-  '2025-11-10T22:35:07.876106'
+  '2025-11-10T22:58:47.597206'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10319,7 +10319,7 @@ VALUES (
   2603,
   NULL,
   60,
-  '2025-11-10T22:35:07.876110'
+  '2025-11-10T22:58:47.597210'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10328,7 +10328,7 @@ VALUES (
   2603,
   NULL,
   60,
-  '2025-11-10T22:35:07.876113'
+  '2025-11-10T22:58:47.597212'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10337,7 +10337,7 @@ VALUES (
   8,
   NULL,
   0,
-  '2025-11-10T22:35:07.876116'
+  '2025-11-10T22:58:47.597216'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10346,7 +10346,7 @@ VALUES (
   8,
   NULL,
   0,
-  '2025-11-10T22:35:07.876119'
+  '2025-11-10T22:58:47.597219'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10355,7 +10355,7 @@ VALUES (
   2543,
   NULL,
   57,
-  '2025-11-10T22:35:07.876122'
+  '2025-11-10T22:58:47.597222'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10364,7 +10364,7 @@ VALUES (
   2235,
   NULL,
   47,
-  '2025-11-10T22:35:07.876125'
+  '2025-11-10T22:58:47.597225'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10373,7 +10373,7 @@ VALUES (
   4,
   NULL,
   0,
-  '2025-11-10T22:35:07.876129'
+  '2025-11-10T22:58:47.597229'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10382,7 +10382,7 @@ VALUES (
   157,
   NULL,
   15,
-  '2025-11-10T22:35:07.876133'
+  '2025-11-10T22:58:47.597232'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10391,7 +10391,7 @@ VALUES (
   1620,
   NULL,
   58,
-  '2025-11-10T22:35:07.876136'
+  '2025-11-10T22:58:47.597236'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10400,7 +10400,7 @@ VALUES (
   3,
   NULL,
   0,
-  '2025-11-10T22:35:07.876140'
+  '2025-11-10T22:58:47.597239'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10409,7 +10409,7 @@ VALUES (
   3,
   NULL,
   0,
-  '2025-11-10T22:35:07.876143'
+  '2025-11-10T22:58:47.597242'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10418,7 +10418,7 @@ VALUES (
   933,
   NULL,
   7,
-  '2025-11-10T22:35:07.876146'
+  '2025-11-10T22:58:47.597246'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10427,7 +10427,7 @@ VALUES (
   933,
   NULL,
   7,
-  '2025-11-10T22:35:07.876149'
+  '2025-11-10T22:58:47.597248'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10436,7 +10436,7 @@ VALUES (
   1606,
   NULL,
   28,
-  '2025-11-10T22:35:07.876152'
+  '2025-11-10T22:58:47.597252'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10445,7 +10445,7 @@ VALUES (
   1606,
   NULL,
   28,
-  '2025-11-10T22:35:07.876155'
+  '2025-11-10T22:58:47.597254'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10454,7 +10454,7 @@ VALUES (
   36,
   NULL,
   2,
-  '2025-11-10T22:35:07.876158'
+  '2025-11-10T22:58:47.597258'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10463,7 +10463,7 @@ VALUES (
   1634,
   NULL,
   166,
-  '2025-11-10T22:35:07.876161'
+  '2025-11-10T22:58:47.597261'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10472,7 +10472,7 @@ VALUES (
   18,
   NULL,
   0,
-  '2025-11-10T22:35:07.876165'
+  '2025-11-10T22:58:47.597264'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10481,7 +10481,7 @@ VALUES (
   1353,
   NULL,
   19,
-  '2025-11-10T22:35:07.876168'
+  '2025-11-10T22:58:47.597267'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10490,7 +10490,7 @@ VALUES (
   1496,
   NULL,
   40,
-  '2025-11-10T22:35:07.876171'
+  '2025-11-10T22:58:47.597271'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10499,7 +10499,7 @@ VALUES (
   6,
   NULL,
   0,
-  '2025-11-10T22:35:07.876174'
+  '2025-11-10T22:58:47.597274'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10508,7 +10508,7 @@ VALUES (
   1930,
   NULL,
   77,
-  '2025-11-10T22:35:07.876177'
+  '2025-11-10T22:58:47.597277'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10517,7 +10517,7 @@ VALUES (
   2791,
   NULL,
   100,
-  '2025-11-10T22:35:07.876180'
+  '2025-11-10T22:58:47.597280'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10526,7 +10526,7 @@ VALUES (
   1292,
   NULL,
   18,
-  '2025-11-10T22:35:07.876183'
+  '2025-11-10T22:58:47.597283'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10535,7 +10535,7 @@ VALUES (
   2697,
   NULL,
   60,
-  '2025-11-10T22:35:07.876187'
+  '2025-11-10T22:58:47.597287'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10544,7 +10544,7 @@ VALUES (
   764,
   NULL,
   11,
-  '2025-11-10T22:35:07.876190'
+  '2025-11-10T22:58:47.597290'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10553,7 +10553,7 @@ VALUES (
   1212,
   NULL,
   10,
-  '2025-11-10T22:35:07.876193'
+  '2025-11-10T22:58:47.597293'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10562,7 +10562,7 @@ VALUES (
   1802,
   NULL,
   35,
-  '2025-11-10T22:35:07.876196'
+  '2025-11-10T22:58:47.597296'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10571,7 +10571,7 @@ VALUES (
   1009,
   NULL,
   48,
-  '2025-11-10T22:35:07.876200'
+  '2025-11-10T22:58:47.597299'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10580,7 +10580,7 @@ VALUES (
   1009,
   NULL,
   48,
-  '2025-11-10T22:35:07.876203'
+  '2025-11-10T22:58:47.597302'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10589,7 +10589,7 @@ VALUES (
   2,
   NULL,
   0,
-  '2025-11-10T22:35:07.876206'
+  '2025-11-10T22:58:47.597306'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10598,7 +10598,7 @@ VALUES (
   482,
   NULL,
   0,
-  '2025-11-10T22:35:07.876209'
+  '2025-11-10T22:58:47.597309'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10607,7 +10607,7 @@ VALUES (
   7,
   NULL,
   0,
-  '2025-11-10T22:35:07.876213'
+  '2025-11-10T22:58:47.597312'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10616,7 +10616,7 @@ VALUES (
   7,
   NULL,
   0,
-  '2025-11-10T22:35:07.876216'
+  '2025-11-10T22:58:47.597315'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10625,7 +10625,7 @@ VALUES (
   2,
   NULL,
   0,
-  '2025-11-10T22:35:07.876219'
+  '2025-11-10T22:58:47.597318'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10634,7 +10634,7 @@ VALUES (
   2,
   NULL,
   0,
-  '2025-11-10T22:35:07.876222'
+  '2025-11-10T22:58:47.597321'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10643,7 +10643,7 @@ VALUES (
   21,
   NULL,
   0,
-  '2025-11-10T22:35:07.876225'
+  '2025-11-10T22:58:47.597325'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10652,7 +10652,7 @@ VALUES (
   1832,
   NULL,
   54,
-  '2025-11-10T22:35:07.876228'
+  '2025-11-10T22:58:47.597328'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10661,7 +10661,7 @@ VALUES (
   7,
   NULL,
   0,
-  '2025-11-10T22:35:07.876232'
+  '2025-11-10T22:58:47.597332'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10670,7 +10670,7 @@ VALUES (
   1165,
   NULL,
   50,
-  '2025-11-10T22:35:07.876235'
+  '2025-11-10T22:58:47.597335'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10679,7 +10679,7 @@ VALUES (
   1165,
   NULL,
   50,
-  '2025-11-10T22:35:07.876237'
+  '2025-11-10T22:58:47.597338'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10688,7 +10688,7 @@ VALUES (
   528,
   NULL,
   8,
-  '2025-11-10T22:35:07.876241'
+  '2025-11-10T22:58:47.597341'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10697,7 +10697,7 @@ VALUES (
   113,
   NULL,
   5,
-  '2025-11-10T22:35:07.876244'
+  '2025-11-10T22:58:47.597345'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10706,7 +10706,7 @@ VALUES (
   113,
   NULL,
   5,
-  '2025-11-10T22:35:07.876248'
+  '2025-11-10T22:58:47.597348'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10715,7 +10715,7 @@ VALUES (
   1540,
   NULL,
   42,
-  '2025-11-10T22:35:07.876251'
+  '2025-11-10T22:58:47.597351'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10724,7 +10724,7 @@ VALUES (
   1841,
   NULL,
   47,
-  '2025-11-10T22:35:07.876254'
+  '2025-11-10T22:58:47.597354'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10733,7 +10733,7 @@ VALUES (
   1205,
   NULL,
   26,
-  '2025-11-10T22:35:07.876258'
+  '2025-11-10T22:58:47.597358'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10742,7 +10742,7 @@ VALUES (
   1205,
   NULL,
   26,
-  '2025-11-10T22:35:07.876261'
+  '2025-11-10T22:58:47.597361'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10751,7 +10751,7 @@ VALUES (
   1310,
   NULL,
   29,
-  '2025-11-10T22:35:07.876266'
+  '2025-11-10T22:58:47.597364'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10760,7 +10760,7 @@ VALUES (
   1138,
   NULL,
   22,
-  '2025-11-10T22:35:07.876268'
+  '2025-11-10T22:58:47.597367'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10769,7 +10769,7 @@ VALUES (
   1655,
   NULL,
   45,
-  '2025-11-10T22:35:07.876272'
+  '2025-11-10T22:58:47.597370'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10778,7 +10778,7 @@ VALUES (
   1655,
   NULL,
   45,
-  '2025-11-10T22:35:07.876275'
+  '2025-11-10T22:58:47.597373'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10787,7 +10787,7 @@ VALUES (
   1013,
   NULL,
   29,
-  '2025-11-10T22:35:07.876278'
+  '2025-11-10T22:58:47.597376'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10796,7 +10796,7 @@ VALUES (
   1013,
   NULL,
   29,
-  '2025-11-10T22:35:07.876281'
+  '2025-11-10T22:58:47.597380'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10805,7 +10805,7 @@ VALUES (
   28,
   NULL,
   0,
-  '2025-11-10T22:35:07.876284'
+  '2025-11-10T22:58:47.597383'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10814,7 +10814,7 @@ VALUES (
   69,
   NULL,
   1,
-  '2025-11-10T22:35:07.876288'
+  '2025-11-10T22:58:47.597386'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10823,7 +10823,7 @@ VALUES (
   902,
   NULL,
   19,
-  '2025-11-10T22:35:07.876291'
+  '2025-11-10T22:58:47.597390'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10832,7 +10832,7 @@ VALUES (
   1527,
   NULL,
   53,
-  '2025-11-10T22:35:07.876294'
+  '2025-11-10T22:58:47.597393'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10841,7 +10841,7 @@ VALUES (
   9,
   NULL,
   0,
-  '2025-11-10T22:35:07.876297'
+  '2025-11-10T22:58:47.597396'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10850,7 +10850,7 @@ VALUES (
   141,
   NULL,
   4,
-  '2025-11-10T22:35:07.876300'
+  '2025-11-10T22:58:47.597399'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10859,7 +10859,7 @@ VALUES (
   668,
   NULL,
   82,
-  '2025-11-10T22:35:07.876304'
+  '2025-11-10T22:58:47.597403'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10868,7 +10868,7 @@ VALUES (
   597,
   NULL,
   14,
-  '2025-11-10T22:35:07.876307'
+  '2025-11-10T22:58:47.597406'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10877,7 +10877,7 @@ VALUES (
   840,
   NULL,
   23,
-  '2025-11-10T22:35:07.876310'
+  '2025-11-10T22:58:47.597410'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10886,7 +10886,7 @@ VALUES (
   1277,
   NULL,
   59,
-  '2025-11-10T22:35:07.876313'
+  '2025-11-10T22:58:47.597413'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10895,7 +10895,7 @@ VALUES (
   1575,
   NULL,
   43,
-  '2025-11-10T22:35:07.876316'
+  '2025-11-10T22:58:47.597416'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10904,7 +10904,7 @@ VALUES (
   1,
   NULL,
   0,
-  '2025-11-10T22:35:07.876319'
+  '2025-11-10T22:58:47.597420'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10913,7 +10913,7 @@ VALUES (
   1,
   NULL,
   0,
-  '2025-11-10T22:35:07.876323'
+  '2025-11-10T22:58:47.597423'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10922,7 +10922,7 @@ VALUES (
   423,
   NULL,
   22,
-  '2025-11-10T22:35:07.876326'
+  '2025-11-10T22:58:47.597426'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10931,7 +10931,7 @@ VALUES (
   423,
   NULL,
   22,
-  '2025-11-10T22:35:07.876329'
+  '2025-11-10T22:58:47.597430'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10940,7 +10940,7 @@ VALUES (
   1738,
   NULL,
   66,
-  '2025-11-10T22:35:07.876332'
+  '2025-11-10T22:58:47.597433'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10949,7 +10949,7 @@ VALUES (
   1169,
   NULL,
   48,
-  '2025-11-10T22:35:07.876335'
+  '2025-11-10T22:58:47.597436'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10958,7 +10958,7 @@ VALUES (
   1529,
   NULL,
   33,
-  '2025-11-10T22:35:07.876338'
+  '2025-11-10T22:58:47.597439'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10967,7 +10967,7 @@ VALUES (
   44,
   NULL,
   0,
-  '2025-11-10T22:35:07.876341'
+  '2025-11-10T22:58:47.597443'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10976,7 +10976,7 @@ VALUES (
   44,
   NULL,
   0,
-  '2025-11-10T22:35:07.876345'
+  '2025-11-10T22:58:47.597446'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10985,7 +10985,7 @@ VALUES (
   105,
   NULL,
   6,
-  '2025-11-10T22:35:07.876349'
+  '2025-11-10T22:58:47.597450'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -10994,7 +10994,7 @@ VALUES (
   105,
   NULL,
   6,
-  '2025-11-10T22:35:07.876352'
+  '2025-11-10T22:58:47.597453'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -11003,7 +11003,7 @@ VALUES (
   864,
   NULL,
   10,
-  '2025-11-10T22:35:07.876355'
+  '2025-11-10T22:58:47.597456'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -11012,7 +11012,7 @@ VALUES (
   6,
   NULL,
   0,
-  '2025-11-10T22:35:07.876359'
+  '2025-11-10T22:58:47.597460'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -11021,7 +11021,7 @@ VALUES (
   1005,
   NULL,
   61,
-  '2025-11-10T22:35:07.876362'
+  '2025-11-10T22:58:47.597463'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -11030,7 +11030,7 @@ VALUES (
   1,
   NULL,
   0,
-  '2025-11-10T22:35:07.876365'
+  '2025-11-10T22:58:47.597466'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -11039,7 +11039,7 @@ VALUES (
   1849,
   NULL,
   77,
-  '2025-11-10T22:35:07.876368'
+  '2025-11-10T22:58:47.597469'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -11048,7 +11048,7 @@ VALUES (
   866,
   NULL,
   36,
-  '2025-11-10T22:35:07.876371'
+  '2025-11-10T22:58:47.597472'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -11057,7 +11057,7 @@ VALUES (
   866,
   NULL,
   36,
-  '2025-11-10T22:35:07.876374'
+  '2025-11-10T22:58:47.597475'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -11066,7 +11066,7 @@ VALUES (
   1144,
   NULL,
   48,
-  '2025-11-10T22:35:07.876377'
+  '2025-11-10T22:58:47.597479'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -11075,7 +11075,7 @@ VALUES (
   276,
   NULL,
   17,
-  '2025-11-10T22:35:07.876380'
+  '2025-11-10T22:58:47.597482'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -11084,7 +11084,7 @@ VALUES (
   1022,
   NULL,
   58,
-  '2025-11-10T22:35:07.876383'
+  '2025-11-10T22:58:47.597485'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -11093,7 +11093,7 @@ VALUES (
   1022,
   NULL,
   58,
-  '2025-11-10T22:35:07.876386'
+  '2025-11-10T22:58:47.597488'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -11102,7 +11102,7 @@ VALUES (
   211,
   NULL,
   15,
-  '2025-11-10T22:35:07.876389'
+  '2025-11-10T22:58:47.597491'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -11111,7 +11111,7 @@ VALUES (
   211,
   NULL,
   15,
-  '2025-11-10T22:35:07.876392'
+  '2025-11-10T22:58:47.597494'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -11120,7 +11120,7 @@ VALUES (
   612,
   NULL,
   19,
-  '2025-11-10T22:35:07.876395'
+  '2025-11-10T22:58:47.597497'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -11129,7 +11129,7 @@ VALUES (
   1,
   NULL,
   0,
-  '2025-11-10T22:35:07.876398'
+  '2025-11-10T22:58:47.597500'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -11138,7 +11138,7 @@ VALUES (
   30,
   NULL,
   2,
-  '2025-11-10T22:35:07.876401'
+  '2025-11-10T22:58:47.597504'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -11147,7 +11147,7 @@ VALUES (
   30,
   NULL,
   2,
-  '2025-11-10T22:35:07.876404'
+  '2025-11-10T22:58:47.597509'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -11156,7 +11156,7 @@ VALUES (
   399,
   NULL,
   1,
-  '2025-11-10T22:35:07.876408'
+  '2025-11-10T22:58:47.597512'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -11165,7 +11165,7 @@ VALUES (
   566,
   NULL,
   28,
-  '2025-11-10T22:35:07.876410'
+  '2025-11-10T22:58:47.597515'
 );
 INSERT OR IGNORE INTO video_metrics (event_id, loop_count, likes, views, comments, updated_at)
 VALUES (
@@ -11174,5 +11174,5 @@ VALUES (
   207,
   NULL,
   0,
-  '2025-11-10T22:35:07.876414'
+  '2025-11-10T22:58:47.597519'
 );

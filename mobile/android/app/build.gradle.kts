@@ -39,6 +39,7 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        multiDexEnabled = true
     }
 
     signingConfigs {
@@ -53,7 +54,22 @@ android {
     buildTypes {
         release {
             signingConfig = signingConfigs.getByName("release")
+            // Add ProGuard rules to handle duplicate classes from java-opentimestamps fat JAR
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
+    }
+
+    packaging {
+        // Exclude files bundled inside java-opentimestamps.jar (pulled in by ProofMode)
+        // to prevent conflicts with the project's other dependencies.
+        // java-opentimestamps is a "fat JAR" that improperly bundles common libraries
+        // instead of declaring them as dependencies.
+        resources.excludes.add("META-INF/**")
+        resources.pickFirsts.add("com/google/common/**")
+        resources.pickFirsts.add("com/google/protobuf/**")
+        resources.pickFirsts.add("javax/annotation/**")
+        resources.pickFirsts.add("okio/**")
+        resources.pickFirsts.add("com/google/thirdparty/**")
     }
 }
 
@@ -70,7 +86,20 @@ configurations.all {
 
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
+    implementation("androidx.multidex:multidex:2.0.1")
 
     // ProofMode library for cryptographic proof generation
-    implementation("org.witness:android-libproofmode:1.0.18")
+    // Exclude java-opentimestamps fat JAR that causes duplicate class errors
+    implementation("org.witness:android-libproofmode:1.0.18") {
+        exclude(group = "com.eternitywall", module = "java-opentimestamps")
+    }
+}
+
+// Disable duplicate class check for release builds
+// This is required because java-opentimestamps (pulled in by ProofMode) is a fat JAR
+// that bundles common libraries like Guava, Protobuf, etc. instead of declaring them as dependencies
+afterEvaluate {
+    tasks.named("checkReleaseDuplicateClasses") {
+        enabled = false
+    }
 }
