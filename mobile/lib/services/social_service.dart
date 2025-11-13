@@ -1523,6 +1523,8 @@ class SocialService {
     final controller = StreamController<Event>();
 
     // Create managed subscription for comments
+    // NOTE: No onComplete callback - keep subscription open for real-time comments
+    // Comments should stay live to receive new comments after EOSE
     _subscriptionManager
         .createSubscription(
       name: 'comments_$rootEventId',
@@ -1544,12 +1546,9 @@ class SocialService {
           controller.addError(error);
         }
       },
-      onComplete: () {
-        if (!controller.isClosed) {
-          controller.close();
-        }
-      },
-      timeout: const Duration(minutes: 2), // Shorter timeout for comments
+      // Removed onComplete callback to keep subscription open for real-time comments
+      // Only timeout or explicit cancellation will close this stream
+      timeout: const Duration(minutes: 5), // Longer timeout for live comment subscriptions
       priority: 6, // Lower priority for comments
     )
         .catchError((error) {

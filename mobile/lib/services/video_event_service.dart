@@ -3080,14 +3080,11 @@ class VideoEventService extends ChangeNotifier {
       _activeSubscriptions.remove(subscriptionType);
       _subscriptionParams.remove(subscriptionType);
 
-      // Clear the event list for this subscription type when cancelling
-      if (_eventLists.containsKey(subscriptionType)) {
-        Log.info(
-            '🧹 Clearing ${_eventLists[subscriptionType]?.length ?? 0} events from $subscriptionType list',
-            name: 'VideoEventService',
-            category: LogCategory.video);
-        _eventLists[subscriptionType]?.clear();
-      }
+      // NOTE: We intentionally DO NOT clear the event list here
+      // Reason: Force refresh with same parameters should preserve existing videos
+      // The deduplication system (seenEventIds) prevents duplicates automatically
+      // Clearing would cause UI to show empty feed until new events arrive
+      // If we truly need a fresh list (e.g., switching feeds), create a new SubscriptionType
 
       // Clear hashtag and group filters
       _activeHashtagFilters.remove(subscriptionType);

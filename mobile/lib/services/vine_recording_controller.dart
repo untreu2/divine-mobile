@@ -472,6 +472,9 @@ class MobileCameraInterface extends CameraPlatformInterface {
   @override
   bool get canSwitchCamera => _availableCameras.length > 1;
 
+  /// Public getter for camera controller to access aspect ratio
+  CameraController? get controller => _controller;
+
   @override
   void dispose() {
     // Stop any active recording before disposal

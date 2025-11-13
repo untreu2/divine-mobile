@@ -362,13 +362,28 @@ NotificationServiceEnhanced notificationServiceEnhanced(Ref ref) {
 
   // Delay initialization until after critical path is loaded
   if (!kIsWeb) {
-    // Initialize immediately on mobile
+    // Initialize on mobile - wait for keys to be available
     final nostrService = ref.watch(nostrServiceProvider);
     final profileService = ref.watch(userProfileServiceProvider);
     final videoService = ref.watch(videoEventServiceProvider);
 
     Future.microtask(() async {
       try {
+        // Wait for Nostr keys to be loaded before initializing notifications
+        // Keys may take a moment to load from secure storage
+        var retries = 0;
+        while (!nostrService.hasKeys && retries < 30) {
+          // Wait 500ms between checks, up to 15 seconds total
+          await Future.delayed(const Duration(milliseconds: 500));
+          retries++;
+        }
+
+        if (!nostrService.hasKeys) {
+          Log.warning('Notification service initialization skipped - no Nostr keys available after 15s',
+              name: 'AppProviders', category: LogCategory.system);
+          return;
+        }
+
         await service.initialize(
           nostrService: nostrService,
           profileService: profileService,

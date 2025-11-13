@@ -101,7 +101,8 @@ class CommentsNotifier extends _$CommentsNotifier {
 
       // Use listen() instead of await for to avoid blocking on stream completion
       // Nostr relays may not send EOSE, causing long waits with await for
-      final subscription = commentsStream.take(100).listen(
+      // Don't use .take() - let stream stay open for real-time comments
+      final subscription = commentsStream.listen(
         (event) {
           // Convert Nostr event to Comment model
           final comment = _eventToComment(event);
@@ -139,15 +140,9 @@ class CommentsNotifier extends _$CommentsNotifier {
           }
         },
         onDone: () {
-          // Stream completed - ensure loading state is cleared
-          if (!hasReceivedFirstEvent) {
-            // No comments received, show empty state immediately
-            state = state.copyWith(
-              topLevelComments: [],
-              isLoading: false,
-              totalCommentCount: 0,
-            );
-          }
+          // Stream completed (timeout, error, or cancellation)
+          Log.debug('Comment stream completed for $_rootEventId',
+              name: 'CommentsNotifier', category: LogCategory.ui);
           if (!completer.isCompleted) {
             completer.complete();
           }
@@ -159,7 +154,25 @@ class CommentsNotifier extends _$CommentsNotifier {
         subscription.cancel();
       });
 
-      // Wait for stream to complete (for tests and proper async behavior)
+      // Wait briefly for initial comments to arrive, then complete
+      // This prevents waiting forever for stream completion while still
+      // allowing real-time comments to arrive after initial load
+      Future.delayed(const Duration(seconds: 3), () {
+        if (!hasReceivedFirstEvent && !completer.isCompleted) {
+          // No comments received after waiting - show empty state
+          state = state.copyWith(
+            topLevelComments: [],
+            isLoading: false,
+            totalCommentCount: 0,
+          );
+          completer.complete();
+        } else if (!completer.isCompleted) {
+          // Comments received - complete to unblock function
+          // Subscription continues listening for real-time updates
+          completer.complete();
+        }
+      });
+
       await completer.future;
     } catch (e) {
       Log.error('Error loading comments: $e',

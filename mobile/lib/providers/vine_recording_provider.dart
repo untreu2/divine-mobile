@@ -8,7 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:riverpod/riverpod.dart' show Ref;
 import 'package:openvine/services/vine_recording_controller.dart'
-    show VineRecordingController, VineRecordingState, RecordingSegment, MacOSCameraInterface, CameraPlatformInterface;
+    show VineRecordingController, VineRecordingState, RecordingSegment, MacOSCameraInterface, CameraPlatformInterface, MobileCameraInterface;
 import 'package:openvine/models/vine_draft.dart';
 import 'package:openvine/models/native_proof_data.dart';
 import 'package:openvine/models/aspect_ratio.dart' as model;
@@ -128,6 +128,21 @@ class VineRecordingNotifier extends StateNotifier<VineRecordingUIState> {
 
   /// Get the underlying camera interface for advanced controls
   CameraPlatformInterface? get cameraInterface => _controller.cameraInterface;
+
+  /// Get the actual camera preview aspect ratio to prevent distortion
+  /// Returns the real camera sensor aspect ratio, or defaults to 3:4 if unavailable
+  double get cameraPreviewAspectRatio {
+    final interface = _controller.cameraInterface;
+    if (interface is MobileCameraInterface) {
+      // Get aspect ratio from mobile camera controller
+      final controller = interface.controller;
+      if (controller != null && controller.value.isInitialized) {
+        return controller.value.aspectRatio;
+      }
+    }
+    // Default fallback for macOS/web or uninitialized cameras
+    return 3.0 / 4.0;
+  }
 
   /// Update the state based on the current controller state
   void updateState() {

@@ -525,79 +525,97 @@ class _UniversalCameraScreenPureState
           return Stack(
             children: [
               // Camera preview (square/1:1 aspect ratio for Vine-style videos)
+              // Wrapped in GestureDetector for tap-anywhere-to-record (Vine-style UX)
               Positioned.fill(
-                child: Align(
-                  alignment: Alignment.topCenter,
-                  child: AspectRatio(
-                    aspectRatio:
-                        recordingState.aspectRatio == vine.AspectRatio.square
-                        ? 1.0
-                        : 9.0 / 16.0,
-                    child: ClipRect(
-                      child: Stack(
-                        children: [
-                          // Camera preview cropped (not stretched) using Stack Overflow pattern:
-                          // https://stackoverflow.com/questions/51348166/how-to-square-crop-a-flutter-camera-preview
-                          if (recordingState.isInitialized)
-                            LayoutBuilder(
-                              // CRITICAL: Use a key that changes when camera switches
-                              // Without this, the preview widget won't rebuild and freezes on the old camera frame
-                              key: ValueKey('preview_${recordingState.cameraSwitchCount}'),
-                              builder: (context, constraints) {
-                                Log.info('📸 Building camera preview widget (switchCount=${recordingState.cameraSwitchCount})',
-                                    name: 'UniversalCameraScreenPure', category: LogCategory.system);
+                child: GestureDetector(
+                  // Only enable tap-anywhere recording on mobile (not web)
+                  // Web uses single tap to toggle recording
+                  onTapDown: !kIsWeb && recordingState.canRecord
+                      ? (_) => _startRecording()
+                      : null,
+                  onTapUp: !kIsWeb && recordingState.isRecording
+                      ? (_) => _stopRecording()
+                      : null,
+                  onTapCancel: !kIsWeb && recordingState.isRecording
+                      ? () => _stopRecording()
+                      : null,
+                  // Allow gestures to pass through to children (camera controls, zoom, etc.)
+                  behavior: HitTestBehavior.translucent,
+                  child: Align(
+                    alignment: Alignment.topCenter,
+                    child: AspectRatio(
+                      aspectRatio:
+                          recordingState.aspectRatio == vine.AspectRatio.square
+                          ? 1.0
+                          : 9.0 / 16.0,
+                      child: ClipRect(
+                        child: Stack(
+                          children: [
+                            // Camera preview cropped (not stretched) using Stack Overflow pattern:
+                            // https://stackoverflow.com/questions/51348166/how-to-square-crop-a-flutter-camera-preview
+                            if (recordingState.isInitialized)
+                              LayoutBuilder(
+                                // CRITICAL: Use a key that changes when camera switches
+                                // Without this, the preview widget won't rebuild and freezes on the old camera frame
+                                key: ValueKey('preview_${recordingState.cameraSwitchCount}'),
+                                builder: (context, constraints) {
+                                  Log.info('📸 Building camera preview widget (switchCount=${recordingState.cameraSwitchCount})',
+                                      name: 'UniversalCameraScreenPure', category: LogCategory.system);
 
-                                // Camera aspect ratio (width/height)
-                                // Mobile cameras in portrait mode are typically 3:4 (0.75)
-                                // This is the natural camera sensor aspect ratio
-                                final cameraAspectRatio = 3.0 / 4.0;
+                                  // Get actual camera aspect ratio from the recording provider
+                                  // This prevents distortion by using the real camera sensor aspect ratio
+                                  final cameraAspectRatio = ref.read(vineRecordingProvider.notifier).cameraPreviewAspectRatio;
 
-                                // Container size
-                                final containerWidth = constraints.maxWidth;
+                                  Log.info('📸 Camera aspect ratio: $cameraAspectRatio',
+                                      name: 'UniversalCameraScreenPure', category: LogCategory.system);
 
-                                // Calculate preview size to fill width, then crop height
-                                final previewHeight = containerWidth / cameraAspectRatio;
+                                  // Container size
+                                  final containerWidth = constraints.maxWidth;
 
-                                return OverflowBox(
-                                  alignment: Alignment.center,
-                                  maxWidth: containerWidth,
-                                  maxHeight: previewHeight,
-                                  child: FittedBox(
-                                    fit: BoxFit.fitWidth,
-                                    child: SizedBox(
-                                      width: containerWidth,
-                                      height: previewHeight,
-                                      child: ref
-                                          .read(vineRecordingProvider.notifier)
-                                          .previewWidget,
+                                  // Calculate preview size to fill width using actual camera aspect ratio
+                                  final previewHeight = containerWidth / cameraAspectRatio;
+
+                                  return OverflowBox(
+                                    alignment: Alignment.center,
+                                    maxWidth: containerWidth,
+                                    maxHeight: previewHeight,
+                                    child: FittedBox(
+                                      fit: BoxFit.fitWidth,
+                                      child: SizedBox(
+                                        width: containerWidth,
+                                        height: previewHeight,
+                                        child: ref
+                                            .read(vineRecordingProvider.notifier)
+                                            .previewWidget,
+                                      ),
                                     ),
-                                  ),
-                                );
-                              },
-                            )
-                          else
-                            CameraPreviewPlaceholder(
-                              isRecording: recordingState.isRecording,
-                            ),
-
-                          // Zoom and gesture controls overlay
-                          if (recordingState.isInitialized)
-                            Consumer(
-                              builder: (context, ref, child) {
-                                final cameraInterface = ref
-                                    .read(vineRecordingProvider.notifier)
-                                    .cameraInterface;
-                                if (cameraInterface != null) {
-                                  return CameraControlsOverlay(
-                                    cameraInterface: cameraInterface,
-                                    recordingState:
-                                        recordingState.recordingState,
                                   );
-                                }
-                                return const SizedBox.shrink();
-                              },
-                            ),
-                        ],
+                                },
+                              )
+                            else
+                              CameraPreviewPlaceholder(
+                                isRecording: recordingState.isRecording,
+                              ),
+
+                            // Zoom and gesture controls overlay
+                            if (recordingState.isInitialized)
+                              Consumer(
+                                builder: (context, ref, child) {
+                                  final cameraInterface = ref
+                                      .read(vineRecordingProvider.notifier)
+                                      .cameraInterface;
+                                  if (cameraInterface != null) {
+                                    return CameraControlsOverlay(
+                                      cameraInterface: cameraInterface,
+                                      recordingState:
+                                          recordingState.recordingState,
+                                    );
+                                  }
+                                  return const SizedBox.shrink();
+                                },
+                              ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -817,7 +835,7 @@ class _UniversalCameraScreenPureState
             (!recordingState.isRecording && !recordingState.hasSegments)
                 ? (kIsWeb
                     ? 'Tap to record' // Web: single-shot
-                    : 'Hold to record') // Mobile: press-and-hold segments
+                    : 'Tap and hold anywhere to record') // Mobile: press-and-hold segments anywhere on screen
                 : '', // Empty but reserves space
             style: TextStyle(
               color: Colors.white.withValues(alpha: 0.8),
