@@ -13,6 +13,7 @@ import 'package:openvine/screens/relay_settings_screen.dart';
 import 'package:openvine/screens/settings_screen.dart';
 import 'package:openvine/theme/vine_theme.dart';
 import 'package:openvine/widgets/bug_report_dialog.dart';
+import 'package:openvine/services/zendesk_support_service.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -211,31 +212,32 @@ class _VineDrawerState extends ConsumerState<VineDrawer> {
                   // Support section
                   _buildSectionHeader('Support'),
                   _buildDrawerItem(
-                    icon: Icons.bug_report,
-                    title: 'Report a Bug',
-                    subtitle: 'Send diagnostic info to developers',
-                    onTap: () {
+                    icon: Icons.support_agent,
+                    title: 'Contact Support',
+                    subtitle: 'Get help or report an issue',
+                    onTap: () async {
+                      print('🎫 Contact Support tapped');
+
+                      // Check Zendesk availability BEFORE closing drawer
+                      final isZendeskAvailable = ZendeskSupportService.isAvailable;
+                      print('🔍 Zendesk available: $isZendeskAvailable');
+
                       Navigator.pop(context); // Close drawer
 
-                      // Wait for drawer close animation to complete before showing dialog
-                      // This prevents navigation corruption that causes black screen after
-                      // returning from external apps (Mail)
-                      WidgetsBinding.instance.addPostFrameCallback((_) {
-                        if (!context.mounted) return;
+                      // Wait for drawer close animation
+                      await Future.delayed(const Duration(milliseconds: 300));
+                      if (!context.mounted) {
+                        print('⚠️ Context not mounted after drawer close');
+                        return;
+                      }
 
-                        final bugReportService =
-                            ref.read(bugReportServiceProvider);
-                        final userPubkey = authService.currentPublicKeyHex;
-
-                        showDialog(
-                          context: context,
-                          builder: (context) => BugReportDialog(
-                            bugReportService: bugReportService,
-                            currentScreen: 'VineDrawer',
-                            userPubkey: userPubkey,
-                          ),
-                        );
-                      });
+                      // Show support options dialog
+                      _showSupportOptionsDialog(
+                        context,
+                        ref,
+                        authService,
+                        isZendeskAvailable,
+                      );
                     },
                   ),
                   _buildDrawerItem(
@@ -371,4 +373,207 @@ class _VineDrawerState extends ConsumerState<VineDrawer> {
             : null,
         onTap: onTap,
       );
+
+  /// Show support options dialog
+  void _showSupportOptionsDialog(
+    BuildContext context,
+    WidgetRef ref,
+    dynamic authService,
+    bool isZendeskAvailable,
+  ) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: VineTheme.cardBackground,
+        title: const Text(
+          'How can we help?',
+          style: TextStyle(color: Colors.white),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildSupportOption(
+              context: context,
+              icon: Icons.bug_report,
+              title: 'Report a Bug',
+              subtitle: 'Technical issues with the app',
+              onTap: () {
+                Navigator.pop(context);
+                _handleBugReport(context, ref, authService, isZendeskAvailable);
+              },
+            ),
+            const SizedBox(height: 12),
+            _buildSupportOption(
+              context: context,
+              icon: Icons.flag,
+              title: 'Report Content',
+              subtitle: 'Inappropriate videos or users',
+              onTap: () {
+                Navigator.pop(context);
+                _handleContentReport(context, ref, authService, isZendeskAvailable);
+              },
+            ),
+            const SizedBox(height: 12),
+            _buildSupportOption(
+              context: context,
+              icon: Icons.help,
+              title: 'View FAQ',
+              subtitle: 'Common questions & answers',
+              onTap: () {
+                Navigator.pop(context);
+                _launchWebPage(context, 'https://divine.video/faq', 'FAQ');
+              },
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: VineTheme.vineGreen),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Build a support option button
+  Widget _buildSupportOption({
+    required BuildContext context,
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: VineTheme.backgroundColor,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey.shade800),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: VineTheme.vineGreen, size: 32),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      color: Colors.grey.shade400,
+                      fontSize: 13,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right, color: Colors.grey.shade600),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Handle bug report submission
+  Future<void> _handleBugReport(
+    BuildContext context,
+    WidgetRef ref,
+    dynamic authService,
+    bool isZendeskAvailable,
+  ) async {
+    if (isZendeskAvailable) {
+      // Get device and app info
+      final packageInfo = await PackageInfo.fromPlatform();
+      final appVersion = '${packageInfo.version}+${packageInfo.buildNumber}';
+
+      final description = '''
+Please describe the bug you encountered:
+
+---
+App Version: $appVersion
+Platform: ${Theme.of(context).platform.name}
+''';
+
+      print('🐛 Opening Zendesk for bug report');
+      final success = await ZendeskSupportService.showNewTicketScreen(
+        subject: 'Bug Report',
+        description: description,
+        tags: ['mobile', 'bug', 'ios'],
+      );
+
+      if (!success && context.mounted) {
+        _showSupportFallback(context, ref, authService);
+      }
+    } else {
+      _showSupportFallback(context, ref, authService);
+    }
+  }
+
+  /// Handle content report submission
+  Future<void> _handleContentReport(
+    BuildContext context,
+    WidgetRef ref,
+    dynamic authService,
+    bool isZendeskAvailable,
+  ) async {
+    if (isZendeskAvailable) {
+      final description = '''
+Please describe the inappropriate content:
+
+Content Type (video/user/comment):
+Link or ID (if available):
+Reason for report:
+
+''';
+
+      print('🚩 Opening Zendesk for content report');
+      final success = await ZendeskSupportService.showNewTicketScreen(
+        subject: 'Content Report',
+        description: description,
+        tags: ['mobile', 'content-report', 'moderation'],
+      );
+
+      if (!success && context.mounted) {
+        _showSupportFallback(context, ref, authService);
+      }
+    } else {
+      _showSupportFallback(context, ref, authService);
+    }
+  }
+
+  /// Show fallback support options when Zendesk is not available
+  void _showSupportFallback(
+    BuildContext context,
+    WidgetRef ref,
+    dynamic authService,
+  ) {
+    final bugReportService = ref.read(bugReportServiceProvider);
+    final userPubkey = authService.currentPublicKeyHex;
+
+    showDialog(
+      context: context,
+      builder: (context) => BugReportDialog(
+        bugReportService: bugReportService,
+        currentScreen: 'VineDrawer',
+        userPubkey: userPubkey,
+      ),
+    );
+  }
 }

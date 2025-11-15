@@ -63,4 +63,23 @@ fi
 
 echo "🚀 Running OpenVine in $BUILD_MODE mode on $DEVICE"
 
-flutter run -d "$DEVICE" --$BUILD_MODE
+# Load Zendesk credentials from .env if it exists
+DART_DEFINES=""
+if [ -f .env ]; then
+    echo "📦 Loading environment from .env..."
+    source .env
+
+    if [ -n "$ZENDESK_APP_ID" ]; then
+        DART_DEFINES="$DART_DEFINES --dart-define=ZENDESK_APP_ID=$ZENDESK_APP_ID"
+    fi
+
+    if [ -n "$ZENDESK_CLIENT_ID" ]; then
+        DART_DEFINES="$DART_DEFINES --dart-define=ZENDESK_CLIENT_ID=$ZENDESK_CLIENT_ID"
+    fi
+
+    if [ -n "$ZENDESK_URL" ]; then
+        DART_DEFINES="$DART_DEFINES --dart-define=ZENDESK_URL=$ZENDESK_URL"
+    fi
+fi
+
+flutter run -d "$DEVICE" --$BUILD_MODE $DART_DEFINES

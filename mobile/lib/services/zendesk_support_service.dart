@@ -132,4 +132,62 @@ class ZendeskSupportService {
       return false;
     }
   }
+
+  /// Create a Zendesk ticket programmatically (no UI)
+  ///
+  /// Creates a support ticket silently in the background without showing any UI.
+  /// Useful for automatic content reporting or system-generated tickets.
+  /// Returns true if ticket created successfully, false otherwise.
+  ///
+  /// Platform limitations:
+  /// - iOS: Full support via RequestProvider API
+  /// - Android: Full support via RequestProvider API
+  /// - macOS/Windows: Not supported (returns false)
+  static Future<bool> createTicket({
+    required String subject,
+    required String description,
+    List<String>? tags,
+  }) async {
+    if (!_initialized) {
+      Log.warning(
+        'Zendesk not initialized - cannot create ticket',
+        category: LogCategory.system,
+      );
+      return false;
+    }
+
+    try {
+      final result = await _channel.invokeMethod('createTicket', {
+        'subject': subject,
+        'description': description,
+        'tags': tags ?? [],
+      });
+
+      if (result == true) {
+        Log.info(
+          'Zendesk ticket created successfully: $subject',
+          category: LogCategory.system,
+        );
+        return true;
+      } else {
+        Log.warning(
+          'Failed to create Zendesk ticket: $subject',
+          category: LogCategory.system,
+        );
+        return false;
+      }
+    } on PlatformException catch (e) {
+      Log.error(
+        'Platform error creating Zendesk ticket: ${e.code} - ${e.message}',
+        category: LogCategory.system,
+      );
+      return false;
+    } catch (e) {
+      Log.error(
+        'Unexpected error creating Zendesk ticket: $e',
+        category: LogCategory.system,
+      );
+      return false;
+    }
+  }
 }

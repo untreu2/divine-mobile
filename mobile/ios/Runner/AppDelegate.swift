@@ -3,6 +3,7 @@ import UIKit
 import LibProofMode
 import ZendeskCoreSDK
 import SupportSDK
+import SupportProvidersSDK
 
 @main
 @objc class AppDelegate: FlutterAppDelegate {
@@ -216,6 +217,46 @@ import SupportSDK
         }
 
         result(true)
+
+      case "createTicket":
+        NSLog("🎫 Zendesk: Creating ticket programmatically (no UI)")
+
+        // Extract parameters
+        guard let args = call.arguments as? [String: Any],
+              let subject = args["subject"] as? String,
+              let description = args["description"] as? String else {
+          NSLog("❌ Zendesk: Missing required parameters for createTicket")
+          result(FlutterError(code: "INVALID_ARGS",
+                            message: "Missing subject or description",
+                            details: nil))
+          return
+        }
+
+        let tags = args["tags"] as? [String] ?? []
+
+        // Build create request object using ZDK API
+        let createRequest = ZDKCreateRequest()
+        createRequest.subject = subject
+        createRequest.requestDescription = description
+        createRequest.tags = tags
+
+        NSLog("🎫 Zendesk: Submitting ticket - subject: '\(subject)', tags: \(tags)")
+
+        // Submit ticket asynchronously using ZDKRequestProvider
+        ZDKRequestProvider().createRequest(createRequest) { (request, error) in
+          DispatchQueue.main.async {
+            if let error = error {
+              NSLog("❌ Zendesk: Failed to create ticket - \(error.localizedDescription)")
+              result(false)
+            } else if let request = request as? ZDKRequest {
+              NSLog("✅ Zendesk: Ticket created successfully - ID: \(request.requestId)")
+              result(true)
+            } else {
+              NSLog("⚠️ Zendesk: Unknown result when creating ticket")
+              result(false)
+            }
+          }
+        }
 
       default:
         result(FlutterMethodNotImplemented)
