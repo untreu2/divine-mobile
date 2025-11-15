@@ -21,6 +21,6 @@ class ZendeskConfig {
   /// Set via: --dart-define=ZENDESK_URL=xxx
   static const String zendeskUrl = String.fromEnvironment(
     'ZENDESK_URL',
-    defaultValue: 'https://openvine.zendesk.com',
+    defaultValue: 'https://rabblelabs.zendesk.com',
   );
 }
