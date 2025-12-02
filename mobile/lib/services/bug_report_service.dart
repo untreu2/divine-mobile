@@ -215,7 +215,6 @@ class BugReportService {
         stackTrace: stackTrace,
       );
 
-<<<<<<< HEAD
       // Sanitize and fall back to Zendesk REST API
       final sanitizedData = sanitizeSensitiveData(data);
       return _fallbackToZendeskApi(sanitizedData);
