@@ -14,7 +14,7 @@ import 'package:openvine/constants/app_constants.dart';
 import 'package:openvine/constants/nip71_migration.dart';
 import 'package:models/models.dart' show NIP94Metadata;
 import 'package:openvine/services/crash_reporting_service.dart';
-import 'package:openvine/services/nostr_key_manager.dart';
+import 'package:nostr_key_manager/nostr_key_manager.dart';
 import 'package:openvine/services/nostr_service_interface.dart';
 import 'package:openvine/services/p2p_discovery_service.dart';
 import 'package:openvine/services/p2p_video_sync_service.dart';

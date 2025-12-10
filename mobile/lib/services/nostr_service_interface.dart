@@ -5,8 +5,8 @@ import 'dart:async';
 
 import 'package:nostr_sdk/event.dart';
 import 'package:nostr_sdk/filter.dart';
-import 'package:models/models.dart' show NIP94Metadata;
-import 'package:openvine/services/nostr_key_manager.dart';
+import 'package:nostr_key_manager/nostr_key_manager.dart';
+import 'package:models/models.dart';
 
 /// Result of broadcasting an event to relays
 class NostrBroadcastResult {

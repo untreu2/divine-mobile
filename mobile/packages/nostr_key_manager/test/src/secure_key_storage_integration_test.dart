@@ -1,31 +1,26 @@
-// ABOUTME: Integration tests for secure key storage with hardware-backed security
-// ABOUTME: Tests NostrKeyManager refactoring, SecureKeyStorageService, and migration
+// ABOUTME: Integration tests for secure key storage with hardware security
+// ABOUTME: Tests NostrKeyManager, SecureKeyStorage, migration
 
-import 'package:flutter_test/flutter_test.dart';
-import 'package:openvine/services/nostr_key_manager.dart';
-import 'package:openvine/services/secure_key_storage_service.dart';
-import 'package:openvine/utils/unified_logger.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 
-void main() {
-  TestWidgetsFlutterBinding.ensureInitialized();
+import 'package:flutter_test/flutter_test.dart';
+import 'package:nostr_key_manager/nostr_key_manager.dart';
+import 'package:nostr_sdk/client_utils/keys.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-  group('NostrKeyManager with SecureKeyStorageService Integration', () {
+import '../test_setup.dart';
+
+void main() {
+  group('NostrKeyManager with SecureKeyStorage Integration', () {
     late NostrKeyManager keyManager;
 
     setUp(() async {
-      // Initialize logger
-      Log.info('Setting up test', name: 'Test', category: LogCategory.system);
-
-      // Set up mock SharedPreferences
-      SharedPreferences.setMockInitialValues({});
-
+      setupTestEnvironment();
       keyManager = NostrKeyManager();
     });
 
-    tearDown(() {
-      keyManager.clearKeys();
+    tearDown(() async {
+      await keyManager.clearKeys();
     });
 
     test('should initialize with secure storage', () async {
@@ -70,11 +65,16 @@ void main() {
 
     test('should migrate legacy keys from SharedPreferences', () async {
       // Arrange - Set up legacy keys in SharedPreferences
+      // Use a valid private key and derive the correct public key
+      const testPrivateKey =
+          '5dab4a6cf3b8c9b8d3c5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7';
+
+      // Import nostr_sdk to get the correct public key derivation
+      final testPublicKey = getPublicKey(testPrivateKey);
+
       final legacyKeyData = {
-        'private':
-            '5dab4a6cf3b8c9b8d3c5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7',
-        'public':
-            '8e4c3a5b6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3',
+        'private': testPrivateKey,
+        'public': testPublicKey,
         'created_at': DateTime.now().millisecondsSinceEpoch,
         'version': 1,
       };
@@ -165,17 +165,11 @@ void main() {
     });
   });
 
-  group('SecureKeyStorageService Integration', () {
-    late SecureKeyStorageService storageService;
+  group('SecureKeyStorage Integration', () {
+    late SecureKeyStorage storageService;
 
     setUp(() async {
-      Log.info(
-        'Setting up SecureKeyStorageService test',
-        name: 'Test',
-        category: LogCategory.system,
-      );
-
-      storageService = SecureKeyStorageService();
+      storageService = SecureKeyStorage();
     });
 
     tearDown(() {
@@ -253,27 +247,27 @@ void main() {
     // Note: saveIdentity and getSavedIdentities methods need to be implemented
     // test('should handle multiple saved identities', () async {
     //   await storageService.initialize();
-    //   // TODO: Implement saveIdentity and getSavedIdentities in SecureKeyStorageService
+    //   // TODO: Implement saveIdentity and getSavedIdentities in SecureKeyStorage
     // });
   });
 
   group('Security Configuration', () {
     test('should use strict security by default', () {
-      final config = SecurityConfig.strict;
+      const config = SecurityConfig.strict;
       expect(config.requireHardwareBacked, isTrue);
       expect(config.requireBiometrics, isFalse);
       expect(config.allowFallbackSecurity, isFalse);
     });
 
     test('should allow desktop configuration', () {
-      final config = SecurityConfig.desktop;
+      const config = SecurityConfig.desktop;
       expect(config.requireHardwareBacked, isFalse);
       expect(config.requireBiometrics, isFalse);
       expect(config.allowFallbackSecurity, isTrue);
     });
 
     test('should support maximum security with biometrics', () {
-      final config = SecurityConfig.maximum;
+      const config = SecurityConfig.maximum;
       expect(config.requireHardwareBacked, isTrue);
       expect(config.requireBiometrics, isTrue);
       expect(config.allowFallbackSecurity, isFalse);

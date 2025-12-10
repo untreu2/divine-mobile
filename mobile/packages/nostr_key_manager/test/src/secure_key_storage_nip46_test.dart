@@ -1,16 +1,18 @@
-// ABOUTME: Tests for NIP-46 bunker key container handling in SecureKeyStorageService
-// ABOUTME: Ensures bunker operations don't crash app when feature is not fully implemented
+// ABOUTME: Tests for NIP-46 bunker key handling in SecureKeyStorage
+// ABOUTME: Ensures bunker operations don't crash when feature is pending
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:openvine/services/secure_key_storage_service.dart';
+import 'package:nostr_key_manager/nostr_key_manager.dart';
+
+import '../test_setup.dart';
 
 void main() {
-  group('SecureKeyStorageService - NIP-46 Bunker Error Handling', () {
-    late SecureKeyStorageService service;
+  group('SecureKeyStorage - NIP-46 Bunker Error Handling', () {
+    late SecureKeyStorage service;
 
     setUp(() {
-      // Use desktop config for testing (allows software-only security)
-      service = SecureKeyStorageService(securityConfig: SecurityConfig.desktop);
+      setupTestEnvironment();
+      service = SecureKeyStorage(securityConfig: SecurityConfig.desktop);
     });
 
     tearDown(() {
@@ -66,24 +68,24 @@ void main() {
     });
   });
 
-  group('SecureKeyStorageService - NIP-46 Feature Not Implemented', () {
+  group('SecureKeyStorage - NIP-46 Feature Not Implemented', () {
     test('_createBunkerKeyContainer implementation is pending', () {
-      // This test documents that NIP-46 bunker key containers are not yet implemented.
-      // The implementation should return null instead of throwing UnimplementedError
-      // to prevent app crashes when users attempt to use bunker authentication.
+      // NIP-46 bunker key containers are not yet implemented.
+      // Implementation should return null instead of throwing
+      // UnimplementedError to prevent app crashes when users
+      // attempt to use bunker authentication.
       //
-      // Once implemented, this test should be updated to verify proper bunker
+      // Once implemented, this test should verify proper bunker
       // key container creation.
 
-      // Currently, the method throws UnimplementedError on line 746.
-      // After fix, it should return null and log a warning that feature is pending.
+      // Currently returns null and logs a warning.
       expect(true, isTrue); // Placeholder test
     });
   });
 
   group('Feature Flag - enableNip46', () {
-    test('enableNip46 feature flag exists in FeatureFlagService defaults', () {
-      // This test documents that the enableNip46 feature flag has been added
+    test('enableNip46 feature flag exists', () {
+      // The enableNip46 feature flag has been added
       // to gate UI entry points for NIP-46 bunker authentication.
       //
       // Usage in UI code:

@@ -13,7 +13,7 @@ import 'package:models/models.dart'
     as _i9
     show NIP94Metadata, NIP94ValidationException, SimpleKeyPair;
 import 'package:openvine/services/auth_service.dart' as _i4;
-import 'package:openvine/services/nostr_key_manager.dart' as _i2;
+import 'package:nostr_key_manager/nostr_key_manager.dart' as _i2;
 import 'package:openvine/services/nostr_service_interface.dart' as _i3;
 import 'package:openvine/services/user_profile_service.dart' as _i10;
 

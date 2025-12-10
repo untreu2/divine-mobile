@@ -2,23 +2,17 @@
 // ABOUTME: Tests authentication, connection, and remote signing functionality
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:openvine/services/nsec_bunker_client.dart';
-import 'package:openvine/utils/unified_logger.dart';
+import 'package:nostr_key_manager/nostr_key_manager.dart';
+
+import '../test_setup.dart';
 
 void main() {
-  TestWidgetsFlutterBinding.ensureInitialized();
-
   group('NsecBunkerClient Integration Tests', () {
     late NsecBunkerClient bunkerClient;
     const testEndpoint = 'https://bunker.example.com/auth';
 
     setUp(() {
-      Log.info(
-        'Setting up bunker client test',
-        name: 'Test',
-        category: LogCategory.system,
-      );
-
+      setupTestEnvironment();
       bunkerClient = NsecBunkerClient(authEndpoint: testEndpoint);
     });
 
@@ -116,7 +110,7 @@ void main() {
           'kind': 1,
           'content': 'Test message',
           'created_at': DateTime.now().millisecondsSinceEpoch ~/ 1000,
-          'tags': [],
+          'tags': <dynamic>[],
         };
 
         // Act
@@ -132,14 +126,14 @@ void main() {
           'kind': 1,
           'content': 'Test message',
           'created_at': DateTime.now().millisecondsSinceEpoch ~/ 1000,
-          'tags': [],
+          'tags': <dynamic>[],
         };
 
         // The request should follow NIP-46 format
         expect(event['kind'], equals(1));
         expect(event['content'], isNotEmpty);
         expect(event['created_at'], isA<int>());
-        expect(event['tags'], isA<List>());
+        expect(event['tags'], isA<List<dynamic>>());
       });
     });
 
